@@ -1,0 +1,36 @@
+# Configure your instance. Copy this file to config.local.yml (gitignored) and edit it.
+# Every field below is optional except `owner`. With no sources at all, the graph still works;
+# you just log 1:1s and build the graph by hand. Add sources to make the daily sweep useful.
+
+owner: "Your Name"           # whose 1:1s and stream these are
+data_dir: "./data"           # where profiles + logs live (private, gitignored)
+
+# OPTIONAL external sources, read-only, to enrich the work side of a brief.
+# Empty is fine: every skill still works. None is required.
+sources:
+  - name: work-graph
+    type: repo-graph
+    path: "../your-work-repo"
+    read: [people, companies, notes]      # READ ONLY, never written
+    scope: work-only                       # nothing personal is imported from here
+
+# OPTIONAL integrations. Wire the ones you have; leave the rest out.
+integrations:
+  calendar: gcal             # for cadence + routine triggers
+  transcripts: fireflies     # source for auto-logging meetings
+  mail: gmail                # person-to-person mail only
+  whatsapp: whatsapp-mcp     # local bridge (lharries/whatsapp-mcp). See SETUP-WHATSAPP.md
+
+# OPTIONAL Notion reconciliation (the notion-sync skill). Delete this block if you do not use Notion.
+notion:
+  people_datasource: "collection://<your People data-source id>"
+  companies_datasource: "collection://<your Companies data-source id>"
+
+# Flow C: daily sweep behaviour
+sweep:
+  create_nodes: on-recurrence   # on-recurrence (default, disciplined) | always (a node for every human)
+  window_hours: 24
+  whatsapp:
+    include_groups: true            # groups are read: messages attributed to the sender feed existing person nodes; a group never becomes a person node
+    unknown_number_min_days: 2      # a number with no saved name becomes a node only after 2+ distinct days of exchange
+    skip: [business, broadcast, otp, automated]   # person-to-person only

@@ -1,0 +1,12 @@
+# YOUR PRIVATE GRAPH LIVES IN data/ AND MUST NEVER BE COMMITTED.
+# This is the opposite default from a normal repo: data/ is your real life, keep it local.
+# Everything directly under data/ is ignored except the two structure markers below.
+/data/*
+!/data/.gitkeep
+!/data/README.md
+
+# Local, instance-specific config (owner, sources, integration ids)
+config.local.yml
+
+# OS / editor noise
+.DS_Store
