@@ -10,6 +10,23 @@ graph. The value is retrieval and connection, not storage.
 
 ---
 
+## 0. Rule zero: the personal detail comes first
+
+Before anything else. The whole reason this graph exists is the **human layer**, captured
+**super-detailed, specific and personal**, never generic. Not just that someone was mentioned but
+**who they are** (origin, life story, family, health, feelings, fears, ambitions, character); not
+just what they said but the **reasons, experiences and activities** behind it, in their own words
+(quote them). **Be obsessed and specific, capture proper NAMES** by first and surname where you
+can: partner / spouse / girlfriend (name, what they do, state of the relationship, plans
+together), children (names, ages), parents and siblings, close friends and who introduced whom,
+and the **investors / people who funded** them or their company. Generic ("has a partner", "some
+investors") is a failed capture, and a known-but-unnamed partner or backer is a gap to chase. The
+human layer beats the work content every time, even in a call that was "about work": a work-only
+log is a failed capture. Never compress the personal detail away to save space; that detail IS
+the memory. When in doubt, keep more.
+
+---
+
 ## 1. Who am I working for?
 
 Read `owner` from [`config.local.yml`](config.example.yml) (the user copies `config.example.yml`

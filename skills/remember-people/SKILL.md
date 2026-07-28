@@ -142,6 +142,17 @@ adoptable by anyone and adaptable to any setup.
 
 ## Rules
 
+- **Personal stories are the priority, always. This is rule zero.** The human layer (life
+  stories, background, family, health, feelings, fears, ambitions, character, jokes, what someone
+  is going through) is the most valuable thing to record, more than the work content. Mine EVERY
+  meeting and EVERY message for it, capture the real words. **Be obsessed and specific: capture
+  proper names** by first AND surname where you can, the partner / spouse / girlfriend (name +
+  what they do + the state of the relationship + plans together), children (names, ages), parents
+  and siblings, close friends and who introduced whom, and the investors / people who funded them
+  or their company. Generic ("has a partner", "some investors") is a failed capture: names and
+  specifics or it did not happen, and a known-but-unnamed partner or backer is a gap to chase. A
+  work-only interaction is a failed capture. Never drop the personal detail to save space.
+
 - Only 1:1s, only what serves the relationship. This is not a company CRM.
 - A person becomes a node only when they recur (you meet them too, or they appear in two or more
   interactions). Below that, they are a text line inside a profile.

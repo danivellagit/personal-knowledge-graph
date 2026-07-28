@@ -61,6 +61,17 @@ normalizer flattens maps).
 
 ## Rules that keep the graph alive
 
+- **Personal stories first, captured aggressively and specifically (the reason this graph
+  exists).** The human layer beats the work layer every time: life stories, where someone is
+  from, family, health, feelings, fears, ambitions, character, what they are going through. Mine
+  every meeting and message for it, quote the real words, and be **obsessed and specific,
+  capturing proper names**: the partner / spouse / girlfriend (name, job, state of the
+  relationship, plans together), children (names, ages), parents and siblings, close friends and
+  who introduced whom, and the **investors / people who funded** them or their company. Generic
+  ("a partner", "some investors") is a failed capture; a known-but-unnamed partner or backer is a
+  gap to chase. A log that only records the work is a failed capture. Never compress the personal
+  beat away to be tidy; that beat is the whole value.
+
 - **Node-on-recurrence.** A light entity (B) becomes a file only when it recurs (two or more
   mentions, or two or more days). Below that it stays plain text inside the interaction. This
   stops the swamp.
