@@ -1,12 +1,17 @@
-# YOUR PRIVATE GRAPH LIVES IN data/ AND MUST NEVER BE COMMITTED.
+# YOUR PRIVATE GRAPH LIVES IN data/ AND BY DEFAULT IS NEVER COMMITTED.
 # This is the opposite default from a normal repo: data/ is your real life, keep it local.
 # Everything directly under data/ is ignored except the two structure markers below.
+#
+# An owner who keeps their copy of this repo PRIVATE may choose to commit data/ as a backup:
+# delete the three data/ lines below. The history then holds real people, health and money, so
+# that repo must never be made public. Never do this in a public fork.
 /data/*
 !/data/.gitkeep
 !/data/README.md
 
-# Local, instance-specific config (owner, sources, integration ids)
+# Local, instance-specific config (owner, sources, integration ids, module paths)
 config.local.yml
 
-# OS / editor noise
+# OS / editor / Python noise
 .DS_Store
+__pycache__/

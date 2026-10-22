@@ -68,6 +68,12 @@ FFmpeg is optional (only for sending audio as playable voice messages).
      whatsapp: whatsapp-mcp
    ```
 
+5. **Let the backfill detector find the store.** The bridge keeps every message in
+   `whatsapp-bridge/store/messages.db`. `tools/owed_backfill.py` reads it to measure which days
+   with real traffic still have no log, so point `backfill.whatsapp_db` in `config.local.yml`
+   at that file. The bridge only holds what it has synced since you linked it; if your WhatsApp
+   desktop app keeps a longer history, you can add its store as `backfill.whatsapp_desktop_db`.
+
 Once connected, the `remember-people` daily sweep reads your real conversations, attributes
 group messages to their sender, and feeds them into each person's node. See the full sweep
 rules in [`skills/remember-people/SKILL.md`](skills/remember-people/SKILL.md).
