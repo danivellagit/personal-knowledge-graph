@@ -8,12 +8,15 @@ An agent here is a role with a memory: it talks to the owner, reads the parts of
 job needs, and writes back what it learns, so the next conversation starts where the last one
 ended. The graph (`data/`) is the shared memory; an agent is a way of using it.
 
-The four shipped here are roles, not people, and they are an optional module (`agents.enabled`
-in `config.local.yml`). Each one has an empty `persona:` slot (mirrored, if you like, in
-`agents.personas` in the config): give it a name, an age, a background and a voice that fit you, and it will keep that persona in every
-conversation. Leave it empty and the agent is simply "the fitness coach", "the psychologist", and
-so on. Whatever persona you write, write down *why* (in your own words) in the agent's
-`memory.md`: the persona is a read of what you need, and you should be able to correct it.
+The nine shipped here are roles, not people, and they are an optional module (`agents.enabled` in
+`config.local.yml`). Each one has an empty `persona:` slot (mirrored, if you like, in
+`agents.personas` in the config): give it a name, an age, a background and a voice that fit you,
+and it will keep that persona in every conversation. A full name with a surname works well and
+makes the agents easier to tell apart ("Rowan Hale" rather than "Rowan"), and a persona name is
+also how the owner calls the agent. Leave it empty and the agent is simply "the fitness coach",
+"the psychologist", and so on. Whatever persona you write, write down *why* (in your own words) in
+the agent's `memory.md`: the persona is a read of what you need, and you should be able to correct
+it.
 
 ## The shape of an agent
 
@@ -78,10 +81,15 @@ Agent memory files link to it with `person: "[[_me]]"` so they are never orphans
 | [psychologist](psychologist/AGENT.md) | reflective sessions, ten minutes at least and as long as needed, direct and warm, trauma-aware; every session saved, themes remembered; not a licensed therapist, with a crisis rule | claude-code | body layer (sleep, as facts only) |
 | [founder-assistant](founder-assistant/AGENT.md) | the owner's work day: calendar, mail, meetings, follow-ups, priorities; drafts and never sends without a yes; pushes to close one thing at a time | claude-code | calendar, mail and transcript connectors, a priorities database (e.g. Notion), a read-only work repo |
 | [linkedin-coach](linkedin-coach/AGENT.md) | grows the owner's own LinkedIn: posts from what they really build, in their voice, a sustainable rhythm, comments and DMs, honest numbers; drafts, never publishes, nothing personal goes public | claude-code, telegram, any chat model | a voice card file, a read-only work repo |
+| [best-friend](best-friend/AGENT.md) | the owner's best friend and daily-life assistant: honest, warm, remembers everything; runs errands, small purchases, rides, tables, bookings and reminders; does what is reversible, asks before paying, never sends a message for the owner | claude-code, telegram, any chat model | calendar and mail connectors, a browser or booking tools, a Notion people database (birthdays) |
+| [brand-designer](brand-designer/AGENT.md) | the owner's visual identity: guidelines, the visual tone of voice, assets for site, decks and social, consistency everywhere; options with an opinion; never publishes, sends or merges without a yes | claude-code, any chat model | a brand repo or folder, a design-tool connector, an image-generation tool |
+| [accountant](accountant/AGENT.md) | tax and company-admin advisor, configured for the owner's country: a deadline register, notices from the tax authority, director duties, paperwork, a monthly grants scan; never files, sends or pays; not a licensed professional, and says so | claude-code, telegram, any chat model | mail and calendar connectors, a Notion finance area, a read-only work repo |
+| [health-advisor](health-advisor/AGENT.md) | health, not fitness: lab reports transcribed into `data/body/labs/`, check-ups, screenings, medications, symptoms, a prevention plan with dates; never diagnoses, urgent symptoms go straight to the emergency number | claude-code, telegram, any chat model | the labs folder or a labs database (e.g. Notion), the body layer, a calendar connector, a scheduled routine |
+| [web-builder](web-builder/AGENT.md) | builds and changes the owner's websites (Next.js + a headless CMS as the reference stack): design system first, copy in the CMS, preview before production, verify before claiming, a setup sheet per site; never deploys production or merges without a yes | claude-code (a shell), telegram or any chat model for planning | a hosting CLI, a CMS CLI or connector, a component workbench, a browser |
 
 ## Adding an agent
 
-Copy one of the four, keep the frontmatter shape, and write the four parts every agent here has:
+Copy one of the nine, keep the frontmatter shape, and write the four parts every agent here has:
 **who it is** (role, voice, what it never does), **memory** (the files in `data/agents/<name>/`
 and what each holds), **flows** (what it does when the owner sends X), **where it lives** (the
 launcher and the channel). Then add a launcher in `skills/<name>/SKILL.md` and a row above.

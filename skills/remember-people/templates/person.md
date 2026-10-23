@@ -19,7 +19,7 @@ into:
   - "[[sailing]]"
 first_met: 2025-03-11
 cadence: monthly                       # monthly | quarterly | ad-hoc
-birthday: 06-14                        # MM-DD. Unknown -> leave the key bare, never []
+birthday: 06-14                        # YYYY-MM-DD, or MM-DD if the year is unknown; source in a comment. Unknown -> bare, never []
 partner: "NAME UNKNOWN (gap to chase) - architect, met at university"
 family:
   - "Theo, son, 6, plays football"     # text: a detail, not a node; a node once they recur

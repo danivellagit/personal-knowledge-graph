@@ -176,6 +176,12 @@ The lint enforces these. A run is not finished until `python3 tools/lint.py` rep
    Appending a list item by hand at the wrong indent is exactly how three hub nodes got
    corrupted in the original instance, and Obsidian then stopped reading their edges entirely,
    silently, for four days.
+10. **A person's birthday is in their file.** `birthday:` holds `YYYY-MM-DD`, or `MM-DD` when the
+    year is unknown, with a comment naming its source (`# from the owner, 2030-05-14`,
+    `# from Notion People`). Another system (a Notion People database, a contacts app) is a
+    source, never the home. Match a row to a node by phone or email, never by first name alone;
+    never overwrite a non-empty birthday: if they disagree, keep the file's value and record the
+    conflict as a gap.
 
 ---
 

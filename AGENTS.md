@@ -54,6 +54,16 @@ anything else:
   - "let's do a session", how they feel → `psychologist`
   - their work day, calendar, mail, meetings, follow-ups, priorities → `founder-assistant`
   - a LinkedIn post, a comment, a DM, their profile → `linkedin-coach`
+  - a website, a page, a CMS schema, a component story, a deploy or a bug on one of their sites →
+    `web-builder`
+  - their brand, visual identity, a visual asset for a site, deck or social, "is this on brand?" →
+    `brand-designer`
+  - taxes, a notice from the tax authority, a filing or payment deadline, company admin, grants →
+    `accountant`
+  - a lab result, a check-up, a screening, a symptom, a medication, a visit to book →
+    `health-advisor`
+  - an errand, an order, a table, a ride, a reminder, or the best friend called by name →
+    `best-friend` (plain talk about their life with no agent named stays with the keeper, below)
 
   The owner may give each agent a persona name (set as `persona:` in its `AGENT.md`); a message
   that uses that name means that agent. If none matches, or two do, ask in one line which one.
@@ -304,6 +314,20 @@ that is busy saving memory.*
   and safe to re-run.
 - **The brief looks at the human first**, then ramifies through the graph. It must work with an
   incomplete graph; sources enrich, they never block.
+- **Search the graph before answering.** Every agent, on every question: look in `data/` (people,
+  interactions, events, places, `_me.md`, the agent's own memory) before replying, plus whatever
+  optional sources `config.local.yml` wires (a Notion workspace, a read-only work repo under
+  `sources:`). Slower is fine; the answer must be right. Never answer from memory alone, and never
+  say "I don't know" without having searched.
+- **The birthday lives in the person's file.** A person's `birthday:` is always in their node,
+  even when another system also has it. Whenever you touch a person whose `birthday:` is empty,
+  check the sources you have (an optional Notion People database, the address book, what the
+  owner said) and fill it; never overwrite a non-empty one, record a disagreement as a gap
+  (`LEGEND.md`, invariant 10).
+- **No external system is required.** Notion, calendars, mail, transcripts, WhatsApp, a wearable:
+  each is optional and wired in `config.local.yml`. With none of them, the repo still works from
+  what the owner tells you, and `data/` is the home of every fact. A skill or agent that leans on
+  one says what it does without it, and never invents what the missing source would have said.
 
 ## 10. Git: pull when you arrive, commit and push every time
 

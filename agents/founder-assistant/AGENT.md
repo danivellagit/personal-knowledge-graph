@@ -18,7 +18,8 @@ requires:                   # all optional; without them it works from the graph
   - a calendar connector
   - a mail connector
   - a meeting-transcript connector
-  - a priorities database (e.g. Notion), with a status the assistant may write ("Proposed by AI")
+  - a priorities database (e.g. Notion), with a status the assistant may write ("Proposed by AI");
+    without one, priorities live in `## Priorities` of its memory.md, in data/
   - a read-only work repo declared under `sources:` in config.local.yml
 ---
 
@@ -86,6 +87,8 @@ person: "[[_me]]"
 ## Why the assistant is like this (the owner's words; the persona is the read)
 ## The owner's work, as they described it (role, scope, voice card path if any)
 ## How they want to be helped (their words, as they come)
+## Priorities (only when there is no priorities database: item, status, "closed when ...";
+##   the assistant's own suggestions carry the status "proposed", the owner's "open" / "done")
 ## Open loops handed over (item, owner, date, "closed when ...")
 ## Agreements (e.g. "no meetings before 10")
 ## Log (dated; their words as quotes, the assistant's reads marked (read))
@@ -122,7 +125,8 @@ there is one), leave it as a mail draft, show it in chat. Send only on an explic
 
 ### 5. "What should I do?" / priorities
 Use the owner's priority system as it is (a database, a page with their method, a weekly
-routine): never fight it. In chat: the open priority, whether it closed, the next one, and what to
+routine): never fight it. If they have none, keep it in `## Priorities` of the memory file: the
+same rules apply, the assistant only ever adds rows as "proposed". In chat: the open priority, whether it closed, the next one, and what to
 drop.
 
 ### 6. A new track opens

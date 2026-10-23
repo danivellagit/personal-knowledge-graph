@@ -51,6 +51,11 @@ This repo is the **engine, empty**. Clone it, point it at your own sources, and 
 `data/` (which stays private, on your machine). It is built to be self-explaining: open it with
 Claude Code (or any agent that reads `AGENTS.md`) and it already knows how to operate.
 
+**Nothing external is required.** No Notion, no calendar, no wearable, not even WhatsApp: with an
+empty `config.local.yml` the graph, the tools, the skills and the agents all work from what you
+tell them, and `data/` is the home of every fact. Each source or system you wire in only enriches
+it, and each optional tool says "not configured" instead of failing.
+
 ## What you get
 
 **The core** (everything else is optional):
@@ -89,13 +94,18 @@ Claude Code (or any agent that reads `AGENTS.md`) and it already knows how to op
 
 - **Agents** (`agents/<role>/AGENT.md`, launched by `skills/<role>/SKILL.md`): roles with a
   memory that work on top of the graph and talk to you: `fitness-coach`, `psychologist`,
-  `founder-assistant`, `linkedin-coach`. Give each one a name and a voice if you like.
+  `founder-assistant`, `linkedin-coach`, `web-builder`, `brand-designer`, `accountant`,
+  `health-advisor`, `best-friend`. Give each one a name and a voice if you like.
 - **The body layer**: a wearable's data (sleep, heart, sessions) turned into one node per day,
   joined on time to who you saw and where, plus a food log, a training log and lab reports
   (`tools/body.py`, `tools/body-pull.sh`, `tools/food.py`, `tools/calories.py`).
 - **The location layer**: your phone's GPS (via the Overland app and a small receiver you host)
   plus a Google Maps Timeline export, kept off-repo, so a meeting can get a place without anyone
   saying it (`tools/location.py`, `tools/location-pull.sh`).
+- **The health app**: your health numbers as a password-locked app on your phone's home screen.
+  A React page with one `DATA` block (an example ships with fake data) is encrypted whole and
+  published as a ciphertext-only site on GitHub Pages; the block can be filled from the body
+  layer and the food log (`tools/publish_health_app.sh`, `tools/health-app/`).
 
 ## Get started
 
@@ -144,6 +154,8 @@ personal-knowledge-graph/
     body.py  body-pull.sh        # optional: the body layer
     food.py  calories.py         # optional: food log, daily calorie estimate
     location.py  location-pull.sh  # optional: the location layer
+    sleep_fields.py              # optional: per-night sleep fields from the wearable CLI
+    publish_health_app.sh  health-app/   # optional: the encrypted phone dashboard
   skills/
     remember-people/             # the core engine
     graph-audit/                 # the weekly look from above

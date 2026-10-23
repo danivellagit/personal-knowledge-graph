@@ -191,7 +191,12 @@ data/agents/<role>/        # its own memory: private, like the rest of data/
 The roles the template ships with: `fitness-coach` (training, food, sleep, recovery, from the
 body layer), `psychologist` (reflective sessions; not a licensed therapist, and says so),
 `founder-assistant` (the work day: calendar, mail, meetings, follow-ups; drafts, never sends on
-its own), `linkedin-coach` (the owner's own posts and comments; drafts, never publishes). The
+its own), `linkedin-coach` (the owner's own posts and comments; drafts, never publishes),
+`web-builder` (the owner's sites; preview before production, never deploys without a yes),
+`brand-designer` (the visual identity and its assets), `accountant` (taxes, deadlines, company
+admin; never files or pays, not a licensed professional), `health-advisor` (labs, check-ups,
+medications; never changes a medication, not a doctor) and `best-friend` (plain company and
+daily-life errands; never handles payment details or passwords). The
 owner can give each a persona name and profile (`persona:` in `AGENT.md`); see
 `agents/README.md`.
 
@@ -298,3 +303,16 @@ raw off-repo, only facts in the repo.
 - **Next, by design:** turn points into visits, match them to `places/` nodes and to the same
   day's interactions, and write them into the day node. **A place is named only from a real
   match** (a `places/` node, an address in a log), never guessed from coordinates alone.
+
+## The health app (a private phone dashboard)
+
+An installable, password-locked copy of a health page on the owner's phone. A React page whose
+numbers sit in one `DATA` block (`tools/health-app/example-page.tsx` ships with fake data; point
+`health_app.source` at your own) is bundled, encrypted whole (AES-256-GCM, key from the password by
+PBKDF2) and wrapped in a home-screen web-app shell with an unlock screen by
+`tools/publish_health_app.sh`, which force-pushes a ciphertext-only site to a GitHub Pages repo.
+The password stays in a file off-repo; the phone keeps only the derived key. The DATA block is
+filled from the graph (`--fill`: body layer + food log, `tools/health-app/fill_data.py`) or by a
+routine (`--data FILE`). The app reloads itself when a newer build is live. Same rule as the body:
+the numbers are facts, a coach's line in `notes` is a read. Setup, security model and what a
+stranger can see: `tools/health-app/README.md`.

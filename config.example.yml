@@ -83,6 +83,11 @@ agents:
   #   psychologist: ""
   #   founder-assistant: ""
   #   linkedin-coach: ""
+  #   web-builder: ""
+  #   brand-designer: ""
+  #   accountant: ""
+  #   health-advisor: ""
+  #   best-friend: ""
 
 # The body layer: a wearable read through its vendor's CLI / API (tools/body-pull.sh, body.py,
 # calories.py, food.py). Raw data and the store stay OFF-repo. Uncomment what you use; an unset
@@ -110,3 +115,41 @@ location:
   # db: "~/health/location/location.db" # SQLite store rebuilt by `tools/location.py ingest`
   # pull_command: "node ~/location-receiver/pull.mjs"   # how location-pull.sh fetches new batches from YOUR store
   # prune_after_days: 7                 # delete batches from the remote store once pulled and older than this
+
+# The health app: an installable, password-locked phone dashboard (tools/health-app/, published by
+# tools/publish_health_app.sh). The page is bundled and ENCRYPTED; only ciphertext goes to a GitHub
+# Pages repo. Unset password_file means "not configured" and the publisher says so. Every key but
+# goals has an env var override, e.g. HEALTH_APP_REPO (the full table: tools/health-app/README.md).
+health_app:
+  enabled: false
+  # name: "Health"                      # app name on the home screen, the lock screen and the tab
+  # description: "Health and training, last 7 days"
+  # lang: "en"
+  # password_file: "~/.secrets/health-app-password"   # one line, OUTSIDE the repo; never committed
+  # repo: "your-github-user/health-app" # the GitHub Pages repo that receives the ciphertext
+  # branch: "main"                      # the branch Pages serves (force-pushed, one commit)
+  # remote_url: ""                      # instead of repo: any git URL (an SSH remote, another host)
+  # token_file: ""                      # a token that can push to that repo (default: git's own credentials)
+  # source: ""                          # your page (.tsx with a DATA block); default tools/health-app/example-page.tsx
+  # data_file: ""                       # a DATA block to splice into the page on every build
+  # fill_from_body: false               # build the DATA block from the body layer + food log (fill_data.py)
+  # goals:                              # used by fill_data.py; set only the ones you want drawn
+  #   kcal_in: 2300
+  #   protein_g: 140
+  #   steps: 9000
+  #   sleep_min: 450
+  #   workouts_per_week: 3
+  # avatar: ""                          # a small JPEG/PNG, embedded inside the ciphertext only
+  # cache_dir: "~/.cache/health-app"    # off-repo: salt, last good page copy, deploy dir
+  # salt_file: ""                       # default <cache_dir>/salt.txt; per instance, made on first build
+  # out_dir: ""                         # default tools/health-app/out/site (gitignored)
+  # git_name: "health-app"              # author of the public deploy commit (keep it neutral)
+  # git_email: "health-app@users.noreply.github.com"
+  # theme_color: "#0B0E10"
+  # accent: "#00F19F"
+  # ui:                                 # lock-screen wording, for another language
+  #   password: "Password"
+  #   remember: "Remember on this device"
+  #   unlock: "Unlock"
+  #   wrong: "Wrong password"
+  #   no_crypto: "This browser cannot decrypt the app (it needs HTTPS)."
