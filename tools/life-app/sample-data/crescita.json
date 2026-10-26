@@ -1,0 +1,17 @@
+{
+ "updated": "2030-01-14",
+ "status": "da seguire",
+ "line": "Esempio: un obiettivo di apprendimento.",
+ "source": "esempio",
+ "sfere": [
+  {
+   "key": "studio",
+   "name": "Studio",
+   "status": "da seguire",
+   "line": "Esempio: 2 ore a settimana.",
+   "steps": [
+    "Mezz'ora oggi (esempio)."
+   ]
+  }
+ ]
+}

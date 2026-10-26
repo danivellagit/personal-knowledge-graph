@@ -1,0 +1,8 @@
+# gitleaks config for tools/template_sync.py and the template leak check: the default rules, plus known false positives.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "localStorage keys of the app are not secrets"
+regexes = ['''salute\.[a-z.]+\.v[0-9]+''']
+regexTarget = "line"

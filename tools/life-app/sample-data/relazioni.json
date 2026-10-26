@@ -1,0 +1,24 @@
+{
+ "updated": "2030-01-14",
+ "source": "esempio",
+ "sfere": [
+  {
+   "key": "famiglia",
+   "name": "Famiglia",
+   "status": "bene",
+   "line": "Esempio: sentiti questa settimana.",
+   "steps": [
+    "Una telefonata di esempio."
+   ]
+  },
+  {
+   "key": "amici",
+   "name": "Amici",
+   "status": "da seguire",
+   "line": "Esempio: poco tempo insieme.",
+   "steps": [
+    "Proponi una cena (esempio)."
+   ]
+  }
+ ]
+}

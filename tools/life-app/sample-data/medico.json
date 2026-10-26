@@ -1,0 +1,85 @@
+{
+ "updated": "2030-01-14",
+ "lab": {
+  "name": "Laboratorio di esempio",
+  "site": "Sede di esempio",
+  "date": "2029-09-16",
+  "reports": 1,
+  "outOfRange": 0
+ },
+ "nextLabs": "2030-09-16",
+ "groups": [
+  {
+   "title": "Metabolismo",
+   "items": [
+    {
+     "name": "Glucosio",
+     "value": "88",
+     "unit": "mg/dL",
+     "ref": "70-100",
+     "status": "ok",
+     "bar": {
+      "v": 88,
+      "lo": 70,
+      "hi": 100,
+      "min": 50,
+      "max": 130
+     }
+    }
+   ]
+  },
+  {
+   "title": "Lipidi",
+   "items": [
+    {
+     "name": "Colesterolo totale",
+     "value": "180",
+     "unit": "mg/dL",
+     "ref": "≤ 190",
+     "status": "ok",
+     "bar": {
+      "v": 180,
+      "lo": null,
+      "hi": 190,
+      "min": 100,
+      "max": 260
+     }
+    },
+    {
+     "name": "Colesterolo HDL",
+     "value": "55",
+     "unit": "mg/dL",
+     "ref": "≥ 40",
+     "status": "ok",
+     "bar": {
+      "v": 55,
+      "lo": 40,
+      "hi": null,
+      "min": 20,
+      "max": 90
+     }
+    }
+   ]
+  }
+ ],
+ "watch": "Valori di esempio: sostituiscili con il tuo ultimo referto.",
+ "checks": [
+  {
+   "title": "Controllo di esempio",
+   "sub": "Una riga per ogni controllo da fare",
+   "due": "2030-02-13",
+   "dueText": "entro un mese",
+   "status": "da fare"
+  },
+  {
+   "title": "Dentista (esempio)",
+   "sub": "Una volta l'anno",
+   "due": null,
+   "dueText": "ogni anno",
+   "status": "proposto"
+  }
+ ],
+ "meds": [],
+ "visits": [],
+ "family": "Esempio: nessuna storia familiare inserita."
+}

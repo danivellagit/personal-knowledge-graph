@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="__LANG__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="__APP_NAME__">
+<meta name="application-name" content="__APP_NAME__">
+<meta name="theme-color" content="#0B0E10">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="format-detection" content="telephone=no">
+<title>__APP_NAME__</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<style>
+html,body{margin:0;padding:0;height:100%;background:#0B0E10;color:#fff;color-scheme:dark;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif}
+#root{height:100%}
+/* ---- iOS standalone geometry ----
+   The Page sizes its root from window.innerHeight. In an installed iOS app with a black-translucent status bar,
+   innerHeight/100dvh come back SHORT by the status-bar height (e.g. 812 instead of 874), so the app ended ~62px
+   above the screen bottom and the floating nav sat ~100px up with content visible below it.
+   The wrapper JS measures the real screen height into --app-h and the root is pinned full-screen. */
+:root{--sa-b:env(safe-area-inset-bottom,0px);--sa-t:env(safe-area-inset-top,0px);--app-h:100vh;
+  --dock-h:calc(62px + 4px + max(8px,var(--sa-b)))}
+html,body{min-height:var(--app-h)}
+.wb-root{position:fixed !important;top:0 !important;left:0 !important;right:0 !important;height:var(--app-h) !important;max-height:none !important;
+  max-width:none !important;width:100% !important;padding-top:0 !important}
+/* status bar: no separate strip; each screen's single sticky frosted header pads itself by --sa-t and covers it */
+.wb-view{padding-bottom:calc(var(--dock-h) + 28px) !important}
+#lock{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:calc(24px + env(safe-area-inset-top)) 28px calc(24px + env(safe-area-inset-bottom));box-sizing:border-box;background:linear-gradient(180deg,#2A3843 0,#121A20 320px,#0B0E10 100%)}
+#lock[hidden]{display:none}
+#lock .t{font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:#B5BCC2}
+#lock form{width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px}
+#lock label.f{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:#7D868D}
+#lock input[type=password]{width:100%;box-sizing:border-box;font-size:17px;padding:14px 16px;border-radius:14px;border:1px solid #2A3239;background:#1A2026;color:#fff;outline:none;-webkit-appearance:none;appearance:none}
+#lock input[type=password]:focus{border-color:#00F19F}
+#lock .r{display:flex;align-items:center;gap:10px;font-size:15px;color:#B5BCC2}
+#lock .r input{width:20px;height:20px;accent-color:#00F19F}
+#lock button{font-size:16px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:15px;border:0;border-radius:999px;background:#00F19F;color:#00140C;-webkit-appearance:none;appearance:none}
+#lock button:disabled{opacity:.6}
+#lock .e{min-height:20px;font-size:14px;color:#FF5A6E;text-align:center}
+</style>
+</head>
+<body>
+<div id="lock" hidden>
+  <svg width="84" height="84" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="38" fill="none" stroke="#00F19F" stroke-width="10" stroke-dasharray="28 211.8" transform="rotate(-87.0 50 50)"/><circle cx="50" cy="50" r="38" fill="none" stroke="#00F19F" stroke-width="10" stroke-dasharray="28 211.8" transform="rotate(-35.6 50 50)"/><circle cx="50" cy="50" r="38" fill="none" stroke="#00F19F" stroke-width="10" stroke-dasharray="28 211.8" transform="rotate(15.9 50 50)"/><circle cx="50" cy="50" r="38" fill="none" stroke="#00F19F" stroke-width="10" stroke-dasharray="28 211.8" transform="rotate(67.3 50 50)"/><circle cx="50" cy="50" r="38" fill="none" stroke="#00F19F" stroke-width="10" stroke-dasharray="28 211.8" transform="rotate(118.7 50 50)"/><circle cx="50" cy="50" r="38" fill="none" stroke="#00F19F" stroke-width="10" stroke-dasharray="28 211.8" transform="rotate(170.1 50 50)"/><circle cx="50" cy="50" r="38" fill="none" stroke="#2C353C" stroke-width="10" stroke-dasharray="28 211.8" transform="rotate(221.6 50 50)"/><circle cx="50" cy="50" r="20" fill="#0B3A2C" stroke="#46E3A4" stroke-width="1.5"/></svg>
+  <div class="t">__APP_NAME__</div>
+  <form id="f" autocomplete="on">
+    <input type="text" name="username" value="life-app" autocomplete="username" hidden>
+    <label class="f" for="pw">Password</label>
+    <input id="pw" type="password" name="password" autocomplete="current-password" required>
+    <label class="r"><input id="rm" type="checkbox" checked> Ricordami su questo dispositivo</label>
+    <button id="go" type="submit">Entra</button>
+    <div class="e" id="err" role="alert"></div>
+  </form>
+</div>
+<div id="root"></div>
+<script>
+var P = __PAYLOAD__;
+(function () {
+  var KEY = "life.k", S = window.crypto && crypto.subtle;
+  var $ = function (id) { return document.getElementById(id); };
+  var b2u = function (b) { var s = atob(b), u = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
+  var u2b = function (u) { var s = ""; u = new Uint8Array(u); for (var i = 0; i < u.length; i++) s += String.fromCharCode(u[i]); return btoa(s); };
+  function store(k, v) { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
+  function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function dec(key) { return S.decrypt({ name: "AES-GCM", iv: b2u(P.v) }, key, b2u(P.c)).then(function (b) { return new TextDecoder().decode(b); }); }
+  // real full-screen height: iOS standalone under-reports innerHeight by the status-bar height
+  function fit() {
+    var de = document.documentElement, h = Math.max(window.innerHeight || 0, de.clientHeight || 0);
+    var standalone = navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+    if (standalone && window.screen) { var portrait = !window.matchMedia || matchMedia("(orientation: portrait)").matches;
+      var sh = portrait ? Math.max(screen.height, screen.width) : Math.min(screen.height, screen.width); if (sh > h) h = sh; }
+    de.style.setProperty("--app-h", h + "px");
+  }
+  fit(); window.addEventListener("resize", fit); window.addEventListener("orientationchange", function () { setTimeout(fit, 300); });
+  // tag the Page's nav so the dock CSS applies (no :has() dependency)
+  function tag() {
+    var root = document.querySelector(".wb-root"); if (!root) return;
+    var pill = root.querySelector(".wb-pill"), dock = pill && pill.parentElement && pill.parentElement.parentElement;
+    root.classList.toggle("wb-hasnav", !!pill);
+    var old = root.querySelectorAll(".wb-dock"); for (var i = 0; i < old.length; i++) if (old[i] !== dock) old[i].classList.remove("wb-dock");
+    if (dock && dock.parentElement === root) dock.classList.add("wb-dock");
+  }
+  function run(js) {
+    $("lock").hidden = true; var s = document.createElement("script"); s.textContent = js; document.body.appendChild(s);
+    fit(); watch();
+  }
+  function showLock(msg) { $("lock").hidden = false; $("err").textContent = msg || ""; }
+  function check() {
+    fetch("version.txt?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.text() : null; }).then(function (v) {
+      // a newer build: reload on a cache-busting URL; GitHub Pages can take a minute to serve a fresh deploy, so if the
+      // reload still lands on the old build, try again (up to 4 times per version, 15 s / 45 s / 90 s later)
+      v = v && v.trim(); if (!v || v === P.b) return;
+      var t = (sessionStorage.getItem("life.tried") || "").split("|"), n = t[0] === v ? Number(t[1]) || 0 : 0;
+      if (n >= 4) return;
+      var go = function () { sessionStorage.setItem("life.tried", v + "|" + (n + 1)); location.replace("./?v=" + encodeURIComponent(v) + "&r=" + (n + 1) + "-" + Date.now()); };
+      if (n === 0) go(); else setTimeout(go, [0, 15000, 45000, 90000][n]);
+    }).catch(function () {});
+  }
+  function watch() {
+    // on every launch and whenever the installed app returns to the foreground: reload if a newer build exists
+    check();
+    document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") check(); });
+    window.addEventListener("pageshow", function (e) { if (e.persisted) check(); });
+  }
+  // network-first service worker: always fetches index.html with no-store (bypasses Pages' 10-min HTTP cache), offline fallback
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(function () {});
+  document.documentElement.setAttribute("data-build", P.b);
+  if (!S) { showLock("Questo browser non supporta la decifratura (serve HTTPS)."); return; }
+  if (/[?&]esci\b/.test(location.search)) store(KEY, null);
+  $("f").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var pw = $("pw").value; if (!pw) return;
+    $("go").disabled = true; $("err").textContent = "";
+    S.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]).then(function (base) {
+      return S.deriveKey({ name: "PBKDF2", salt: b2u(P.s), iterations: P.i, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, true, ["decrypt"]);
+    }).then(function (key) {
+      return dec(key).then(function (js) {
+        if ($("rm").checked) return S.exportKey("raw", key).then(function (raw) { store(KEY, u2b(raw)); return js; });
+        store(KEY, null); return js;
+      });
+    }).then(function (js) { $("pw").blur(); run(js); }, function () { $("go").disabled = false; showLock("Password errata"); $("pw").select(); });
+  });
+  var k = load(KEY);
+  if (k) {
+    S.importKey("raw", b2u(k), { name: "AES-GCM" }, false, ["decrypt"]).then(dec).then(run, function () { store(KEY, null); showLock(); });
+  } else showLock();
+})();
+</script>
+</body>
+</html>

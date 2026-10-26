@@ -1,0 +1,12 @@
+{
+ "updated": "2030-01-14",
+ "spese": null,
+ "margine": null,
+ "verdict": {
+  "status": "bene",
+  "line": "Esempio: nessuna scadenza urgente.",
+  "steps": [
+   "Controlla le scadenze del mese (esempio)."
+  ]
+ }
+}

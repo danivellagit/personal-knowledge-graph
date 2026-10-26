@@ -1,0 +1,330 @@
+// Life App only: code fragments spliced INSIDE the health App component by training-patches.mjs (build time).
+// They use the component's own helpers (K, card, row, st, ic, plansOn, open...). Data: TRAINING (from data/training/*.md
+// via training.mjs) and BODY_DAYS (data/body). MD first: nothing here writes data, it only displays it.
+// ==== FRAGMENT: hooks ====
+  const [exOpen, setExOpen] = useState<string | null>(null);
+// ==== FRAGMENT: oggi ====
+  // ---------- Life: allenamenti di oggi (Fatto / In corso / Da fare) dai log data/training ----------
+  type TEx = { name: string; sets: number | null; reps: number | null; kg: number | null; approx?: boolean; note: string | null };
+  const TLOGS = TRAINING.logs as { date: string; time: string | null; kind: string; title: string; exercises: TEx[] }[];
+  const TPLANS = TRAINING.plans as { name: string; kind: string; match: string | null; isDefault: boolean; exercises: TEx[] }[];
+  const exKey = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const tMin = (t: string | null | undefined) => { const m = /(\d{1,2})[:.](\d{2})/.exec(t ?? ""); return m ? Number(m[1]) * 60 + Number(m[2]) : null; };
+  // the log of a gym session: the training-file section closest in time (same kind first when a time is missing)
+  const logOf = (date: string, w: Workout) => {
+    if (!isGym(kindOf(w))) return null;
+    const ws = (dayOf(date)?.workouts ?? []).filter((x: Workout) => x.status === "fatto" && isGym(kindOf(x)));
+    const ls = TLOGS.filter((l) => l.date === date && l.exercises.length);
+    const near = (l: (typeof ls)[number]): Workout | null => {
+      let best: Workout | null = null, bd = Infinity;
+      ws.forEach((x: Workout) => { const a = tMin(l.time), b = tMin(x.time); const dd = (a !== null && b !== null ? Math.abs(a - b) : 0) + (kindOf(x) === l.kind ? 0 : 1000); if (dd < bd) { bd = dd; best = x; } });
+      return best;
+    };
+    return ls.find((l) => near(l) === w) ?? null;
+  };
+  const exOfW = (date: string, w: Workout): TEx[] => { const l = logOf(date, w); return l ? l.exercises : (w.exercises ?? []).map((e: string) => ({ name: e, sets: null, reps: null, kg: null, note: null })); };
+  const kgTxt = (e: TEx) => (isNum(e.kg) ? `${e.approx ? "~" : ""}${fmt(e.kg)} kg` : "");
+  const doseTxt = (e: TEx) => (isNum(e.sets) && isNum(e.reps) ? `${e.sets}×${e.reps}` : isNum(e.sets) ? `${e.sets} serie` : isNum(e.reps) ? `${e.reps} ripetizioni` : "");
+  const exRight = (e: TEx) => [doseTxt(e), kgTxt(e)].filter(Boolean).join(" · ") || e.note || "";
+  const lastLift = (name: string, before: string) => LIFTS.filter((l) => exKey(l.ex) === exKey(name) && l.date < before).sort((a, b) => (a.date < b.date ? -1 : 1)).pop() ?? null;
+  const planTpl = (p: Plan) => {
+    if (!isGym(p.kind) || isMatch(p.kind, p.name)) return null;
+    const t = `${p.name} ${p.detail ?? ""}`.toLowerCase();
+    return TPLANS.find((x) => !!x.match && t.includes(x.match.toLowerCase())) ?? TPLANS.find((x) => x.isDefault && x.kind === p.kind) ?? null;
+  };
+  // in corso: only while now is inside the calendar slot, or while a live Fitbit session is logged (status "in corso");
+  // a slot that has ended is never turned into "fatto": the session stays to do until the log says it is done
+  const slotOf = (t: string) => { const m = /(\d{1,2})[:.](\d{2})\D+(\d{1,2})[:.](\d{2})/.exec(t); return m ? [Number(m[1]) * 60 + Number(m[2]), Number(m[3]) * 60 + Number(m[4])] : null; };
+  const inSlot = (p: Plan) => { const s = slotOf(p.time); return p.date === now.date && !!s && now.min >= s[0] && now.min < s[1]; };
+  const capSm: CSSProperties = { ...caps, fontSize: 10, lineHeight: "14px", color: K.t3 };
+  const groupHead = (t: string, right?: string) => (
+    <div style={{ ...row, justifyContent: "space-between", padding: "14px 0 4px" }}><span style={capSm}>{t}</span>{right ? <span style={capSm}>{right}</span> : null}</div>
+  );
+  const exLines = (list: TEx[], plan?: { date: string; ticks: Set<string> }) => (
+    <div style={{ ...st(0), paddingLeft: 56 }}>
+      {list.map((e, i) => {
+        const lt = plan ? lastLift(e.name, plan.date) : null, on = plan ? plan.ticks.has(exKey(e.name)) : false;
+        const right = plan ? (lt ? `${fmt(lt.kg)} kg` : isNum(e.sets) || isNum(e.reps) ? "—" : "") : exRight(e);
+        const sub = plan ? doseTxt(e) || e.note || "" : "";
+        return (
+          <div key={i} style={{ ...row, gap: 10, padding: "8px 0", borderTop: i ? `1px solid ${K.line}` : "none" }}>
+            {plan ? <span aria-label={on ? "fatto" : "da fare"} style={{ width: 18, height: 18, borderRadius: 9, flex: "0 0 auto", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", background: on ? K.up : "transparent", border: on ? "none" : `1.5px solid ${K.t3}` }}>{on ? ic("check", K.bg, 12, 3) : null}</span> : null}
+            <div style={{ ...st(0), flex: 1 }}>
+              <span style={{ ...ell, fontSize: 14, lineHeight: "19px", color: on ? K.t3 : K.t1 }}>{e.name}</span>
+              {sub ? <span style={{ ...ell, ...lbl }}>{sub}</span> : null}
+            </div>
+            <span style={{ ...lbl, color: K.t2, flex: "0 0 auto", whiteSpace: "nowrap" }}>{right}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+  const turn = (deg: number, color: string = K.t3) => <span style={{ display: "flex", transform: `rotate(${deg}deg)`, flex: "0 0 auto" }}>{ic("right", color, 16, 2.2)}</span>;
+  // one done session: name, time · duration, kcal on the right (the group header says kcal once); in the day card a gym row
+  // opens its exercises in place; in the Allenamento week list (withDay) every row opens the session page like the others
+  // (its exercises are on top there): an in-place toggle in a long list read as a dead tap (2026-10-26)
+  const oggiDone = (x: Day, w: Workout, i: number, withDay = false) => {
+    const k = kindOf(w), key = `${x.date}w${i}`, ex = isGym(k) && !withDay ? exOfW(x.date, w) : [], isOpen = exOpen === key;
+    const meta = [withDay ? shortDay(x.date) : "", w.time, isNum(w.durationMin) ? durTxt(w.durationMin) : "", w.partners ? `con ${w.partners}` : ""].filter(Boolean).join(" · ");
+    return (
+      <div key={key} style={{ borderTop: `1px solid ${K.line}` }}>
+        <button aria-label={`Allenamento ${w.name}`} aria-expanded={ex.length ? isOpen : undefined} onClick={() => (ex.length ? setExOpen(isOpen ? null : key) : open({ kind: "act", key }))} style={{ ...btn, ...row, width: "100%", padding: "12px 0" }}>
+          {kindBadge(k)}
+          <div style={{ ...st(2), flex: 1 }}>
+            <span style={{ ...ell, fontSize: 15, lineHeight: "20px", fontWeight: 600, color: K.t1 }}>{w.name}</span>
+            {meta ? <span style={{ ...ell, ...lbl }}>{meta}</span> : null}
+          </div>
+          <span style={{ ...numStyle(22, isNum(w.kcal) ? K.t1 : K.t3), flex: "0 0 auto" }}>{isNum(w.kcal) ? kcalTxt(w.kcal) : "—"}</span>
+          {ex.length ? turn(isOpen ? -90 : 90) : chev()}
+        </button>
+        {isOpen ? (
+          <div aria-label="Esercizi della sessione" style={{ ...st(6), paddingBottom: 12 }}>
+            {exLines(ex)}
+            <button onClick={() => open({ kind: "act", key })} style={{ ...btn, ...row, gap: 4, paddingLeft: 56, fontSize: 13, lineHeight: "18px", fontWeight: 600, color: K.strain }}>Apri la sessione{ic("right", K.strain, 14, 2.2)}</button>
+          </div>
+        ) : null}
+      </div>
+    );
+  };
+  // one session to do (or in corso): name, calendar time, the plan's description; for a gym day the template's exercises,
+  // each ticked once today's training log has it, with the load from last time
+  const oggiPlan = (p: Plan, key: string, inCorso: boolean) => {
+    const tpl = planTpl(p), desc = p.detail && p.detail !== p.name ? p.detail : "";
+    const sub = [p.time, desc, p.partners ? `con ${p.partners}` : ""].filter(Boolean).join(" · ");
+    const ticks = new Set(TLOGS.filter((l) => l.date === p.date).flatMap((l) => l.exercises.map((e) => exKey(e.name))));
+    return (
+      <div key={key} aria-label={`${inCorso ? "In corso" : "Da fare"} ${p.name}`} style={{ ...st(8), padding: "12px 0", borderTop: `1px solid ${K.line}` }}>
+        <div style={row}>
+          {kindBadge(p.kind ?? "", !inCorso)}
+          <div style={{ ...st(2), flex: 1 }}>
+            <span style={{ ...ell, fontSize: 15, lineHeight: "20px", fontWeight: 600, color: inCorso ? K.t1 : K.t2 }}>{p.name}</span>
+            {sub ? <span style={lbl}>{sub}</span> : null}
+          </div>
+          {inCorso ? <span style={{ ...row, gap: 6, flex: "0 0 auto" }}><span style={{ width: 8, height: 8, borderRadius: 4, background: K.strain, boxShadow: `0 0 0 4px ${K.strain}33` }} /><span style={{ ...caps, fontSize: 10, lineHeight: "14px", color: K.strain }}>Adesso</span></span> : null}
+        </div>
+        {tpl && tpl.exercises.length ? (
+          <>
+            <div style={{ ...row, justifyContent: "space-between", paddingLeft: 56 }}><span style={capSm}>Esercizi</span><span style={capSm}>Ultima volta</span></div>
+            {exLines(tpl.exercises, { date: p.date, ticks })}
+          </>
+        ) : null}
+      </div>
+    );
+  };
+  const lifeOggi = (x: Day) => {
+    const isT = x.date === DATA.today, dn = doneOfDay(x), pl = isT ? plansOn(x.date) : [];
+    const lw = isT ? x.workouts.map((w: Workout, i: number) => ({ w, i })).filter((e) => (e.w.status as string) === "in corso") : [];
+    const cur = pl.filter((p) => inSlot(p) || lw.some((e) => kindOf(e.w) === p.kind)), todo = pl.filter((p) => !cur.includes(p));
+    const lwOnly = lw.filter((e) => !cur.some((p) => p.kind === kindOf(e.w)));
+    if (!dn.length && !pl.length && !lw.length) return null;
+    return (
+      <div aria-label="Allenamenti di oggi" style={st(0)}>
+        {dn.length ? <>{groupHead("Fatto", "kcal")}{dn.map((e) => oggiDone(x, e.w, e.i))}</> : null}
+        {cur.length || lwOnly.length ? (
+          <>
+            {groupHead("In corso")}
+            {lwOnly.map((e) => oggiPlan({ date: x.date, time: e.w.time, name: e.w.name, kind: kindOf(e.w), detail: null, partners: e.w.partners ?? null }, `live${e.i}`, true))}
+            {cur.map((p, j) => oggiPlan(p, `cur${j}`, true))}
+          </>
+        ) : null}
+        {todo.length ? <>{groupHead("Da fare")}{todo.map((p, j) => oggiPlan(p, `todo${j}`, false))}</> : null}
+        {isT && dn.length && !pl.length && !lw.length ? (
+          <div aria-label="Tutto fatto oggi" style={{ ...row, gap: 8, padding: "12px 0 0", borderTop: `1px solid ${K.line}` }}>{ic("check", K.up, 16, 2.6)}<span style={{ fontSize: 14, lineHeight: "20px", fontWeight: 600, color: K.t1 }}>Tutto fatto oggi</span></div>
+        ) : null}
+      </div>
+    );
+  };
+  // gym session page: the exercises first
+  const lifeExCard = (list: TEx[]) => (
+    <div aria-label="Esercizi" style={{ ...card, ...st(2) }}>
+      <span style={{ ...capLbl(12), paddingBottom: 4 }}>Esercizi</span>
+      {list.map((e, i) => (
+        <div key={i} style={{ ...row, justifyContent: "space-between", gap: 10, padding: "9px 0", borderTop: i ? `1px solid ${K.line}` : "none" }}>
+          <span style={{ ...row, gap: 10, minWidth: 0 }}>{ic("dumbbell", K.t3, 16)}<span style={{ ...ell, fontSize: 15, lineHeight: "20px", color: K.t1 }}>{e.name}</span></span>
+          {doseTxt(e) || kgTxt(e) ? <span style={{ ...numStyle(17), flex: "0 0 auto", whiteSpace: "nowrap" }}>{[doseTxt(e), kgTxt(e)].filter(Boolean).join(" · ")}</span> : <span style={{ ...lbl, flex: "0 0 auto", whiteSpace: "nowrap" }}>{e.note ?? ""}</span>}
+        </div>
+      ))}
+    </div>
+  );
+  // the Note card only repeats the exercises when most of their names are in it
+  const noteDup = (date: string, w: Workout) => {
+    const ex = exOfW(date, w), t = (w.detail ?? "").toLowerCase();
+    if (!ex.length || !t) return false;
+    return ex.filter((e) => t.includes(e.name.toLowerCase().split(/[\s(]/)[0])).length >= Math.ceil(ex.length / 2);
+  };
+// ==== FRAGMENT: fitness ====
+  // =================== Life: ALLENAMENTO (settimana, 8 settimane, esercizi principali, volume) ===================
+  const catOf = (k: string | null | undefined, name: string): "gym" | "sport" | null =>
+    isGym(k) ? "gym" : ["padel", "beach", "tennis", "sport", "calcio"].includes(k ?? "") || /padel|tennis|beach|calcio|torneo|partita/i.test(name) ? "sport" : null;
+  const BODY_CAT: Record<string, "gym" | "sport"> = { "strength training": "gym", workout: "gym", crossfit: "gym", weights: "gym", tennis: "sport", padel: "sport", "beach volleyball": "sport", sport: "sport" };
+  const TSESS = TRAINING.sessions as { date: string; time: string | null; kind: string }[];
+  // sessions of one day: the app's day when it has it, else the larger of training log and Fitbit (data/body) per category
+  const dayCount = (date: string) => {
+    const dd = dayOf(date);
+    if (dd) { const ws = dd.workouts.filter((w: Workout) => w.status === "fatto"); return { gym: ws.filter((w: Workout) => catOf(kindOf(w), w.name) === "gym").length, sport: ws.filter((w: Workout) => catOf(kindOf(w), w.name) === "sport").length }; }
+    const ts = TSESS.filter((s) => s.date === date), bs = ((BODY_DAYS as Day[]).find((b) => b.date === date)?.workouts ?? []).map((w: Workout) => BODY_CAT[w.name.toLowerCase()] ?? null);
+    const n = (c: "gym" | "sport") => Math.max(ts.filter((s) => catOf(s.kind, "") === c).length, bs.filter((q) => q === c).length);
+    return { gym: n("gym"), sport: n("sport") };
+  };
+  const firstData = [...(BODY_DAYS as Day[]).map((b) => b.date), ...TSESS.map((s) => s.date), ...days.map((x: Day) => x.date)].sort()[0] ?? DATA.today;
+  const W8 = Array.from({ length: 8 }, (_, i) => addDays(weekStart, -7 * (7 - i))).map((ws) => {
+    const ds = Array.from({ length: 7 }, (_, j) => addDays(ws, j)).filter((x) => x <= DATA.today && x >= firstData);
+    const c = ds.map(dayCount);
+    return { ws, none: !ds.length, gym: sum(c.map((q) => q.gym)), sport: sum(c.map((q) => q.sport)) };
+  });
+  const goal8 = gymGoal ?? 2;
+  const w8Chart = (() => {
+    const mx = Math.max(goal8 + 1, ...W8.map((w) => w.gym + w.sport));
+    const VW = 340, VH = 150, pt = 16, pb = 20, step = VW / 8, bw = 22;
+    const Y = (v: number) => pt + (1 - v / mx) * (VH - pt - pb);
+    return (
+      <svg aria-label="Sessioni per settimana" width="100%" viewBox={`0 0 ${VW} ${VH}`} style={{ display: "block" }}>
+        {W8.map((w, i) => {
+          const x = i * step + (step - bw) / 2, tot = w.gym + w.sport, cur = i === 7, p = parts(w.ws);
+          return (
+            <g key={w.ws}>
+              {w.none ? <rect x={x} y={Y(0) - 2} width={bw} height={2} rx={1} fill={K.track} /> : (
+                <>
+                  {w.gym ? <rect x={x} y={Y(w.gym)} width={bw} height={Y(0) - Y(w.gym)} rx={3} fill={K.strain} /> : null}
+                  {w.sport ? <rect x={x} y={Y(tot)} width={bw} height={Y(w.gym) - Y(tot) - (w.gym ? 2 : 0)} rx={3} fill={K.teal} /> : null}
+                  {!tot ? <rect x={x} y={Y(0) - 2} width={bw} height={2} rx={1} fill={K.t3} /> : null}
+                  <text x={x + bw / 2} y={Y(tot) - 4} fontSize={11} fontWeight={700} textAnchor="middle" fill={K.t1}>{tot}</text>
+                </>
+              )}
+              <text x={x + bw / 2} y={VH - 5} fontSize={10} fontWeight={cur ? 700 : 500} textAnchor="middle" fill={cur ? K.t1 : K.t3}>{`${p.dd}/${p.m}`}</text>
+            </g>
+          );
+        })}
+        <line x1={0} x2={VW} y1={Y(goal8)} y2={Y(goal8)} stroke={K.t1} strokeOpacity={0.55} strokeWidth={1.2} strokeDasharray="4 4" />
+      </svg>
+    );
+  })();
+  // this week, Mon–Sun: filled = done, dashed = planned
+  const weekStrip = (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0,1fr))", gap: 2 }}>
+      {weekDates.map((x) => {
+        const p = parts(x), isT = x === DATA.today;
+        const dn = (dayOf(x)?.workouts ?? []).filter((w: Workout) => w.status === "fatto" && catOf(kindOf(w), w.name) !== null);
+        const pl = x >= DATA.today ? plansOn(x).filter((q) => catOf(q.kind, q.name) !== null) : [];
+        const sp = dn.length ? catOf(kindOf(dn[0]), dn[0].name) === "sport" : pl.length ? catOf(pl[0].kind, pl[0].name) === "sport" : false;
+        const col = sp ? K.teal : K.strain, icn = sp ? "ball" : "dumbbell";
+        return (
+          <div key={x} aria-label={`${WD[p.w]} ${dn.length} fatte ${pl.length} in programma`} style={{ ...st(5), alignItems: "center" }}>
+            <span style={{ ...caps, fontSize: 10, lineHeight: "12px", letterSpacing: "0.06em", color: isT ? K.t1 : K.t3 }}>{WD[p.w]}</span>
+            <div style={{ width: 36, height: 36, boxSizing: "border-box", borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center", background: dn.length ? col : "transparent", border: dn.length ? "none" : `1.5px ${pl.length ? "dashed" : "solid"} ${pl.length ? col : K.track}` }}>
+              {dn.length > 1 ? <span style={numStyle(17, K.bg)}>{dn.length}</span> : dn.length ? ic(icn, K.bg, 18, 2.2) : pl.length ? ic(icn, col, 16, 1.8) : null}
+            </div>
+            <span style={{ ...numStyle(12, isT ? K.t1 : K.t3) }}>{p.dd}</span>
+            <span style={{ width: 4, height: 4, borderRadius: 2, background: isT ? K.t1 : "transparent" }} />
+          </div>
+        );
+      })}
+    </div>
+  );
+  // main lifts: latest load × reps, a small line of the loads, change over 4 weeks only when there is a load from 4 weeks ago (else one "nuovo" line for the block)
+  const liftOrder = [...TPLANS.flatMap((t) => t.exercises.map((e) => exKey(e.name)))];
+  const liftRows = Array.from(new Set(LIFTS.map((l) => l.ex)))
+    .sort((a, b) => { const ia = liftOrder.indexOf(exKey(a)), ib = liftOrder.indexOf(exKey(b)); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); })
+    .map((ex) => {
+      const ls = LIFTS.filter((l) => l.ex === ex).sort((a, b) => (a.date < b.date ? -1 : 1)), last = ls[ls.length - 1], ago = addDays(DATA.today, -28);
+      const then = [...ls].reverse().find((l) => l.date <= ago) ?? null;
+      return { ex, ls, last, ch: then ? last.kg - then.kg : null };
+    });
+  const spark = (vals: number[]) => {
+    const VW = 64, VH = 26, lo = Math.min(...vals), hi = Math.max(...vals);
+    const X = (i: number) => (vals.length < 2 ? VW / 2 : 4 + (i * (VW - 8)) / (vals.length - 1)), Y = (v: number) => (hi === lo ? VH / 2 : 4 + (1 - (v - lo) / (hi - lo)) * (VH - 8));
+    return (
+      <svg width={VW} height={VH} viewBox={`0 0 ${VW} ${VH}`} style={{ display: "block", flex: "0 0 auto" }}>
+        {vals.length > 1 ? <polyline points={vals.map((v, i) => `${X(i)},${Y(v)}`).join(" ")} fill="none" stroke={K.strain} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" /> : <line x1={4} x2={VW - 4} y1={VH / 2} y2={VH / 2} stroke={K.track} strokeWidth={2} strokeDasharray="2 4" />}
+        <circle cx={X(vals.length - 1)} cy={Y(vals[vals.length - 1])} r={3} fill={K.strain} />
+      </svg>
+    );
+  };
+  const sDate = (x: string) => { const p = parts(x); return `${p.dd} ${MO[p.m - 1].slice(0, 3)}`; };
+  const volSessions = Array.from(new Set(LIFTS.map((l) => l.date))).sort().map((dt) => ({ date: dt, kg: sum(LIFTS.filter((l) => l.date === dt).map((l) => (isNum(l.sets) && isNum(l.reps) ? l.sets * l.reps * l.kg : null))) })).filter((v) => v.kg > 0);
+  const lifeFitness = (
+    <div style={st(14)}>
+      {sectionTitle("Questa settimana", <span style={lbl}>{`${parts(weekStart).dd}–${parts(weekEnd).dd} ${MO[parts(weekEnd).m - 1].slice(0, 3)}`}</span>)}
+      <div aria-label="Settimana" style={{ ...card, ...st(14) }}>
+        {weekStrip}
+        {goalRow("dumbbell", GYM, gymWeek, gymGoal, gymPend, K.strain)}
+        {goalRow("ball", sportLabel, sportWeek, sportGoal, sportPend, K.teal)}
+        {fitWeek.length ? (
+          <div style={st(0)}>
+            {groupHead("Sessioni", "kcal")}
+            {fitWeek.slice().reverse().map((e) => { const dd = dayOf(e.date); const i = Number(e.key.split("w").pop()); return dd ? oggiDone(dd, e.w, i, true) : null; })}
+          </div>
+        ) : <span style={lbl}>Nessun allenamento registrato questa settimana.</span>}
+      </div>
+
+      {sectionTitle("Ultime 8 settimane")}
+      <div aria-label="Ultime 8 settimane" style={{ ...card, ...st(10) }}>
+        {w8Chart}
+        {legend([{ label: GYM, color: K.strain }, { label: "Partite", color: K.teal }, { label: `Obiettivo ${goal8} a settimana`, color: K.t2 }])}
+      </div>
+
+      {liftRows.length ? (
+        <>
+          <div aria-label="Forza" style={st(14)}>
+          {sectionTitle("Esercizi principali", <span style={lbl}>{`ultima ${sDate(liftRows.reduce((a, r) => (r.last.date > a ? r.last.date : a), liftRows[0].last.date))}`}</span>)}
+          <div aria-label="Esercizi principali" style={{ ...card, padding: "4px 16px" }}>
+            {liftRows.map((r, i) => (
+              <div key={r.ex} style={{ ...row, gap: 12, padding: "12px 0", borderBottom: i < liftRows.length - 1 ? `1px solid ${K.line}` : "none" }}>
+                <div style={{ ...st(2), flex: 1 }}>
+                  <span style={{ ...ell, fontSize: 15, lineHeight: "20px", fontWeight: 600, color: K.t1 }}>{r.ex}</span>
+                  {r.ch !== null ? <span style={{ ...ell, ...lbl, color: r.ch > 0 ? K.up : r.ch < 0 ? K.warn : K.t2 }}>{r.ch === 0 ? "stabile in 4 sett." : `${r.ch > 0 ? "+" : "−"}${fmt(Math.abs(r.ch))} kg in 4 sett.`}</span> : null}
+                </div>
+                {spark(r.ls.map((l) => l.kg))}
+                <div style={{ ...st(0), alignItems: "flex-end", flex: "0 0 auto", minWidth: 100 }}>
+                  <span style={numStyle(20)}>{`${fmt(r.last.kg)} kg`}</span>
+                  <span style={lbl}>{isNum(r.last.sets) && isNum(r.last.reps) ? `${r.last.sets}×${r.last.reps}` : "serie non dette"}</span>
+                </div>
+              </div>
+            ))}
+            {liftRows.some((r) => r.ch === null) ? <span style={{ ...lbl, display: "block", padding: "10px 0 12px", borderTop: `1px solid ${K.line}` }}>{liftRows.every((r) => r.ch === null) ? "Tutto nuovo: il confronto con 4 settimane fa arriva con le prossime sedute." : "Gli esercizi senza variazione sono nuovi: il confronto arriva con le prossime sedute."}</span> : null}
+          </div>
+          </div>
+        </>
+      ) : null}
+
+      {volSessions.length >= 3 ? (
+        <>
+          {sectionTitle("Volume", <span style={lbl}>kg sollevati per seduta</span>)}
+          <div aria-label="Volume" style={card}>{weekBars(volSessions.slice(-7).map((v) => v.kg), Math.max(...volSessions.map((v) => v.kg)), () => K.strain, (v) => `${r1(v / 1000).toLocaleString("it-IT")}t`)}</div>
+        </>
+      ) : null}
+
+      {sectionTitle("Prossime sessioni")}
+      {fitPlans.length ? (
+        <div style={{ ...card, padding: "4px 16px" }}>
+          {fitPlans.map((p, i) => (
+            <div key={`${p.date}${p.name}`} style={{ ...st(4), padding: "12px 0", borderBottom: i < fitPlans.length - 1 ? `1px solid ${K.line}` : "none" }}>
+              <div style={{ ...row, gap: 10 }}>
+                {ic(isMatch(p.kind, p.name) ? "ball" : p.kind === "palestra" ? "dumbbell" : "bolt", isMatch(p.kind, p.name) ? K.teal : K.strain, 18)}
+                <span style={{ ...ell, flex: 1, fontSize: 15, fontWeight: 600, color: K.t1 }}>{p.name}</span>
+                <span style={{ ...lbl, flex: "0 0 auto", textTransform: "capitalize" }}>{[dayWord(p.date), p.time].filter(Boolean).join(" · ")}</span>
+              </div>
+              <span style={{ ...txt, paddingLeft: 28 }}>{planTip(p)}</span>
+            </div>
+          ))}
+        </div>
+      ) : <span style={{ ...lbl, padding: "0 4px" }}>Nessuna sessione in calendario nei prossimi giorni.</span>}
+
+      <div style={{ borderRadius: 18, padding: 1, background: `linear-gradient(135deg, ${K.strain}, ${K.inA})` }}>
+        <div style={{ ...st(10), borderRadius: 17, padding: 18, background: K.mid }}>
+          <span style={{ ...row, gap: 8 }}>{ic("dumbbell", K.strain, 18, 2)}<span style={{ ...caps, fontSize: 11, color: K.t2 }}>Il verdetto di {COACH}</span></span>
+          <span style={{ fontSize: 22, lineHeight: "27px", fontWeight: 800, color: K.t1 }}>{fitHeadline}</span>
+          <span style={{ ...txt, color: K.t1 }}>{fitVerdict}</span>
+        </div>
+      </div>
+      {sectionTitle("Le 3 priorità della settimana")}
+      <div style={{ ...card, padding: "4px 16px" }}>
+        {fitActions.map((a, i) => (
+          <div key={i} style={{ ...row, alignItems: "flex-start", gap: 12, padding: "13px 0", borderBottom: i < fitActions.length - 1 ? `1px solid ${K.line}` : "none" }}>
+            <span style={{ ...numStyle(20, K.strain), width: 18, flex: "0 0 auto" }}>{i + 1}</span>
+            <span style={{ ...txt, flex: 1, color: K.t1 }}>{a}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );

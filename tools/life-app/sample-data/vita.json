@@ -1,0 +1,26 @@
+{
+ "updated": "2030-01-14",
+ "status": "bene",
+ "line": "Esempio: tempo per te.",
+ "source": "esempio",
+ "sfere": [
+  {
+   "key": "hobby",
+   "name": "Hobby",
+   "status": "bene",
+   "line": "Esempio: un hobby attivo.",
+   "steps": [
+    "Pianifica il weekend (esempio)."
+   ]
+  }
+ ],
+ "todo": [
+  {
+   "titolo": "Cosa da fare di esempio",
+   "quando": "questa settimana",
+   "data": "2030-01-19",
+   "priorita": "media",
+   "fonte": "personal-tasks"
+  }
+ ]
+}

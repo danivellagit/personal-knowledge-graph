@@ -73,6 +73,18 @@ Agent memory files link to it with `person: "[[_me]]"` so they are never orphans
    conversation starts and commits + pushes after every change: a bot that runs no hooks has to
    do it itself, or memory written on one surface never reaches the others.
 
+8. **The Life App data rule** (only if you use `tools/life-app/`). Each life area has one owner
+   agent and one file in `data/happiness/`: `corpo.json` (fitness-coach), `medico.json`
+   (health-advisor), `mente.json` (psychologist), `lavoro.json` (founder-assistant, linkedin-coach),
+   `finanze.json` (accountant), `relazioni.json` / `crescita.json` / `vita.json` (best-friend), plus
+   `weekly-summary.json` (whoever writes the Monday recap). An agent writes ONLY its own file, only
+   facts it has a source for (the sample values are fake: replace them, never extend them), and
+   after writing runs `python3 tools/happiness.py validate` and then `bash tools/life-app/publish.sh`.
+   The generated `*.md` recaps next to the JSON are rebuilt by the tool, never edited by hand.
+   Nothing from these files goes anywhere except, encrypted, into the app. Area names and the
+   agent shown for each area come from `life_app.areas` in `config.local.yml`. Field reference:
+   [`tools/life-app/DATA-MODEL.md`](../tools/life-app/DATA-MODEL.md).
+
 ## The agents
 
 | agent | job | channel | optional dependencies |

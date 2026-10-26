@@ -1,0 +1,19 @@
+{
+ "week": "2030-W03",
+ "from": "2030-01-07",
+ "to": "2030-01-13",
+ "generatedAt": "2030-01-14T08:00",
+ "conclusion": [
+  "Settimana di esempio: questi testi sono finti.",
+  "Il tuo agente li riscrive ogni lunedì."
+ ],
+ "good": [
+  "Esempio: sonno regolare."
+ ],
+ "bad": [
+  "Esempio: poco movimento."
+ ],
+ "improve": [
+  "Esempio: due allenamenti."
+ ]
+}

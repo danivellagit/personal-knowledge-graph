@@ -106,6 +106,12 @@ it, and each optional tool says "not configured" instead of failing.
   A React page with one `DATA` block (an example ships with fake data) is encrypted whole and
   published as a ciphertext-only site on GitHub Pages; the block can be filled from the body
   layer and the food log (`tools/publish_health_app.sh`, `tools/health-app/`).
+- **The Life App**: the whole life on one screen. One number, *Life Health*, over seven areas
+  (body, health, work, money, relationships, growth, daily life), each fed by the agent that owns
+  it through one JSON file in `data/happiness/`. Same encryption and ciphertext-only Pages site as
+  the health app, which it contains as its Corpo/Salute tabs. It ships with fake sample data, so it
+  builds on a fresh clone: `bash tools/life-app/setup.sh` (details in
+  [`tools/life-app/README.md`](tools/life-app/README.md)).
 
 ## Get started
 
@@ -129,7 +135,16 @@ it, and each optional tool says "not configured" instead of failing.
    The agent reads [`AGENTS.md`](AGENTS.md) / [`CLAUDE.md`](CLAUDE.md), loads the contract, the
    anatomy and the skills, and knows what to do.
 
-4. **Optional:** enable the git-sync hook (`.claude/hooks/git-sync.sh`, see `CLAUDE.md`) if you
+4. **Optional: the Life App on your phone.**
+   ```bash
+   bash tools/life-app/setup.sh --dry-run        # see what it would do
+   bash tools/life-app/setup.sh                  # name, password, sample data, first build
+   bash tools/life-app/setup.sh --create-site    # + your own public Pages repo (needs gh auth login)
+   ```
+   The password stays in `~/.secrets/`, your data in `data/happiness/` (gitignored); only ciphertext
+   is ever pushed, and only to the separate site repo.
+
+5. **Optional:** enable the git-sync hook (`.claude/hooks/git-sync.sh`, see `CLAUDE.md`) if you
    keep a private remote, and switch on the modules you want in `config.local.yml`.
 
 ## Layout
@@ -156,6 +171,9 @@ personal-knowledge-graph/
     location.py  location-pull.sh  # optional: the location layer
     sleep_fields.py              # optional: per-night sleep fields from the wearable CLI
     publish_health_app.sh  health-app/   # optional: the encrypted phone dashboard
+    life-app/                    # optional: the Life App (setup.sh, publish.sh, sample-data/, README)
+    happiness.py                 # validate / init / inject / recap data/happiness/*.json for the Life App
+    template_sync.py             # maintainers: bring app updates from an upstream instance, leak-checked
   skills/
     remember-people/             # the core engine
     graph-audit/                 # the weekly look from above
@@ -172,6 +190,7 @@ personal-knowledge-graph/
     _gaps/                              # the gap register
     _followups/                         # the work digest (no personal content, ever)
     body/  food/  training/  agents/    # only if you enable those modules
+    happiness/                          # the Life App's data: one JSON per agent (from sample-data/)
 ```
 
 ## Rules that keep it alive

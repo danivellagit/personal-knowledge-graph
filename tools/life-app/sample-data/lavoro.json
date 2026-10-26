@@ -1,0 +1,64 @@
+{
+ "updated": "2030-01-14",
+ "priorita": {
+  "status": "da seguire",
+  "line": "Esempio: tre priorità chiare per la settimana.",
+  "steps": [
+   "Scegli la priorità numero uno (esempio)."
+  ],
+  "source": "esempio"
+ },
+ "tip": "Blocca due ore per la priorità numero uno (esempio).",
+ "source": "esempio",
+ "priorities": [
+  {
+   "rank": 1,
+   "titolo": "Progetto di esempio",
+   "status": "da seguire",
+   "line": "In corso",
+   "q4": null,
+   "next": "Prossimo passo di esempio",
+   "quando": "2030-01-18",
+   "source": "esempio"
+  }
+ ],
+ "sfere": [
+  {
+   "key": "clienti",
+   "name": "Clienti",
+   "status": "bene",
+   "line": "Esempio: rapporti buoni.",
+   "steps": [
+    "Una chiamata di esempio."
+   ]
+  },
+  {
+   "key": "team",
+   "name": "Team",
+   "status": "da seguire",
+   "line": "Esempio: allineamento da migliorare.",
+   "steps": [
+    "Un 1:1 di esempio."
+   ]
+  }
+ ],
+ "wins": [
+  {
+   "titolo": "Risultato di esempio",
+   "data": "2030-01-12",
+   "source": "esempio"
+  }
+ ],
+ "soddisfazione": null,
+ "linkedin": null,
+ "openLoops": [
+  "Cosa aperta di esempio"
+ ],
+ "events": [
+  {
+   "date": "2030-01-17",
+   "time": "10:00",
+   "name": "Riunione di esempio"
+  }
+ ]
+}
