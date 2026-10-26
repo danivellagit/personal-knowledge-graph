@@ -771,7 +771,7 @@ export default function App() {
   })();
   const altro = (
     <div>
-      {header("Altro", AREAS.filter((a) => ["relazioni", "crescita", "vita"].includes(a.id)).map((a) => a.name).join(", "))}
+      {header("Altro", ((ns: string[]) => ns.length > 1 ? `${ns.slice(0, -1).map((n, i) => (i ? n.toLowerCase() : n)).join(", ")} e ${ns[ns.length - 1].toLowerCase()}` : ns[0] ?? "")(AREAS.filter((a) => ["relazioni", "crescita", "vita"].includes(a.id)).map((a) => a.name)))}
       <div style={{ ...col(14), padding: "14px 16px 0" }}>
         <div style={{ ...card, padding: "2px 16px" }}>{(["relazioni", "crescita", "vita"] as AreaId[]).filter((id) => AREAS.some((a) => a.id === id)).map((id, i, ids) => areaRow(area(id), i === ids.length - 1))}</div>
       </div>

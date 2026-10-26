@@ -41,7 +41,13 @@ if (!saluteSrc || !existsSync(saluteSrc)) { console.error("missing health page s
 // It is never edited on disk: build-time patches below only add an "embedded" mode (props) used by the Life App
 // Corpo and Salute pages. Without props the component behaves exactly as in the Salute app.
 // Every patch must match exactly; if the health Page changes a patched line the build fails loudly (fix the anchor here).
-const s = readFileSync(saluteSrc, "utf8");
+// pages that predate the config globals (e.g. an instance's own copy of the page kept elsewhere) get the three
+// declarations the build-time fragments use; the page in src/health/ declares them itself
+const s0 = readFileSync(saluteSrc, "utf8");
+const shim = [["TZ", "__LIFE_TZ__", "Europe/Rome"], ["COACH", "__LIFE_COACH__", "il coach"], ["GYM", "__LIFE_GYM__", "Palestra"]]
+  .filter(([n]) => !new RegExp(`^const ${n}\\b`, "m").test(s0))
+  .map(([n, g, d]) => `const ${n}: string = (typeof globalThis !== "undefined" ? (globalThis as unknown as { ${g}?: string }).${g} : undefined) ?? ${JSON.stringify(d)};`);
+const s = shim.length ? s0.replace(/^((?:import [^\n]*\n)+)/m, (m) => m + shim.join("\n") + "\n") : s0;
 if (!s.includes("export default function App()") || !s.includes("DATA:START") || !s.includes("const MEDICO")) { console.error("health Page source: App / DATA / MEDICO not found"); process.exit(3); }
 let full = s;
 const patch = (name, from, to, count = 1) => {
@@ -416,9 +422,12 @@ const coach = (CFG.areas.find((a) => a.id === "corpo")?.agents || "").split(",")
 writeFileSync(join(work, "avatar-init.js"), (AV && existsSync(AV)
   ? `globalThis.__SALUTE_AVATAR__ = "data:${avMime};base64,${readFileSync(AV).toString("base64")}";\n` : "globalThis.__SALUTE_AVATAR__ = null;\n")
   + `globalThis.__LIFE_TZ__ = ${JSON.stringify(CFG.timezone)};\nglobalThis.__LIFE_COACH__ = ${JSON.stringify(coach)};\nglobalThis.__LIFE_GYM__ = ${JSON.stringify(CFG.gym_label)};\n`);
-// the template has no photo feature: the hair-photo list is always empty
-writeFileSync(join(work, "hair-init.js"), "globalThis.__SALUTE_HAIR_PHOTOS__ = [];\n");
-const hairN = 0;
+// photos for the Capelli view (optional hook, life_app.hooks.hair_photos): an ES module OUTSIDE the data that exports
+// writeHairInit(workDir) -> count and writes <workDir>/hair-init.js (globalThis.__SALUTE_HAIR_PHOTOS__ = [...]), embedded only
+// inside the encrypted bundle. No hook: an empty list (the view shows placeholders).
+let hairN = 0;
+if (CFG.hooks.hair_photos && existsSync(CFG.hooks.hair_photos)) hairN = await (await import(pathToFileURL(CFG.hooks.hair_photos).href)).writeHairInit(work);
+else writeFileSync(join(work, "hair-init.js"), "globalThis.__SALUTE_HAIR_PHOTOS__ = [];\n");
 // life-log write-back (README "Write-back"): repo + fine-grained token (Contents r/w on that repo only), embedded ONLY in the
 // encrypted bundle. LIFE_LOG_MOCK=1 -> fake in-memory API; LIFE_LOG_OFF=1 or no token file -> queue on the phone only.
 const LOG_TOKEN_FILE = process.env.LIFE_LOG_TOKEN_FILE || CFG.writeback.token_file;
@@ -453,7 +462,7 @@ const P = { s: salt.toString("base64"), i: ITER, v: iv.toString("base64"), c: ct
 
 rmSync(out, { recursive: true, force: true }); mkdirSync(join(out, "icons"), { recursive: true });
 const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
-const shell = readFileSync(join(HERE, "shell.html"), "utf8").replace(/__APP_NAME__/g, () => esc(CFG.app_name)).replace(/__LANG__/g, () => esc(CFG.lang));
+const shell = readFileSync(join(HERE, "shell.html"), "utf8").replace(/__APP_NAME__/g, () => esc(CFG.app_name)).replace(/__LANG__/g, () => esc(CFG.lang)).replace(/__USERNAME__/g, () => esc(CFG.login_username));
 writeFileSync(join(out, "index.html"), shell.replace("__PAYLOAD__", () => JSON.stringify(P)));
 const man = JSON.parse(readFileSync(join(HERE, "manifest.webmanifest"), "utf8"));
 writeFileSync(join(out, "manifest.webmanifest"), JSON.stringify({ ...man, name: CFG.app_name, short_name: CFG.app_name, description: CFG.description, lang: CFG.lang }, null, 2) + "\n");

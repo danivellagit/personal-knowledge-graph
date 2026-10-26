@@ -21,9 +21,10 @@ const AVATAR: string | null = typeof globalThis !== "undefined" ? ((globalThis a
 const TZ: string = (typeof globalThis !== "undefined" ? (globalThis as unknown as { __LIFE_TZ__?: string }).__LIFE_TZ__ : undefined) ?? "Europe/Rome";
 const COACH: string = (typeof globalThis !== "undefined" ? (globalThis as unknown as { __LIFE_COACH__?: string }).__LIFE_COACH__ : undefined) ?? "il coach";
 const GYM: string = (typeof globalThis !== "undefined" ? (globalThis as unknown as { __LIFE_GYM__?: string }).__LIFE_GYM__ : undefined) ?? "Palestra";
-// foto (vista Capelli): non usate nel template, lista sempre vuota
+// foto (vista Capelli): le inserisce solo la build cifrata, dal hook life_app.hooks.hair_photos (mai in git):
+// [{ date, n, file, bytes, dataUrl }] dalla più vecchia. Senza hook: lista vuota, si vedono i segnaposto.
 type HairPhoto = { date: string; n?: number; file?: string; bytes?: number; pinned?: boolean; dataUrl: string };
-const HAIR_PHOTOS: HairPhoto[] = [];
+const HAIR_PHOTOS: HairPhoto[] = (() => { const g: unknown = typeof globalThis !== "undefined" ? (globalThis as unknown as { __SALUTE_HAIR_PHOTOS__?: unknown }).__SALUTE_HAIR_PHOTOS__ : null; return Array.isArray(g) ? (g as HairPhoto[]).filter((p: HairPhoto) => !!p && typeof p.date === "string" && typeof p.dataUrl === "string") : []; })();
 
 // ==== DATA:START (sostituire solo questo blocco ad ogni aggiornamento; tenere solo gli ultimi 7 giorni) ====
 // SCHEMA (i campi con ? sono opzionali: se mancano o sono null la pagina li salta o mostra "—")
@@ -4154,11 +4155,71 @@ export default function App() {
   const psText = psDays === null ? "" : psDays > 1 ? `finisce tra ${psDays} giorni` : psDays === 1 ? "finisce domani" : psDays === 0 ? "finisce oggi" : "finita";
   const pMoments = PILLS ? PILLS.moments : [];
 
-  // Capelli: vista personale non inclusa nel template
-  const hairScreen = backBar("Capelli");
+  // Capelli (MEDICO.hair, all names and doses from medico.json; photos only through the build hook life_app.hooks.hair_photos)
+  // =================== CAPELLI ===================
+  // foto per data: una griglia per giorno; confronto = punto di partenza (serie fissata o la più vecchia) contro l'ultima
+  const hDates = Array.from(new Set(HAIR_PHOTOS.map((x: HairPhoto) => x.date))).sort();
+  const hBase = HAIR_PHOTOS.find((x: HairPhoto) => x.pinned)?.date ?? hDates[0] ?? null;
+  const hLast = hDates.length ? hDates[hDates.length - 1] : null;
+  const hOf = (date: string | null) => (date ? HAIR_PHOTOS.filter((x: HairPhoto) => x.date === date).sort((a: HairPhoto, b: HairPhoto) => (a.n ?? 1) - (b.n ?? 1)) : []);
+  const hName = (date: string, n: number) => { const set = HAIR ? HAIR.photoSets.find((s: HairSet) => s.date === date) : null; return set?.slots[n - 1]?.label ?? HAIR?.photoProtocol.angles[n - 1]?.label ?? `Foto ${n}`; };
+  const thumb = (x: HairPhoto | undefined, date: string | null, big = false) => x ? (
+    <button key={`${x.date}-${x.n ?? 1}`} onClick={() => setHairZoom({ src: x.dataUrl, label: `${hName(x.date, x.n ?? 1)} · ${hYear(x.date)}` })} aria-label={`Foto ${x.n ?? 1}, ${hYear(x.date)}`} style={{ ...btn, display: "block", width: "100%", aspectRatio: big ? "3 / 4" : "1 / 1", borderRadius: 10, overflow: "hidden", border: `1px solid ${K.line}`, background: K.mid }}>
+      <img src={x.dataUrl} alt={`Capelli ${x.date}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+    </button>
+  ) : (
+    <div style={{ width: "100%", boxSizing: "border-box", aspectRatio: big ? "3 / 4" : "1 / 1", borderRadius: 10, border: `1px dashed ${K.track}`, background: K.mid, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 8 }}>
+      <span style={lbl}>{date ? `Foto del ${hShort(date)}` : "Nessuna foto"}</span>
+    </div>
+  );
+  const hairScreen = HAIR ? (() => {
+    // the supply to reorder: the first one that is not the counted prescription stock (PILLS.stock)
+    const fol = HAIR.supply.find((s) => !PS || s.name !== PS.name);
+    const next = HAIR.photoProtocol.next;
+    const baseSet = hOf(hBase), lastSet = hLast && hLast !== hBase ? hOf(hLast) : [];
+    const slots = Math.max(1, baseSet.length, lastSet.length);
+    const sI = Math.min(cmpSlot, slots - 1);
+    return (
+      <div style={st(14)}>
+        {backBar("Capelli")}
+        {plain("Terapia", <>
+          {HAIR.therapy.map((t, i) => line(t.key, t.name, (t.when ?? "").toLowerCase(), i === HAIR.therapy.length - 1))}
+        </>)}
+        {plain("Prossime cose", <>
+          {PS ? line("ricetta", `Ricetta ${PS.name}`, psOut ? `finisce il ${hShort(psOut)}` : psText, false) : null}
+          {line("foto", "Foto dei capelli", hShort(next), !fol)}
+          {fol && fol.next ? line("fol", `Riordino ${fol.name}`, `verso il ${hShort(fol.next)}`, true) : null}
+        </>)}
+        <div style={{ ...card, ...st(12) }}>
+          <span style={capLbl(12)}>Confronto</span>
+          <div style={{ ...two, gap: 10 }}>
+            <div style={st(6)}>{thumb(baseSet[sI], hBase, true)}<span style={{ ...lbl, color: K.t2 }}>Prima · {hBase ? hYear(hBase) : "-"}</span></div>
+            <div style={st(6)}>{thumb(lastSet[sI], lastSet.length ? hLast : next, true)}<span style={{ ...lbl, color: K.t2 }}>Ultima · {lastSet.length && hLast ? hYear(hLast) : `da fare il ${hShort(next)}`}</span></div>
+          </div>
+          {slots > 1 ? chips(Array.from({ length: slots }, (_: unknown, i: number) => chip(String(i + 1), i === sI, () => setCmpSlot(i), `s${i}`))) : null}
+        </div>
+        {[...hDates].reverse().map((dt: string) => (
+          <div key={dt} style={{ ...card, ...st(10) }}>
+            <span style={capLbl(12)}>{hYear(dt)}</span>
+            <div style={three}>{hOf(dt).map((x: HairPhoto) => thumb(x, dt))}</div>
+          </div>
+        ))}
+        {hDates.length ? null : <div style={{ ...card }}><span style={lbl}>Nessuna foto in questa versione dell'app</span></div>}
+        <button onClick={() => setHairGuide(!hairGuide)} aria-expanded={hairGuide} style={{ ...btn, ...caps, fontSize: 12, color: K.link, alignSelf: "flex-start" }}>{hairGuide ? "Chiudi" : "Come fare le foto"}</button>
+        {hairGuide ? plain("Come fare le foto", HAIR.photoProtocol.angles.map((a, i) => line(a.key, `${i + 1}. ${a.label}`, "", i === HAIR.photoProtocol.angles.length - 1))) : null}
+        {hairZoom ? (
+          <button onClick={() => setHairZoom(null)} aria-label="Chiudi foto" style={{ ...btn, position: "fixed", inset: 0, zIndex: 50, background: `${K.bg}F2`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 16 }}>
+            <img src={hairZoom.src} alt={hairZoom.label} style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: 12, display: "block" }} />
+            <span style={{ ...lbl, color: K.t2 }}>{hairZoom.label}</span>
+          </button>
+        ) : null}
+      </div>
+    );
+  })() : backBar("Capelli");
 
   // =================== PILLOLE (con farmaci e integratori: ogni voce una sola volta) ===================
-  const pOther: { key: string; name: string }[] = [];
+  // therapies that are not a pill already listed in a moment above (e.g. a lotion): shown once, with their own timing
+  const pOther = HAIR ? HAIR.therapy.filter((t) => !pMoments.some((m: PillMoment) => m.items.some((it) => it.link === t.key))) : [];
   const pillsScreen = (
     <div style={st(14)}>
       {backBar("Pillole")}
@@ -4166,7 +4227,7 @@ export default function App() {
       {pillToday}
       {pillSkip}
       {pMoments.map((m: PillMoment) => <div key={m.key}>{plain(m.label, m.items.map((it, i) => line(it.name, it.name, it.dose, i === m.items.length - 1)))}</div>)}
-      {pOther.length ? plain("Sui capelli", pOther.map((t, i) => line(t.key, t.name, "mattina e sera", i === pOther.length - 1))) : null}
+      {pOther.length ? plain("Sui capelli", pOther.map((t, i) => line(t.key, t.name, (("when" in t ? t.when : "") ?? "").toLowerCase(), i === pOther.length - 1))) : null}
       {PILLS && PILLS.hold.length ? plain("Da chiedere al medico di base", PILLS.hold.map((h, i) => line(h.name, h.name, "in pausa", i === PILLS.hold.length - 1))) : null}
     </div>
   );
@@ -4243,7 +4304,7 @@ export default function App() {
   const navIco = (node: ReactNode) => <div style={{ width: 54, height: 44, borderRadius: 10, border: `1px solid ${K.line}`, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto" }}>{node}</div>;
   const lastVisit = visitsSorted[0] ?? null;
   const medRows: { key: string; icon: ReactNode; title: string; sub: string; s: Screen; show: boolean }[] = [
-    { key: "hair", icon: headPic("front", 30, K.t2), title: "Capelli", sub: "", s: { kind: "hair" }, show: false },
+    { key: "hair", icon: headPic("front", 30, K.t2), title: "Capelli", sub: `Foto il ${HAIR ? hShort(HAIR.photoProtocol.next) : "-"}${psOut ? ` · ricetta entro il ${hShort(psOut)}` : ""}`, s: { kind: "hair" }, show: !!HAIR },
     { key: "pills", icon: hIc("pill", K.t2, 22), title: "Pillole", sub: (pNow === "am" ? "Oggi: prese stamattina" : pNow === "pm" ? "Oggi: prese stasera" : pNow === "no" ? "Oggi: saltate" : "Oggi: da segnare") + (pStreak > 1 ? ` · ${pStreak} giorni di fila` : ""), s: { kind: "pills" }, show: !!PILLS },
     { key: "labs", icon: ic("pulse", K.t2, 22), title: "Prelievi", sub: `Ultimo: ${hYear(MEDICO.lab.date)} · prossimo ${hShort(MEDICO.nextLabs)}`, s: { kind: "labs" }, show: true },
     { key: "checks", icon: ic("cal", K.t2, 22), title: "Controlli e screening", sub: ckNext ? `Prossimo: ${ckNext.title}` : `${medChecks.length} controlli`, s: { kind: "checks" }, show: true },

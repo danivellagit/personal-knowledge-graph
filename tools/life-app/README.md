@@ -73,6 +73,17 @@ url, token file, commit author), write-back, a few labels, and per area `name`, 
 in the app), `weight` in the Life Health total, `enabled` (Relazioni, Crescita, Vita only).
 `python3 tools/life-app/life_config.py` prints the resolved settings; `... get site.repo` prints one.
 
+## Hooks and instance config
+
+- `life_app.hooks.hair_photos`: an ES module that exports `writeHairInit(workDir)`, writes
+  `<workDir>/hair-init.js` (`globalThis.__SALUTE_HAIR_PHOTOS__ = [{ date, n, dataUrl, pinned? }]`) and returns how many
+  photos it embedded. The photos end up only inside the ciphertext. Without a hook the Capelli view (shown when
+  `medico.json` has a `hair` block: therapy, supply, photo protocol, all names from the data) shows placeholders.
+- `life_app.health_page`: build from a health page kept somewhere else (e.g. a page your agents edit in another tool);
+  the build adds the `TZ` / `COACH` / `GYM` declarations if that page does not have them.
+- A private instance that keeps everything in git can put the same `life_app:` block in a committed
+  `tools/life-app/instance.yml` (no secrets in it, only file paths); `config.local.yml` still wins. Never add one to a public fork.
+
 ## Write-back (optional, off by default)
 
 Some taps in the app (a pill taken, a weigh-in) can be saved as small event files in a PRIVATE repo of yours, which an

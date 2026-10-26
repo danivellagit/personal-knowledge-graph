@@ -32,9 +32,34 @@ AREAS = [
 ]
 
 
+# Optional COMMITTED instance file tools/life-app/instance.yml, for private instances that keep everything in git: same `life_app:`
+# block, no secrets (only file paths). config.local.yml (and env) win over it. A public template never has one.
+INSTANCE = os.path.join(HERE, "instance.yml")
+
+
+def _instance(key):
+    return config._load(INSTANCE).get("life_app." + key) if os.path.exists(INSTANCE) else None
+
+
 def g(key, default=None, env=None):
     v = config.get("life_app." + key, None, env)
+    if v in (None, "", []):
+        v = _instance(key)
     return default if v in (None, "", []) else v
+
+
+def glist(key, default):
+    v = config.get_list("life_app." + key, ())
+    if not v:
+        v = _instance(key)
+        v = v if isinstance(v, list) else ([x.strip() for x in str(v).split(",")] if v else None)
+    return list(v) if v else list(default)
+
+
+def p(v):
+    """a path setting: ~ expanded, relative paths taken from the repo root; '' -> None"""
+    v = os.path.expanduser(str(v or ""))
+    return (v if os.path.isabs(v) else os.path.join(ROOT, v)) if v else None
 
 
 def truthy(v, default=False):
@@ -56,7 +81,7 @@ def resolve():
     if owner in ("the owner", "Your Name", ""):
         owner = "Alex"
     first = owner.split()[0]
-    cache = os.path.expanduser(str(g("cache_dir", os.path.join(home, ".cache", "life-app"), "LIFE_APP_CACHE")))
+    cache = p(g("cache_dir", os.path.join(home, ".cache", "life-app"), "LIFE_APP_CACHE"))
     site_repo = str(g("site.repo", "", "LIFE_APP_REPO"))
     pages = str(g("site.url", "", "LIFE_APP_URL"))
     if not pages and "/" in site_repo:
@@ -83,20 +108,24 @@ def resolve():
         "owner_first": first,
         "owner_initial": first[:1].upper() or "L",
         # the words that mean "me" in the Chi column of data/finance/scadenzario.md (a row about you, not someone else)
-        "owner_words": [w.lower() for w in config.get_list("life_app.owner_words", [first, "io", "me"])],
+        "owner_words": [str(w).lower() for w in glist("owner_words", [first, "io", "me"])],
+        # the hidden username next to the password field (password managers key the saved password on it)
+        "login_username": str(g("login_username", "life-app")),
         "timezone": str(g("timezone", "Europe/Rome", "LIFE_APP_TZ")),
         "gym_label": str(g("labels.gym", "Palestra")),
-        "password_file": os.path.expanduser(str(g("password_file", os.path.join(home, ".secrets", "life-app-password"), "LIFE_APP_PASSWORD_FILE"))),
+        "password_file": p(g("password_file", os.path.join(home, ".secrets", "life-app-password"), "LIFE_APP_PASSWORD_FILE")),
         "cache_dir": cache,
-        "salt_file": os.path.expanduser(str(g("salt_file", os.path.join(cache, "salt.txt"), "LIFE_APP_SALT_FILE"))),
-        "avatar": os.path.expanduser(str(g("avatar", ""))) or None,
+        "salt_file": p(g("salt_file", os.path.join(cache, "salt.txt"), "LIFE_APP_SALT_FILE")),
+        "avatar": p(g("avatar", "")),
         "data_dir": os.path.join(ROOT, "data", "happiness"),
-        "health_page": os.path.expanduser(str(g("health_page", os.path.join(HERE, "src", "health", "health-page.tsx")))),
+        "health_page": p(g("health_page", os.path.join(HERE, "src", "health", "health-page.tsx"), "LIFE_APP_HEALTH_PAGE")),
+        # build hooks (paths to ES modules, optional): hair_photos exports writeHairInit(workDir) -> count (README "Hooks")
+        "hooks": {"hair_photos": p(g("hooks.hair_photos", ""))},
         "site": {
             "repo": site_repo,                       # "<github-user>/<repo>", the separate PUBLIC Pages repo for the ciphertext
             "branch": str(g("site.branch", "main")),
             "url": pages,
-            "token_file": os.path.expanduser(str(g("site.token_file", ""))) or None,
+            "token_file": p(g("site.token_file", "")),
             "git_name": str(g("site.git_name", "life-app")),
             "git_email": str(g("site.git_email", "life-app@users.noreply.github.com")),
         },
@@ -104,7 +133,7 @@ def resolve():
             "enabled": wb_on,
             "repo": str(g("writeback.repo", "")),
             "branch": str(g("writeback.branch", "main")),
-            "token_file": os.path.expanduser(str(g("writeback.token_file", os.path.join(home, ".secrets", "life-log-token")))),
+            "token_file": p(g("writeback.token_file", os.path.join(home, ".secrets", "life-log-token"))),
         },
         "areas": areas,
     }

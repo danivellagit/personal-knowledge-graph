@@ -3,16 +3,17 @@
 
 The Life App is meant to be the SAME code in both repos: everything personal lives in config.local.yml (gitignored)
 and in data/ (gitignored here), never in the code. This script copies only the allowlisted shared paths, then
-proves the result is anonymous and still builds, and commits to a sync branch. It never touches main and never
-pushes unless asked, and then only the sync branch.
+proves the result is anonymous and still builds, and commits to a sync branch. Nothing leaves the machine unless
+asked: --push pushes the sync branch; --merge (only after every check passed) fast-forwards main to it, never forced.
 
     python3 tools/template_sync.py --source ~/my-knowledge --template ~/wt/template            # check + commit
     python3 tools/template_sync.py --source ... --template ... --dry-run                       # report only
-    python3 tools/template_sync.py --source ... --template ... --base feature/life-app --push  # push sync branch
+    python3 tools/template_sync.py --source ... --template ... --push                          # + push sync branch
+    python3 tools/template_sync.py --source ... --template ... --verify --require-gitleaks --push --merge   # daily
 
 Steps (any failure stops the run with exit code != 0 and nothing committed):
   1. source: read files from the source repo's last COMMIT (git show HEAD:path), never its working tree
-  2. template: must be a clean git worktree; create/reset the branch sync/<area>-<YYYY-MM-DD> from --base
+  2. template: must be a clean git worktree; create/reset the branch sync/life-app-<YYYY-MM-DD> from origin/<--base>
   3. copy every allowlisted file that differs (SYNC); HOLD paths are template-owned and never overwritten;
      PENDING paths are reported but not copied while the source still carries personal values in them
   4. leak check over every tracked + new file of the template worktree:
@@ -29,7 +30,8 @@ Steps (any failure stops the run with exit code != 0 and nothing committed):
   5. build with SAMPLE data in a throwaway copy (own HOME, own password, data/happiness from sample-data):
      tools/happiness.py init + tools/life-app/publish.sh --no-push; with --verify also tools/life-app/verify.mjs
   6. commit on the sync branch with --author 'Name <user@users.noreply.github.com>' as author AND committer
-     (a GitHub noreply address is required), then check the identity and message of every new commit (base..HEAD) against the denylist; --push pushes that branch only (refuses main/master)
+     (a GitHub noreply address is required), then check the identity and message of every new commit (base..HEAD)
+     against the denylist; --push pushes the sync branch, --merge then fast-forwards main to it (plain push)
 """
 import argparse, datetime, fnmatch, hashlib, json, os, re, shutil, subprocess, sys, tempfile
 
@@ -39,27 +41,23 @@ SYNC = [
     "tools/life-app/manifest.webmanifest", "tools/life-app/package.json", "tools/life-app/package-lock.json",
     "tools/life-app/area-modules.mjs", "tools/life-app/grok-canvas-shim.js", "tools/life-app/make_icons.py",
     "tools/life-app/training.mjs", "tools/life-app/training-patches.mjs", "tools/life-app/steps-patches.mjs",
-    "tools/life-app/*.fragments.txt", "tools/life-app/icons/*.png", "tools/life-app/src/*",
-    "tools/life-app/src/health/*", "tools/life-app/tests/*", "tools/life-app/life_config.py",
-    "tools/life-app/publish.sh", "tools/life-app/setup.sh", "tools/life-app/verify.mjs",
-    "tools/life-app/make_sample_data.py", "tools/happiness_eval.mjs",
+    "tools/life-app/*.fragments.txt", "tools/life-app/icons/*.png", "tools/life-app/src/*.ts", "tools/life-app/src/*.tsx",
+    "tools/life-app/src/*.mjs", "tools/life-app/src/*.jsx", "tools/life-app/tests/*", "tools/life-app/life_config.py",
+    "tools/happiness_eval.mjs", "tools/config.py", "tools/template_sync.py", "tools/template_sync.gitleaks.toml",
 ]
-# template-owned: written for template users, never overwritten by a sync
+# template-owned: written for template users (or the template's own copy of the health page; an instance may build
+# from a page kept elsewhere, life_app.health_page), never overwritten by a sync
 HOLD = [
     "tools/life-app/README.md", "tools/life-app/DATA-MODEL.md", "tools/life-app/sample-data/*",
-    "tools/happiness.py", "tools/template_sync.py",
+    "tools/life-app/src/health/*", "tools/life-app/publish.sh", "tools/life-app/setup.sh", "tools/life-app/verify.mjs",
+    "tools/life-app/make_sample_data.py", "tools/happiness.py",
 ]
-# shared in principle, but the source still has personal values in them: reported, not copied. Empty this list
-# (file by file) once the source repo adopts the config-driven version (see tools/life-app/README.md "Sync").
-PENDING = [
-    "tools/life-app/build.mjs", "tools/life-app/shell.html", "tools/life-app/manifest.webmanifest",
-    "tools/life-app/package.json", "tools/life-app/package-lock.json", "tools/life-app/src/app.tsx",
-    "tools/life-app/src/scores.ts", "tools/life-app/src/lifelog.mjs", "tools/life-app/src/pill-bridge.mjs",
-    "tools/life-app/steps-patches.mjs", "tools/life-app/steps.fragments.txt", "tools/life-app/training-patches.mjs",
-    "tools/life-app/health-training.fragments.txt", "tools/life-app/tests/lifelog.test.mjs",
-    "tools/life-app/src/health/health-page.tsx", "tools/happiness_eval.mjs",
-]
-NEVER = ["*/node_modules/*", "*/out/*", "*/salt.txt", "*/verify_*.py", "*/verify.py", "*.pyc"]
+# shared in principle, but the source still has personal values in them: reported, not copied. Add a file here only
+# while the source repo has not moved its personal values into config/data yet (empty since 2026-10-26).
+PENDING = []
+# instance files never copied (the instance's own committed config, secrets, generated output, private verifiers)
+NEVER = ["tools/life-app/instance.yml", "config.local.yml", "*/node_modules/*", "*/out/*", "*/salt.txt", "*/verify_*.py", "*/verify.py",
+         "*.pyc", "*/publish_life_app.sh"]
 IMAGE_OK = ["tools/life-app/icons/*.png"]
 IMG_EXT = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic", ".bmp", ".tif", ".tiff", ".avif")
 TEXT_SKIP = ("package-lock.json",)
@@ -259,12 +257,13 @@ def build_check(tpl, verify):
             if os.path.isfile(s):
                 d = os.path.join(kb, f); os.makedirs(os.path.dirname(d), exist_ok=True); shutil.copy2(s, d)
         nm = os.path.join(tpl, "tools", "life-app", "node_modules")
-        if os.path.isdir(nm): os.symlink(nm, os.path.join(kb, "tools", "life-app", "node_modules"))
+        if not os.path.isdir(nm):   # once per template clone (gitignored there)
+            run(["npm", "ci", "--no-audit", "--no-fund", "--silent"], cwd=os.path.join(tpl, "tools", "life-app"))
+        os.symlink(nm, os.path.join(kb, "tools", "life-app", "node_modules"))
         home = os.path.join(tmp, "home"); os.makedirs(os.path.join(home, ".secrets"))
         pw = os.path.join(home, ".secrets", "life-app-password"); open(pw, "w").write("sync-check-password\n")
         env = dict(os.environ, HOME=home, LIFE_APP_PASSWORD_FILE=pw, LIFE_APP_CACHE=os.path.join(home, ".cache", "life-app"))
         for k in ("LIFE_APP_REPO", "LIFE_LOG_TOKEN_FILE"): env.pop(k, None)
-        if not os.path.isdir(nm): run(["npm", "ci", "--no-audit", "--no-fund", "--silent"], cwd=os.path.join(kb, "tools", "life-app"), env=env)
         run(["python3", "tools/happiness.py", "init"], cwd=kb, env=env)
         p = run(["bash", "tools/life-app/publish.sh", "--no-push"], cwd=kb, env=env, check=False)
         if p.returncode != 0: raise SystemExit("FAILED: build with sample data\n" + (p.stdout + p.stderr)[-3000:])
@@ -287,7 +286,9 @@ def main():
     ap.add_argument("--verify", action="store_true", help="also run the headless phone check (needs playwright-core + chrome)")
     ap.add_argument("--require-gitleaks", action="store_true")
     ap.add_argument("--author", default=None, help="'Name <user@users.noreply.github.com>' for author AND committer")
-    ap.add_argument("--push", action="store_true", help="push the sync branch to origin (never main)")
+    ap.add_argument("--push", action="store_true", help="push the sync branch to origin")
+    ap.add_argument("--merge", action="store_true", help="after every check passed: also fast-forward origin/main to the sync "
+                    "commit (plain push, never forced; refused by the server if main moved meanwhile)")
     a = ap.parse_args()
     src, tpl = os.path.abspath(os.path.expanduser(a.source)), os.path.abspath(os.path.expanduser(a.template))
     branch = a.branch or "sync/life-app-%s" % datetime.date.today().isoformat()
@@ -340,7 +341,8 @@ def main():
         print("== dry run: nothing written (%d to copy, %d pending)" % (len(changed), len(pending))); return
     print("== 6. commit")
     if not changed:
-        print("   nothing to commit"); return
+        git(tpl, "checkout", "-q", "--detach", base); git(tpl, "branch", "-q", "-D", branch, check=False)
+        print("   nothing to commit (no sync branch kept)"); return
     git(tpl, "add", "--", *changed)
     msg = "sync: life app from upstream\n\n%s" % "\n".join("- " + f for f in changed)   # no source hash/path: nothing about the source
     if text_hits(msg, compile_terms(terms)): raise SystemExit("FAILED: commit message would leak")
@@ -354,7 +356,10 @@ def main():
     print("   commit metadata (identity + message) of %s..HEAD: clean" % base)
     if a.push:
         git(tpl, "push", "-u", "origin", branch)
-        print("   pushed origin/" + branch + " (open a PR to main by hand)")
+        print("   pushed origin/" + branch)
+    if a.merge:
+        git(tpl, "push", "origin", "HEAD:refs/heads/main")
+        print("   merged: origin/main fast-forwarded to %s" % git(tpl, "rev-parse", "--short", "HEAD").strip())
 
 
 if __name__ == "__main__":

@@ -163,6 +163,7 @@ life_app:
   # owner_name: ""                      # shown in the app (initial in the header); default: `owner` above; env LIFE_APP_OWNER
   # owner_words: [io, me]               # words in the "Chi" column of data/finance/scadenzario.md that mean you (+ your first name)
   # app_name: "Life"                    # home-screen / lock-screen name; env LIFE_APP_NAME
+  # login_username: "life-app"          # hidden username next to the password (what a password manager saves it under)
   # description: "Life Health: tutte le aree della vita"
   # lang: "it"                          # the app's own wording is Italian today; this sets the page language tag
   # timezone: "Europe/Rome"             # "today" in the app; env LIFE_APP_TZ
@@ -172,7 +173,12 @@ life_app:
   # cache_dir: "~/.cache/life-app"      # off-repo: salt, deploy dir, last published hash; env LIFE_APP_CACHE
   # salt_file: ""                       # default <cache_dir>/salt.txt, made on the first build (keep it: a new salt = re-login)
   # avatar: ""                          # a small JPEG/PNG outside the repo, embedded only inside the ciphertext
-  # health_page: ""                     # default tools/life-app/src/health/health-page.tsx
+  # health_page: ""                     # default tools/life-app/src/health/health-page.tsx; env LIFE_APP_HEALTH_PAGE
+  # hooks:
+  #   hair_photos: ""                   # ES module exporting writeHairInit(workDir) -> count (photos for Salute > Capelli,
+  #                                     # embedded only in the ciphertext); none = the view shows placeholders
+  # (relative paths in this block are taken from the repo root. A private instance that commits everything may keep
+  #  this same `life_app:` block in a committed tools/life-app/instance.yml instead; config.local.yml wins over it.)
   # site:                               # your SEPARATE public GitHub Pages repo; it only ever receives ciphertext
   #   repo: "your-github-user/life-app" # env LIFE_APP_REPO; setup.sh --create-site fills it in
   #   branch: "main"
