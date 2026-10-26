@@ -396,7 +396,7 @@ def collect(root="data", today=None):
                           % (a, b, c), priority=1)
 
     # possible duplicate people — the failure mode that hit repeatedly before it was detectable:
-    # a first name saved as a nickname in one source ("Tobi" for `tobia-rinaldi`, or
+    # a first name saved as a nickname in one source ("Tobi" for `tobia-quillon`, or
     # "Tobi Acme") forked into a second node that then accumulated its own interactions.
     def norm(v):
         return re.sub(r"[^a-z0-9]+", "", str(v or "").lower())

@@ -92,10 +92,15 @@ it, and each optional tool says "not configured" instead of failing.
 
 **Optional modules**, opt-in, each documented in [`anatomy.md`](anatomy.md):
 
-- **Agents** (`agents/<role>/AGENT.md`, launched by `skills/<role>/SKILL.md`): roles with a
-  memory that work on top of the graph and talk to you: `fitness-coach`, `psychologist`,
-  `founder-assistant`, `linkedin-coach`, `web-builder`, `brand-designer`, `accountant`,
-  `health-advisor`, `best-friend`. Give each one a name and a voice if you like.
+- **Agents** (`agents/<role>/AGENT.md`, launched by `skills/<role>/SKILL.md`): twelve ready-made
+  roles with a memory that work on top of the graph and talk to you: `fitness-coach`,
+  `psychologist`, `founder-assistant`, `linkedin-coach`, `web-builder`, `brand-designer`,
+  `accountant`, `health-advisor`, `best-friend`, `tech-maintainer`, `english-teacher`, `recruiter`.
+  Each one ships with its lane and handoffs, what it must remember and where (a memory skeleton in
+  `agents/<role>/memory-skeleton/`), and the routines it typically runs (`agents/<role>/routines/`).
+  The names are not shipped: they are generated when you create the agent,
+  `python3 tools/agents/create_agent.py <role>` (or `--name "..."`; details in
+  [`agents/README.md`](agents/README.md), "Creating an agent").
 - **The body layer**: a wearable's data (sleep, heart, sessions) turned into one node per day,
   joined on time to who you saw and where, plus a food log, a training log and lab reports
   (`tools/body.py`, `tools/body-pull.sh`, `tools/food.py`, `tools/calories.py`).
@@ -174,12 +179,13 @@ personal-knowledge-graph/
     life-app/                    # optional: the Life App (setup.sh, publish.sh, sample-data/, README)
     happiness.py                 # validate / init / inject / recap data/happiness/*.json for the Life App
     template_sync.py             # maintainers: bring app updates from an upstream instance, leak-checked
+    agents/create_agent.py       # optional: create an agent from its role (persona name, memory skeleton)
   skills/
     remember-people/             # the core engine
     graph-audit/                 # the weekly look from above
     notion-sync/                 # optional
     <role>/                      # optional: thin launchers for the agents
-  agents/                        # optional: agents/<role>/AGENT.md
+  agents/                        # optional: agents/<role>/AGENT.md, memory-skeleton/, routines/
   .claude/hooks/git-sync.sh      # optional: pull on session start, autosave + push on stop
   data/                          # PRIVATE, gitignored by default: your graph + your stream
     _me.md                              # the owner node (the point of view)

@@ -183,7 +183,9 @@ repo, a number or a coordinate is a fact and its meaning is not.**
 An agent is a role with a memory that works on top of the graph and talks to the owner.
 
 ```
-agents/<role>/AGENT.md     # who it is: role, voice, what it reads, what it writes, its flows
+agents/<role>/AGENT.md     # who it is: role, voice, lane and handoffs, what it remembers, routines, flows
+agents/<role>/memory-skeleton/   # its empty memory files (headings only), copied to data/ at creation
+agents/<role>/routines/    # one spec per routine (schedule, intent), mirrored with the runner
 skills/<role>/SKILL.md     # the thin launcher, so "/<role>" or "talk to the <role>" starts it
 data/agents/<role>/        # its own memory: private, like the rest of data/
 ```
@@ -195,14 +197,17 @@ its own), `linkedin-coach` (the owner's own posts and comments; drafts, never pu
 `web-builder` (the owner's sites; preview before production, never deploys without a yes),
 `brand-designer` (the visual identity and its assets), `accountant` (taxes, deadlines, company
 admin; never files or pays, not a licensed professional), `health-advisor` (labs, check-ups,
-medications; never changes a medication, not a doctor) and `best-friend` (plain company and
-daily-life errands; never handles payment details or passwords). The
-owner can give each a persona name and profile (`persona:` in `AGENT.md`); see
-`agents/README.md`.
+medications; never changes a medication, not a doctor), `best-friend` (plain company and
+daily-life errands; never handles payment details or passwords), `tech-maintainer` (the repo,
+its tools, git, routines and the daily memory sweep), `english-teacher` (language practice,
+corrections logged, CEFR evidence) and `recruiter` (CVs, interviews, the pipeline; only skills and
+experience count). The persona name is generated when the owner creates the agent
+(`python3 tools/agents/create_agent.py <role>`); see `agents/README.md`.
 
 Rules every agent inherits: `CLAUDE.md` applies in full (the wall, quotes vs reads, never
 invent, never hand-edit frontmatter links, always push); an agent's reads of the owner stay in
-its own log marked as reads, never in the owner's profile; one agent, one job.
+its own log marked as reads, never in the owner's profile; one agent, one job; memory lives in the
+repo, never only in a runner's memory; every routine is mirrored in `agents/<role>/routines/`.
 **`data/agents/psychologist/sessions/` is the one place whose content never propagates**: nothing
 said in a session is copied into a profile, a brief or another agent unless the owner asks.
 

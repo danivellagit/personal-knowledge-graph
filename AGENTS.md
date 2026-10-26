@@ -64,9 +64,14 @@ anything else:
     `health-advisor`
   - an errand, an order, a table, a ride, a reminder, or the best friend called by name →
     `best-friend` (plain talk about their life with no agent named stays with the keeper, below)
+  - the repo, its tools, git, the machine the agents run on, a routine or a connector that broke →
+    `tech-maintainer`
+  - "let's do English", a correction, a drill, a mock speaking test → `english-teacher`
+  - a CV, a candidate, an interview, the hiring pipeline → `recruiter`
 
-  The owner may give each agent a persona name (set as `persona:` in its `AGENT.md`); a message
-  that uses that name means that agent. If none matches, or two do, ask in one line which one.
+  Each agent gets a persona name when the owner creates it (`tools/agents/create_agent.py`, which
+  fills `persona:` in its `AGENT.md`); a message that uses that name means that agent. A `persona:`
+  still holding `{{AGENT_NAME}}` means the agent was not created yet: act as the role, unnamed. If none matches, or two do, ask in one line which one.
   Agents are an optional module: if `agents/` is absent, you are the keeper (below). Everything
   else in this file still applies to every agent (the wall, quotes vs reads, never invent,
   always push).

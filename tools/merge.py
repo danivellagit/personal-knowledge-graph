@@ -7,7 +7,7 @@ It keeps happening, always the same shape: a first name saved as a nickname in o
 (`Tobi`, `Wren Globex`) forks into a second node that then accumulates its own interactions, its
 own profile and its own Notion page. For example:
 
-  - tobi-lisbon  -> tobia-rinaldi    same city, same shared dates
+  - tobi-lisbon  -> tobia-quillon    same city, same shared dates
   - wren-globex  -> wren-hollis      same company, same phone
 
 So it is a tool, not a one-off script. `tools/checks.py` detects the candidates
