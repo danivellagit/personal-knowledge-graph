@@ -11,7 +11,15 @@ asked: --push pushes the sync branch; --merge (only after every check passed) fa
     python3 tools/template_sync.py --source ... --template ... --push                          # + push sync branch
     python3 tools/template_sync.py --source ... --template ... --verify --require-gitleaks --push --merge   # daily
 
-Steps (any failure stops the run with exit code != 0 and nothing committed):
+    python3 tools/template_sync.py --source ~/my-knowledge --detect [--template ~/wt/template] [--dry-run]  # daily, first
+    python3 tools/template_sync.py --source ~/my-knowledge --resolve <id> [<id> ...]                         # after applying
+
+--detect does not copy anything: it lists every change in the source since the last scan (added, modified, deleted,
+renamed) that is NOT a generic SYNC file - agents, their rules, memory headings and routines, skills, tools, docs, the
+data/ layout (structure only) - as PENDING items in a list and a report, classified by <source>/tools/template_sync.map.yml
+(exclude / generic / anonymize / structure). Anonymizing needs judgment, so these are applied by hand, never verbatim.
+
+Steps of the copy (any failure stops the run with exit code != 0 and nothing committed):
   1. source: read files from the source repo's last COMMIT (git show HEAD:path), never its working tree
   2. template: must be a clean git worktree; create/reset the branch sync/life-app-<YYYY-MM-DD> from origin/<--base>
   3. copy every allowlisted file that differs (SYNC); HOLD paths are template-owned and never overwritten;
@@ -276,10 +284,232 @@ def build_check(tpl, verify):
             print("   verify.mjs (headless phone, password, every tab): ok")
 
 
+# ---- architecture change detection (--detect): what changed in the source since the last scan --------------
+# The copy above only handles SYNC paths (generic code, verbatim). Everything else that shapes the system (agents,
+# their rules and routines, skills, tools, docs, the data/ layout) needs judgment to anonymize, so it is never
+# copied: --detect lists it as PENDING items for the routine run to regenerate by hand in the template.
+# The mapping lives in the SOURCE repo (<source>/tools/template_sync.map.yml, never synced): one `key: <json>` line
+# per setting and one `- <json>` line per rule. State, pending list and report paths come from that file.
+MAP_FILE = os.path.join("tools", "template_sync.map.yml")
+DATED = re.compile(r"\d{4}-\d{2}(-\d{2})?")
+
+
+def load_map(src):
+    path = os.path.join(src, MAP_FILE)
+    if not os.path.exists(path): raise SystemExit("FAILED: no %s in the source repo" % MAP_FILE)
+    cfg, rules = {}, []
+    for n, line in enumerate(open(path, encoding="utf-8"), 1):
+        t = line.strip()
+        if not t or t.startswith("#") or t == "rules:": continue
+        try:
+            if t.startswith("- "): rules.append(json.loads(t[2:]))
+            else:
+                k, v = t.split(":", 1); cfg[k.strip()] = json.loads(v.strip())
+        except ValueError as e:
+            raise SystemExit("FAILED: %s:%d: %s" % (MAP_FILE, n, e))
+    for r in rules:
+        r["_rx"] = glob_rx(r["source"])
+    cfg["rules"] = rules
+    return cfg
+
+
+def glob_rx(g):
+    out, i = "", 0
+    while i < len(g):
+        if g.startswith("**/", i): out += "(.*/)?"; i += 3
+        elif g.startswith("**", i): out += "(.*)"; i += 2
+        elif g[i] == "*": out += "([^/]*)"; i += 1
+        else: out += re.escape(g[i]); i += 1
+    return re.compile("^%s$" % out)
+
+
+def classify(path, cfg):
+    """-> (mode, template target, rule) for one source path"""
+    aliases = cfg.get("aliases", {})
+    def target(rule, m):
+        t = rule.get("template", path)
+        for i, grp in enumerate(m.groups(), 1):
+            grp = (grp or "").rstrip("/")
+            if i == 1: grp = aliases.get(grp, grp)
+            t = t.replace("{%d}" % i, grp)
+        return t
+    if path in (cfg.get("state"), cfg.get("pending"), cfg.get("report")): return "exclude", None, {"why": "detector state"}
+    for r in cfg["rules"]:
+        if r["mode"] == "exclude" and r["_rx"].match(path): return "exclude", None, r
+    if match(path, NEVER): return "exclude", None, {"why": "NEVER list"}
+    if match(path, SYNC): return "generic", path, {"note": "SYNC list: copied verbatim by the sync step"}
+    if match(path, HOLD): return "anonymize", path, {"note": "HOLD: template-owned version, update it by hand"}
+    for r in cfg["rules"]:
+        m = r["_rx"].match(path)
+        if m and r["mode"] != "exclude": return r["mode"], target(r, m), r
+    return "unclassified", path, {"note": "no rule: port it anonymized, or add a rule to the map"}
+
+
+def headings(src, rev, path):
+    p = subprocess.run(["git", "-C", src, "show", "%s:%s" % (rev, path)], capture_output=True, text=True)
+    if p.returncode != 0: return set()
+    return {l[3:].strip() for l in p.stdout.splitlines() if l.startswith("## ") and not DATED.search(l)}
+
+
+def tree(src, rev, prefix):
+    out = git(src, "ls-tree", "--name-only", rev, prefix.rstrip("/") + "/", check=False)
+    return set(out.split())
+
+
+def detect(src, tpl, since, dry, today):
+    cfg = load_map(src)
+    st_path, pend_path, rep_path = (os.path.join(src, cfg[k]) for k in ("state", "pending", "report"))
+    state = json.load(open(st_path)) if os.path.exists(st_path) else {}
+    head = git(src, "rev-parse", "HEAD").strip()
+    base = since or state.get("last_scanned")
+    pending = json.load(open(pend_path)) if os.path.exists(pend_path) else []
+    if not base:
+        raise SystemExit("FAILED: no last_scanned in %s: run --detect --baseline once (marks HEAD as synced)" % cfg["state"])
+    if git(src, "cat-file", "-t", base, check=False).strip() != "commit":
+        raise SystemExit("FAILED: last_scanned %s is not a commit of the source (history rewritten?): pass --since" % base[:10])
+    print("== detect: %s..%s" % (base[:10], head[:10]))
+    raw = git(src, "diff", "--name-status", "-M", base, head).splitlines()
+    commits = git(src, "log", "--format=%h", "%s..%s" % (base, head)).split()
+    found, auto, struct_seen = [], [], set()
+    tpl_has = lambda t: bool(tpl and t and os.path.exists(os.path.join(tpl, t.split(" ")[0])))
+    for line in raw:
+        parts = line.split("\t")
+        st, paths = parts[0][0], parts[1:]
+        kind = {"A": "add", "M": "modify", "D": "delete", "R": "rename", "C": "add", "T": "modify"}.get(st, "modify")
+        path = paths[-1]
+        mode, tgt, rule = classify(path, cfg)
+        old = paths[0] if kind == "rename" else None
+        if old:
+            omode, otgt, _ = classify(old, cfg)
+            if mode == "exclude" and omode == "exclude": continue
+            if mode == "exclude": path, mode, tgt, kind = old, omode, otgt, "delete"
+            elif omode == "exclude": kind, old = "add", None
+        if mode == "exclude": continue
+        if mode == "structure":
+            what = rule.get("what")
+            if what == "headings":
+                before, after = headings(src, base, old or path), headings(src, head, path)
+                if kind in ("add", "delete") or before != after:
+                    det = []
+                    if kind == "add": det.append("new memory file")
+                    if kind == "delete": det.append("memory file removed")
+                    det += ["+ section: %s" % h for h in sorted(after - before)] if kind != "delete" else []
+                    det += ["- section: %s" % h for h in sorted(before - after)] if kind != "add" else []
+                    found.append(dict(kind="structure", mode=mode, source=path, template=tgt, detail="; ".join(det)))
+                continue
+            if what == "files":
+                if kind in ("add", "delete", "rename"):
+                    found.append(dict(kind="structure", mode=mode, source=path, template=tgt, old_source=old,
+                                      detail={"add": "file added", "delete": "file removed", "rename": "file renamed"}[kind]))
+                continue
+            # folders: only a data/<x>/ that appears or disappears
+            top = "/".join(path.split("/")[:2])
+            if top in struct_seen: continue
+            struct_seen.add(top)
+            b, h = tree(src, base, "data"), tree(src, head, "data")
+            if top in h and top not in b: found.append(dict(kind="structure", mode=mode, source=top + "/", template=tgt, detail="new folder in data/"))
+            elif top in b and top not in h: found.append(dict(kind="structure", mode=mode, source=top + "/", template=tgt, detail="folder removed from data/"))
+            continue
+        if mode == "generic" and kind in ("add", "modify"):
+            auto.append(path); continue
+        item = dict(kind=kind, mode=mode, source=path, template=tgt, note=rule.get("note") or rule.get("why", ""))
+        if old: item["old_source"] = old; item["old_template"] = classify(old, cfg)[1]
+        if kind == "delete": item["template_exists"] = tpl_has(tgt)
+        found.append(item)
+    # merge into the pending list (keyed by source path; a file added then deleted before it was applied cancels out)
+    idx = {(p["source"], p["kind"] == "structure"): p for p in pending}
+    for f in found:
+        key = (f["source"], f["kind"] == "structure")
+        f = {k: v for k, v in f.items() if v not in (None, "")}
+        prev = idx.get(key)
+        if prev and prev["kind"] == "add" and f["kind"] == "delete" and not prev.get("old_source"):
+            pending.remove(prev); idx.pop(key); continue
+        if prev:
+            kind = prev["kind"] if (prev["kind"] == "add" and f["kind"] == "modify") else f["kind"]
+            if prev["kind"] == "delete" and f["kind"] == "add": kind = "modify"
+            if f["kind"] == "structure" and prev.get("detail") and f.get("detail") and f["detail"] not in prev["detail"]:
+                f["detail"] = prev["detail"] + "; " + f["detail"]
+            prev.update(f, kind=kind, last_seen=today, commits=(prev.get("commits", []) + commits)[-10:])
+        else:
+            f.update(id=hashlib.sha1(("%s|%s|%s" % (f["source"], f["kind"], today)).encode()).hexdigest()[:8],
+                     first_seen=today, last_seen=today, commits=commits[-10:])
+            pending.append(f); idx[key] = f
+    print("   %d change(s) since the last scan: %d pending item(s) touched, %d generic file(s) left to the sync step"
+          % (len(raw), len(found), len(auto)))
+    print("   pending now: %d" % len(pending))
+    for p in pending:
+        print("   PENDING %s %-9s %-11s %s -> %s" % (p["id"], p["kind"], p["mode"], p["source"], p.get("template") or "-"))
+    if dry:
+        print("== dry run: state, pending list and report not written"); return pending
+    os.makedirs(os.path.dirname(st_path), exist_ok=True)
+    state.update(last_scanned=head, last_run=today)
+    json.dump(state, open(st_path, "w"), indent=1); open(st_path, "a").write("\n")
+    write_pending(cfg, src, pending, state, auto)
+    return pending
+
+
+def write_pending(cfg, src, pending, state, auto=()):
+    pend_path, rep_path = os.path.join(src, cfg["pending"]), os.path.join(src, cfg["report"])
+    json.dump(pending, open(pend_path, "w"), indent=1); open(pend_path, "a").write("\n")
+    groups = [("Pending to regenerate in the template (anonymized, never verbatim)", lambda p: p["mode"] == "anonymize" and p["kind"] in ("add", "modify")),
+              ("Pending removals (deleted in the source)", lambda p: p["kind"] == "delete"),
+              ("Pending renames", lambda p: p["kind"] == "rename"),
+              ("Structure changes (data/ layout, memory headings: regenerate the skeleton or the layout doc)", lambda p: p["kind"] == "structure"),
+              ("Unclassified (no rule in the map: port anonymized, or add a rule)", lambda p: p["mode"] == "unclassified" and p["kind"] in ("add", "modify"))]
+    out = ["---", "type: agent-memory", "agent: tech-maintainer", 'person: "[[_me]]"', "---",
+           "# Template sync: pending architecture changes", "",
+           "Generated by `tools/template_sync.py --detect` (do not edit by hand). Last scanned source commit: `%s`, run %s."
+           % (state.get("last_scanned", "")[:10], state.get("last_run", "")),
+           "Apply each item in the template clone on a branch, by judgment (no personal value: names, places, companies,",
+           "health, money, ids, phones, emails), leak-check with `tools/template_sync.py --dry-run`, merge, then",
+           "`tools/template_sync.py --source . --resolve <id> ...`. Mapping: `%s`." % MAP_FILE, ""]
+    for title, pick in groups:
+        items = [p for p in pending if pick(p)]
+        if not items: continue
+        out += ["## %s (%d)" % (title, len(items)), "", "| id | change | source | template | since | note |", "| --- | --- | --- | --- | --- | --- |"]
+        for p in items:
+            src_s = ("%s -> %s" % (p["old_source"], p["source"])) if p.get("old_source") else p["source"]
+            note = p.get("detail") or p.get("note", "")
+            if p["kind"] == "delete" and "template_exists" in p: note = (note + "; " if note else "") + ("template path exists" if p["template_exists"] else "template path absent")
+            tgt = p.get("template") or "-"
+            if p.get("old_template") and p["old_template"] != tgt: tgt = "%s -> %s" % (p["old_template"], tgt)
+            out.append("| %s | %s | `%s` | `%s` | %s | %s |" % (p["id"], p["kind"], src_s, tgt, p["first_seen"], str(note).replace("|", "/")))
+        out.append("")
+    if not pending: out += ["Nothing pending.", ""]
+    if auto: out += ["Generic files changed in the last scan (copied verbatim by the sync step): %d." % len(auto), ""]
+    open(rep_path, "w").write("\n".join(out))
+    print("   wrote %s, %s" % (cfg["pending"], cfg["report"]))
+
+
+def resolve(src, ids, today):
+    cfg = load_map(src)
+    pend_path = os.path.join(src, cfg["pending"])
+    pending = json.load(open(pend_path)) if os.path.exists(pend_path) else []
+    keep = [p for p in pending if p["id"] not in ids and "all" not in ids]
+    gone = [p["id"] for p in pending if p not in keep]
+    missing = [i for i in ids if i != "all" and i not in gone]
+    st_path = os.path.join(src, cfg["state"])
+    state = json.load(open(st_path)) if os.path.exists(st_path) else {}
+    write_pending(cfg, src, keep, state)
+    print("   resolved: %s%s" % (" ".join(gone) or "none", ("; unknown: " + " ".join(missing)) if missing else ""))
+
+
+def baseline(src, today):
+    cfg = load_map(src)
+    st_path = os.path.join(src, cfg["state"])
+    os.makedirs(os.path.dirname(st_path), exist_ok=True)
+    state = json.load(open(st_path)) if os.path.exists(st_path) else {}
+    state.update(last_scanned=git(src, "rev-parse", "HEAD").strip(), last_run=today, baseline=today)
+    json.dump(state, open(st_path, "w"), indent=1); open(st_path, "a").write("\n")
+    pend = os.path.join(src, cfg["pending"])
+    write_pending(cfg, src, json.load(open(pend)) if os.path.exists(pend) else [], state)
+    print("   baseline: last_scanned = %s" % state["last_scanned"][:10])
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--source", required=True, help="the private knowledge repo (read only)")
-    ap.add_argument("--template", required=True, help="a worktree/clone of this template")
+    ap.add_argument("--template", help="a worktree/clone of this template (required except for --detect/--resolve/--baseline)")
     ap.add_argument("--base", default="main", help="branch the sync branch starts from (default main)")
     ap.add_argument("--branch", default=None, help="default sync/life-app-<today>")
     ap.add_argument("--dry-run", action="store_true", help="report differences and leaks, change nothing")
@@ -289,8 +519,19 @@ def main():
     ap.add_argument("--push", action="store_true", help="push the sync branch to origin")
     ap.add_argument("--merge", action="store_true", help="after every check passed: also fast-forward origin/main to the sync "
                     "commit (plain push, never forced; refused by the server if main moved meanwhile)")
+    ap.add_argument("--detect", action="store_true", help="architecture changes since the last scan -> pending list + report "
+                    "(paths from <source>/tools/template_sync.map.yml); copies nothing")
+    ap.add_argument("--since", help="with --detect: scan from this source commit instead of the state's last_scanned")
+    ap.add_argument("--baseline", action="store_true", help="with --detect: mark the source HEAD as scanned, add nothing")
+    ap.add_argument("--resolve", nargs="+", metavar="ID", help="drop applied items from the pending list ('all' for every one)")
     a = ap.parse_args()
-    src, tpl = os.path.abspath(os.path.expanduser(a.source)), os.path.abspath(os.path.expanduser(a.template))
+    today = datetime.date.today().isoformat()
+    src = os.path.abspath(os.path.expanduser(a.source))
+    tpl = os.path.abspath(os.path.expanduser(a.template)) if a.template else None
+    if a.resolve: return resolve(src, a.resolve, today)
+    if a.detect and a.baseline: return baseline(src, today)
+    if a.detect: detect(src, tpl, a.since, a.dry_run, today); return
+    if not tpl: ap.error("--template is required")
     branch = a.branch or "sync/life-app-%s" % datetime.date.today().isoformat()
     if branch in ("main", "master") or not branch.startswith("sync/"):
         raise SystemExit("refusing branch %r: sync branches must be named sync/..." % branch)
