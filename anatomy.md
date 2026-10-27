@@ -309,15 +309,9 @@ raw off-repo, only facts in the repo.
   day's interactions, and write them into the day node. **A place is named only from a real
   match** (a `places/` node, an address in a log), never guessed from coordinates alone.
 
-## The health app (a private phone dashboard)
+## Health (in the Life App)
 
-An installable, password-locked copy of a health page on the owner's phone. A React page whose
-numbers sit in one `DATA` block (`tools/health-app/example-page.tsx` ships with fake data; point
-`health_app.source` at your own) is bundled, encrypted whole (AES-256-GCM, key from the password by
-PBKDF2) and wrapped in a home-screen web-app shell with an unlock screen by
-`tools/publish_health_app.sh`, which force-pushes a ciphertext-only site to a GitHub Pages repo.
-The password stays in a file off-repo; the phone keeps only the derived key. The DATA block is
-filled from the graph (`--fill`: body layer + food log, `tools/health-app/fill_data.py`) or by a
-routine (`--data FILE`). The app reloads itself when a newer build is live. Same rule as the body:
-the numbers are facts, a coach's line in `notes` is a read. Setup, security model and what a
-stranger can see: `tools/health-app/README.md`.
+Your health numbers (body, labs, check-ups, training, sleep) live in the Life App's Corpo and
+Salute areas: `tools/life-app/src/health/health-page.tsx`, filled from `data/happiness/` at build
+and published encrypted, ciphertext-only, like the rest of the app. Setup and security model:
+`tools/life-app/README.md`.

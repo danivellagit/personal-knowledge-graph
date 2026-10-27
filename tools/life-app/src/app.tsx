@@ -273,7 +273,7 @@ export default function App() {
     </div>
   );
 
-  // ---------- Corpo: hub + full-screen sub-pages (iOS push), built on the health app (same component as the Salute app) ----------
+  // ---------- Corpo: hub + full-screen sub-pages (iOS push), built on the health page (src/health/health-page.tsx) ----------
   // hub = two blocks. OGGI: day picker + Oggi ring + guidance + the daily sections (all follow the picked day).
   // LUNGO PERIODO: its ring + Allenamento, Peso, Biologia, Tendenze (never follow the picker, no date).
   // A card opens its sub-page with ONE header (back, title; the day picker only on the daily ones)

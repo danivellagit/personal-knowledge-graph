@@ -107,14 +107,10 @@ it, and each optional tool says "not configured" instead of failing.
 - **The location layer**: your phone's GPS (via the Overland app and a small receiver you host)
   plus a Google Maps Timeline export, kept off-repo, so a meeting can get a place without anyone
   saying it (`tools/location.py`, `tools/location-pull.sh`).
-- **The health app**: your health numbers as a password-locked app on your phone's home screen.
-  A React page with one `DATA` block (an example ships with fake data) is encrypted whole and
-  published as a ciphertext-only site on GitHub Pages; the block can be filled from the body
-  layer and the food log (`tools/publish_health_app.sh`, `tools/health-app/`).
 - **The Life App**: the whole life on one screen. One number, *Life Health*, over seven areas
   (body, health, work, money, relationships, growth, daily life), each fed by the agent that owns
-  it through one JSON file in `data/happiness/`. Same encryption and ciphertext-only Pages site as
-  the health app, which it contains as its Corpo/Salute tabs. It ships with fake sample data, so it
+  it through one JSON file in `data/happiness/`. Encrypted whole and published as a ciphertext-only
+  site on GitHub Pages; your health numbers live in its Corpo/Salute tabs. It ships with fake sample data, so it
   builds on a fresh clone: `bash tools/life-app/setup.sh` (details in
   [`tools/life-app/README.md`](tools/life-app/README.md)).
 
@@ -175,7 +171,6 @@ personal-knowledge-graph/
     food.py  calories.py         # optional: food log, daily calorie estimate
     location.py  location-pull.sh  # optional: the location layer
     sleep_fields.py              # optional: per-night sleep fields from the wearable CLI
-    publish_health_app.sh  health-app/   # optional: the encrypted phone dashboard
     life-app/                    # optional: the Life App (setup.sh, publish.sh, sample-data/, README)
     happiness.py                 # validate / init / inject / recap data/happiness/*.json for the Life App
     template_sync.py             # maintainers: bring app updates from an upstream instance, leak-checked

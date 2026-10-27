@@ -1,4 +1,0 @@
-node_modules/
-out/
-# the per-instance salt lives off-repo (health_app.salt_file); never commit one here
-salt.txt

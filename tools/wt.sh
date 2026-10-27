@@ -58,7 +58,7 @@ fetch() {
 # ignored things the tools need, shared from the main checkout instead of reinstalled per tree
 link_local() {
   local wt="$1" rel
-  for rel in tools/health-app/node_modules tools/life-app/node_modules config.local.yml; do
+  for rel in tools/life-app/node_modules config.local.yml; do
     [ -e "$MAIN/$rel" ] || continue
     [ -e "$wt/$rel" ] || [ -L "$wt/$rel" ] && continue
     mkdir -p "$(dirname "$wt/$rel")"

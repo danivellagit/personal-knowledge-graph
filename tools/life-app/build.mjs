@@ -37,9 +37,9 @@ const scoresOut = resolve(arg("scores-out", join(HERE, "out/scores.json")));
 const ITER = 310000;
 if (!saluteSrc || !existsSync(saluteSrc)) { console.error("missing health page source: " + saluteSrc); process.exit(2); }
 
-// 1. health Page: the WHOLE health app source (same code the Salute app publishes), included at build time.
+// 1. health Page: the WHOLE health page source (src/health/health-page.tsx), included at build time.
 // It is never edited on disk: build-time patches below only add an "embedded" mode (props) used by the Life App
-// Corpo and Salute pages. Without props the component behaves exactly as in the Salute app.
+// Corpo and Salute pages. Without props the component behaves as a standalone health page.
 // Every patch must match exactly; if the health Page changes a patched line the build fails loudly (fix the anchor here).
 // pages that predate the config globals (e.g. an instance's own copy of the page kept elsewhere) get the three
 // declarations the build-time fragments use; the page in src/health/ declares them itself
