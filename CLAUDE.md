@@ -348,6 +348,16 @@ of commits piled up unpushed on one machine while other sessions pushed theirs.
   `push`).
 - **If you are not Claude Code**, the hooks do not run for you: pull before you start and commit
   + push yourself after every change.
+- **Several agents on one machine:** give each its own worktree instead of sharing one checkout:
+  `tools/wt.sh init <agent>` once, then `tools/wt.sh sync <agent>` when it arrives and
+  `tools/wt.sh sync <agent> "message" PATH...` after each change (adds only those paths, rebases,
+  pushes, never forces). `tools/wt.sh doctor` reports stale worktrees and onboarding gaps.
+  `tools/git-sync.sh` does the same for a single shared checkout.
+- **Pre-commit guard:** run `git config core.hooksPath .githooks` once per clone (`wt.sh init` does
+  it). `.githooks/pre-commit` runs `tools/precommit.py` on the staged files: size cap, repo layout
+  (no logs, databases, media under data/), secrets (gitleaks, regex fallback), mechanical lint
+  findings, Life App data validation. Emergency skip only with `DK_PRECOMMIT_SKIP=<check>
+  DK_PRECOMMIT_REASON="why"`, which is logged; never `--no-verify`.
 - `data/_gaps/history.jsonl` merges with `merge=union` (`.gitattributes`): it is an append-only
   ledger, both sides' lines are kept. Any other conflict: resolve it, never drop the other side.
 
