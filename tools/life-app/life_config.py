@@ -136,6 +136,12 @@ def resolve():
             "token_file": p(g("writeback.token_file", os.path.join(home, ".secrets", "life-log-token"))),
         },
         "areas": areas,
+        # desktop layout: on a wide screen (PC browser) the app shows a sidebar and multi-column pages instead of the
+        # phone layout; phones (narrower than min_width) always get the phone layout, unchanged
+        "desktop": {
+            "enabled": truthy(g("desktop.enabled", "true", "LIFE_APP_DESKTOP"), True),
+            "min_width": int(num(g("desktop.min_width", 1024), 1024)),
+        },
     }
 
 

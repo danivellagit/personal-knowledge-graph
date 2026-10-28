@@ -83,12 +83,49 @@ const sectionTitle = (t: string, right?: ReactNode) => (
   <div style={{ ...row, justifyContent: "space-between", padding: "10px 2px 0" }}><span style={{ ...caps, fontSize: 13, lineHeight: "18px", color: K.t1 }}>{t}</span>{right ?? null}</div>
 );
 
+// ---------- desktop layout (PC browser, viewport >= life_app.desktop.min_width): sidebar + multi-column pages ----------
+// Phones never reach the width, so they always get the phone layout below, unchanged (same DOM).
+const DESK_Q = `(min-width: ${LIFE.desktop?.minWidth ?? 1024}px)`;
+const deskMQ = (): MediaQueryList | null => (LIFE.desktop?.enabled === false || typeof window === "undefined" || !window.matchMedia ? null : window.matchMedia(DESK_Q));
+const useDesk = (): boolean => {
+  const [d, setD] = useState<boolean>(() => !!deskMQ()?.matches);
+  useEffect(() => {
+    const q = deskMQ(); if (!q) return;
+    const f = () => setD(q.matches);
+    if (q.addEventListener) q.addEventListener("change", f); else q.addListener(f);
+    return () => { if (q.removeEventListener) q.removeEventListener("change", f); else q.removeListener(f); };
+  }, []);
+  return d;
+};
+const SIDE_W = 248;
+// desktop-only CSS (rendered only in the desktop layout): hover states, the multi-column flow of the area pages and of the
+// embedded health pages (.hx-view column -> masonry columns; a block never splits across columns)
+const DESK_CSS = `
+.dk .wb-view{padding-bottom:40px !important}
+.dk button{transition:background-color .15s ease, filter .15s ease, border-color .15s ease}
+.dk .dk-main button:not(:disabled):hover{filter:brightness(1.14)}
+.dk .dk-side .wb-tab:hover{background:rgba(255,255,255,.06) !important}
+.dk .dk-flow{column-width:340px;column-gap:20px}
+.dk .dk-flow > *{break-inside:avoid;margin:0 0 14px}
+.dk .hx-view{max-width:none !important}
+.dk .hx-view > div{display:block !important;column-width:400px;column-gap:20px}
+.dk .hx-view > div > :not([style*="position: fixed"]){break-inside:avoid;margin:0 0 14px !important}
+.dk .hx-view > div > div:not([aria-label]):not(:has(> :not(span))){break-after:avoid}
+.dk .hx-view > div > [aria-label^="Blocco"], .dk .hx-view > div > .dk-span{column-span:all}
+.dk .hx-view > div > [aria-label^="Sezioni"], .dk .hx-view > div > [aria-label="Altro Corpo"]{display:contents !important}
+.dk .hx-view > div > [aria-label^="Sezioni"] > *, .dk .hx-view > div > [aria-label="Altro Corpo"] > *{break-inside:avoid;margin:0 0 14px !important}
+.dk-main ::-webkit-scrollbar{width:10px;height:10px}
+`;
+
 type Tab = "home" | "corpo" | "salute" | "lavoro" | "finanze" | "altro";
 type View = { tab: Tab; sub: AreaId | null };
 type CView = "oggi" | "settimana" | "lungo";
 
 export default function App() {
   const [view, setView] = useState<View>({ tab: "home", sub: null });
+  const desk = useDesk();
+  // a section title + its card(s): one block on desktop (it never splits across columns), plain siblings on the phone
+  const blk = (a: ReactNode, b: ReactNode) => (desk ? <div className="dk-blk" style={col(14)}>{a}{b}</div> : <>{a}{b}</>);
   const [corpoTab, setCorpoTab] = useState<HTab>("home");
   const [corpoSel, setCorpoSel] = useState<string>(DATA.today);
   const [corpoScreen, setCorpoScreen] = useState<boolean>(false);
@@ -213,7 +250,61 @@ export default function App() {
       {weeklyList("Cosa fare per migliorare", K.blue, WEEKLY.improve, "improve")}
     </div>
   ) : null;
-  const home = (
+  const weeklyCol = (title: string, color: string, items: string[], k: string) => (
+    <div data-weekly={k} style={{ ...card, ...col(10) }}>
+      <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color }}>{title}</span>
+      {items.length ? items.map((t, i) => (
+        <div key={i} style={{ ...row, gap: 10, alignItems: "flex-start" }}>
+          <span style={{ width: 6, height: 6, borderRadius: 3, background: color, flex: "0 0 auto", marginTop: 7 }} />
+          <span style={{ fontSize: 15, lineHeight: "21px", color: K.t1, flex: 1 }}>{t}</span>
+        </div>
+      )) : <span style={lbl}>—</span>}
+    </div>
+  );
+  const areaTile = (a: Area) => {
+    const weak = WEAKEST && a.id === WEAKEST.id;
+    return (
+      <button key={a.id} onClick={() => openArea(a.id)} aria-label={`Apri ${a.name}`} style={{ ...btn, ...card, ...col(12), cursor: "pointer", borderColor: weak ? `${K.weak}66` : K.line }}>
+        <div style={{ ...row, gap: 14 }}>
+          {ring(a.score, 62, 6, a.score === null ? <span style={num(18, K.t3)}>—</span> : <span style={num(22, weak ? K.weak : K.t1)}>{a.score}</span>)}
+          <div style={{ ...col(3), flex: 1 }}>
+            <span style={{ ...row, gap: 8 }}>{ic(AREA_ICON[a.id], a.score === null ? K.t3 : weak ? K.weak : K.t1, 17)}<span style={{ ...caps, fontSize: 13, lineHeight: "17px", color: weak ? K.weak : K.t1 }}>{a.name}</span></span>
+            <span style={lbl}>{a.score === null ? "in arrivo" : weak ? "l'area più debole" : a.agents === "da decidere" ? "" : `con ${a.agents}`}</span>
+          </div>
+          {ic("right", K.t3, 16, 2.2)}
+        </div>
+        {a.tip ? <span style={{ ...txt, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" } as CSSProperties}>{a.tip}</span> : null}
+      </button>
+    );
+  };
+  const homeDesk = (
+    <div>
+      {header("Life Health", todayLine)}
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(380px, 420px) minmax(0, 1fr)", gap: 20, padding: "20px 16px 0", alignItems: "stretch" }}>
+        <div aria-label="Life Health" style={{ ...card, padding: "22px 0 18px" }}>{happyRing}</div>
+        {WEEKLY ? (
+          <div data-weekly="block" style={{ ...card, ...col(12), justifyContent: "center", padding: "24px 28px" }}>
+            <span data-weekly="label" style={{ ...caps, fontSize: 11, lineHeight: "14px", color: K.t3 }}>Il quadro · aggiornato il {updOf(WEEKLY.generatedAt)}</span>
+            <div data-weekly="conclusion" style={col(6)}>
+              {WEEKLY.conclusion.map((t, i) => <span key={i} style={{ fontSize: 21, lineHeight: "30px", fontWeight: 400, color: K.t1 }}>{t}</span>)}
+            </div>
+          </div>
+        ) : <div />}
+      </div>
+      {WEEKLY ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14, alignItems: "stretch", padding: "14px 16px 0" }}>
+          {weeklyCol("Cosa va bene", K.good, WEEKLY.good, "good")}
+          {weeklyCol("Cosa va male", K.low, WEEKLY.bad, "bad")}
+          {weeklyCol("Cosa fare per migliorare", K.blue, WEEKLY.improve, "improve")}
+        </div>
+      ) : null}
+      <div style={{ ...col(14), padding: "20px 16px 0" }}>
+        {sectionTitle("Le aree")}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>{AREAS.map(areaTile)}</div>
+      </div>
+    </div>
+  );
+  const home = desk ? homeDesk : (
     <div>
       {header("Life Health", todayLine)}
       <div style={{ ...col(14), padding: "14px 16px 0" }}>
@@ -260,7 +351,22 @@ export default function App() {
     </div>
   );
   const emptyCard = (t: string, tag = true) => <div style={{ ...card, ...col(6), alignItems: "center", textAlign: "center", padding: "22px 16px" }}>{tag ? soon() : null}<span style={txt}>{t}</span></div>;
-  const page = (a: Area, extra: ReactNode, back?: () => void, before?: ReactNode) => (
+  const page = (a: Area, extra: ReactNode, back?: () => void, before?: ReactNode) => desk ? (
+    <div>
+      {header(a.name, a.agents === "da decidere" ? "Agente da decidere" : `Con ${a.agents}`, back)}
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(300px, 340px) minmax(0, 1fr)", gap: 20, padding: "20px 16px 0", alignItems: "start" }}>
+        <div style={{ ...col(14), position: "sticky", top: 96 }}>
+          <div style={{ ...card, padding: "18px 16px" }}>{hero(a)}</div>
+          {tipCard(a.tip)}
+        </div>
+        <div className="dk-flow">
+          {before ?? null}
+          {a.subs.length ? blk(sectionTitle("Sezioni"), <div style={col(14)}>{a.subs.map(subCard)}</div>) : null}
+          {extra}
+        </div>
+      </div>
+    </div>
+  ) : (
     <div>
       {header(a.name, a.agents === "da decidere" ? "Agente da decidere" : `Con ${a.agents}`, back)}
       <div style={{ ...col(14), padding: "14px 16px 0" }}>
@@ -671,7 +777,12 @@ export default function App() {
       {saluteScreen ? null : saluteTab === "biologia" ? header("Biologia", "Salute", backToSalute) : header(saluteA.name, `Con ${saluteA.agents}`)}
       {!saluteScreen && saluteTab === "biologia" && bioSub ? <div style={{ padding: "14px 16px 0" }}>{subCard(bioSub)}</div> : null}
       <SaluteApp embed noHeader tab={saluteTab} onTab={onBioTab} onView={() => {}} onScreen={onSaluteScreen} sel={DATA.today} slots={{
-        hero: saluteTab === "medico" ? <>{hero(saluteA)}{tipCard(saluteA.tip)}{sectionTitle("Sezioni")}{saluteA.subs.map(saluteSub)}</> : null,
+        hero: saluteTab === "medico" ? (desk
+          ? <div className="dk-span" style={{ display: "grid", gridTemplateColumns: "minmax(300px, 340px) minmax(0, 1fr)", gap: 20, alignItems: "start" }}>
+              <div style={col(14)}><div style={{ ...card, padding: "18px 16px" }}>{hero(saluteA)}</div>{tipCard(saluteA.tip)}</div>
+              <div style={col(14)}>{sectionTitle("Sezioni")}<div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>{saluteA.subs.map(saluteSub)}</div></div>
+            </div>
+          : <>{hero(saluteA)}{tipCard(saluteA.tip)}{sectionTitle("Sezioni")}{saluteA.subs.map(saluteSub)}</>) : null,
         bioPace: paceCard,
       }} />
     </div>
@@ -686,8 +797,8 @@ export default function App() {
   const wkDay = (d: string) => { const p = pDate(d), n = diffDays(todayISO, d); return n === 0 ? "oggi" : n === 1 ? "domani" : `${WDL[p.w].slice(0, 3)} ${p.dd}`; };
   const lavoroPrio = L.priorities && L.priorities.length ? (
     <>
-      {sectionTitle("Priorità", <span style={lbl}>in ordine</span>)}
-      <div aria-label="Priorità lavoro" style={{ ...card, padding: "2px 16px" }}>
+      {blk(sectionTitle("Priorità", <span style={lbl}>in ordine</span>),
+      <div key="p" aria-label="Priorità lavoro" style={{ ...card, padding: "2px 16px" }}>
         {L.priorities.map((p, i) => (
           <div key={p.rank} aria-label={`Priorità ${p.rank}`} style={{ ...col(6), padding: "14px 0", borderBottom: i < (L.priorities as unknown[]).length - 1 ? `1px solid ${K.line}` : "none" }}>
             <div style={{ ...row, gap: 10, alignItems: "flex-start" }}>
@@ -699,14 +810,14 @@ export default function App() {
             {p.next ? <div style={{ ...row, gap: 8, alignItems: "flex-start", paddingLeft: 34 }}><span aria-hidden="true" style={{ fontSize: 14, lineHeight: "20px", color: K.t3, flex: "0 0 auto" }}>→</span><span style={{ fontSize: 14, lineHeight: "20px", color: K.t1, flex: 1 }}>{p.next}{p.quando ? <span style={{ color: K.t3 }}>{` · entro ${shortDate(p.quando)}`}</span> : null}</span></div> : null}
           </div>
         ))}
-      </div>
-      {thisWeek.length && thisWeek.length <= 3 ? <>{sectionTitle("Questa settimana")}{listCard(thisWeek.map((e) => ({ title: e.name, sub: e.time ? `${wkDay(e.date)} · ${e.time}` : wkDay(e.date), right: e.end ? `${shortDate(e.date)} – ${shortDate(e.end)}` : shortDate(e.date), color: e.date === todayISO ? K.weak : K.t2 })))}</> : null}
+      </div>)}
+      {thisWeek.length && thisWeek.length <= 3 ? blk(sectionTitle("Questa settimana"), listCard(thisWeek.map((e) => ({ title: e.name, sub: e.time ? `${wkDay(e.date)} · ${e.time}` : wkDay(e.date), right: e.end ? `${shortDate(e.date)} – ${shortDate(e.end)}` : shortDate(e.date), color: e.date === todayISO ? K.weak : K.t2 })))) : null}
     </>
   ) : null;
   const lavoroExtra = (
     <>
-      {!L.priorities?.length && L.priorita ? <>{sectionTitle("Priorità")}<div style={{ ...card, ...col(8) }}>{L.priorita.steps.map((x) => <div key={x} style={{ ...row, gap: 10, alignItems: "flex-start" }}>{ic("check", K.good, 16, 2.2)}<span style={{ ...txt, flex: 1 }}>{x}</span></div>)}</div></> : null}
-      {L.wins && L.wins.length ? <>{sectionTitle("Cose che vanno bene")}<div aria-label="Cose che vanno bene" style={{ ...card, padding: "2px 16px" }}>
+      {!L.priorities?.length && L.priorita ? blk(sectionTitle("Priorità"), <div style={{ ...card, ...col(8) }}>{L.priorita.steps.map((x) => <div key={x} style={{ ...row, gap: 10, alignItems: "flex-start" }}>{ic("check", K.good, 16, 2.2)}<span style={{ ...txt, flex: 1 }}>{x}</span></div>)}</div>) : null}
+      {L.wins && L.wins.length ? blk(sectionTitle("Cose che vanno bene"), <div aria-label="Cose che vanno bene" style={{ ...card, padding: "2px 16px" }}>
         {L.wins.map((w, i) => (
           <div key={w.titolo} style={{ ...row, gap: 10, alignItems: "flex-start", padding: "12px 0", borderBottom: i < (L.wins as unknown[]).length - 1 ? `1px solid ${K.line}` : "none" }}>
             {ic("check", K.good, 16, 2.2)}
@@ -714,24 +825,24 @@ export default function App() {
             {w.data ? <span style={{ ...lbl, whiteSpace: "nowrap" }}>{shortDate(w.data)}</span> : null}
           </div>
         ))}
-      </div></> : null}
-      {L.openLoops.length ? <>{sectionTitle("Cose aperte", <span style={lbl}>aspettano te</span>)}{listCard(L.openLoops.map((x) => ({ title: x })))}</> : null}
-      {L.soddisfazione ? <>{sectionTitle("Soddisfazione")}<div style={card}><span style={txt}>{L.soddisfazione.line}</span></div></> : null}
-      {L.linkedin ? <>{sectionTitle("LinkedIn", <span style={lbl}>settimana del {shortDate(L.linkedin.week)}</span>)}{kv([
+      </div>) : null}
+      {L.openLoops.length ? blk(sectionTitle("Cose aperte", <span style={lbl}>aspettano te</span>), listCard(L.openLoops.map((x) => ({ title: x })))) : null}
+      {L.soddisfazione ? blk(sectionTitle("Soddisfazione"), <div style={card}><span style={txt}>{L.soddisfazione.line}</span></div>) : null}
+      {L.linkedin ? blk(sectionTitle("LinkedIn", <span style={lbl}>settimana del {shortDate(L.linkedin.week)}</span>), kv([
         ["Follower", grp(L.linkedin.followers)],
         ["Visite al profilo (90 giorni)", grp(L.linkedin.profileViews90d)],
         ["Impression post (7 giorni)", grp(L.linkedin.impressions7d)],
         ["Comparse nelle ricerche", grp(L.linkedin.searchAppearances)],
-      ])}<div style={card}><span style={lbl}>Post migliore</span><div style={{ ...txt, marginTop: 2 }}>{L.linkedin.bestPost}</div></div></> : null}
-      {(L.priorities?.length ? later : upcoming).length ? <>{sectionTitle(L.priorities?.length ? "Più avanti" : "In calendario")}{listCard((L.priorities?.length ? later.slice(0, 3) : upcoming).map((e) => ({ title: e.name, sub: e.time ?? undefined, right: e.end ? `${shortDate(e.date)} – ${shortDate(e.end)}` : shortDate(e.date) })))}</> : null}
+      ]), <div style={card}><span style={lbl}>Post migliore</span><div style={{ ...txt, marginTop: 2 }}>{L.linkedin.bestPost}</div></div>) : null}
+      {(L.priorities?.length ? later : upcoming).length ? blk(sectionTitle(L.priorities?.length ? "Più avanti" : "In calendario"), listCard((L.priorities?.length ? later.slice(0, 3) : upcoming).map((e) => ({ title: e.name, sub: e.time ?? undefined, right: e.end ? `${shortDate(e.date)} – ${shortDate(e.end)}` : shortDate(e.date) })))) : null}
       <span style={{ ...lbl, padding: "0 2px" }}>Da {agentLabel("lavoro")}, aggiornato il {longDate(L.updated)}</span>
     </>
   );
   const kindColor = { scaduta: K.low, urgente: K.weak, aperta: K.t3, pagata: K.good } as const;
   const finanzeExtra = (
     <>
-      {sectionTitle("Scadenze", SCADENZE_UPDATED ? <span style={lbl}>aggiornate {shortDate(SCADENZE_UPDATED)}</span> : undefined)}
-      {scadenze.length ? listCard(scadenze.map((x) => ({ title: x.cosa, sub: `${x.entita} · ${x.scadenza}${/\d/.test(x.importo) ? ` · ${x.importo} €` : ""} · ${x.chi}`, right: x.kind, color: kindColor[x.kind] }))) : emptyCard("Nessuna scadenza registrata.")}
+      {blk(sectionTitle("Scadenze", SCADENZE_UPDATED ? <span style={lbl}>aggiornate {shortDate(SCADENZE_UPDATED)}</span> : undefined),
+      scadenze.length ? listCard(scadenze.map((x) => ({ title: x.cosa, sub: `${x.entita} · ${x.scadenza}${/\d/.test(x.importo) ? ` · ${x.importo} €` : ""} · ${x.chi}`, right: x.kind, color: kindColor[x.kind] }))) : emptyCard("Nessuna scadenza registrata."))}
     </>
   );
   // relazioni: birthdays in the next 60 days, events in the next 60 days
@@ -744,9 +855,9 @@ export default function App() {
   const when = (n: number) => (n === 0 ? "oggi" : n === 1 ? "domani" : `tra ${n} giorni`);
   const relazioniExtra = (
     <>
-      {sectionTitle("Compleanni in arrivo")}
-      {bdays.length ? listCard(bdays.slice(0, 8).map((b) => ({ title: b.name, sub: `${shortDate(b.iso)}${b.age ? ` · compie ${b.age} anni` : ""}`, right: when(b.inDays), color: b.inDays <= 7 ? K.weak : K.t2 }))) : emptyCard("Nessun compleanno nei prossimi due mesi.")}
-      {evs.length ? <>{sectionTitle("Eventi in arrivo")}{listCard(evs.map((e) => ({ title: e.name, right: e.end ? `${shortDate(e.date)} – ${shortDate(e.end)}` : shortDate(e.date) })))}</> : null}
+      {blk(sectionTitle("Compleanni in arrivo"),
+      bdays.length ? listCard(bdays.slice(0, 8).map((b) => ({ title: b.name, sub: `${shortDate(b.iso)}${b.age ? ` · compie ${b.age} anni` : ""}`, right: when(b.inDays), color: b.inDays <= 7 ? K.weak : K.t2 }))) : emptyCard("Nessun compleanno nei prossimi due mesi."))}
+      {evs.length ? blk(sectionTitle("Eventi in arrivo"), listCard(evs.map((e) => ({ title: e.name, right: e.end ? `${shortDate(e.date)} – ${shortDate(e.end)}` : shortDate(e.date) })))) : null}
       <span style={{ ...lbl, padding: "0 2px" }}>Dal report di {agentLabel("relazioni")} del {longDate(RELAZIONI.updated)}</span>
     </>
   );
@@ -755,7 +866,7 @@ export default function App() {
     const steps = (d.sfere ?? []).flatMap((s) => s.steps.map((t) => ({ title: t, sub: s.name }))).filter((x) => x.title !== a.tip);
     return (
       <>
-        {steps.length ? <>{sectionTitle("Prossimi passi")}{listCard(steps)}</> : null}
+        {steps.length ? blk(sectionTitle("Prossimi passi"), listCard(steps)) : null}
         <span style={{ ...lbl, padding: "0 2px" }}>Da {agentLabel(a.id)}, aggiornato il {longDate(d.updated)}</span>
       </>
     );
@@ -765,15 +876,16 @@ export default function App() {
     const t = [...(VITA?.todo ?? [])].sort((a, b) => (a.data ?? "9999") < (b.data ?? "9999") ? -1 : (a.data ?? "9999") > (b.data ?? "9999") ? 1 : 0);
     if (!t.length) return null;
     const today = romeDay();
-    return <>{sectionTitle("Cose aperte")}{listCard(t.map((x) => ({ title: x.titolo, sub: x.quando ?? undefined,
+    return blk(sectionTitle("Cose aperte"), listCard(t.map((x) => ({ title: x.titolo, sub: x.quando ?? undefined,
       right: x.priorita === "alta" ? "priorità alta" : x.data && x.data < today ? "scaduta" : undefined,
-      color: x.priorita === "alta" || (x.data && x.data < today) ? K.weak : K.t2 })))}</>;
+      color: x.priorita === "alta" || (x.data && x.data < today) ? K.weak : K.t2 }))));
   })();
   const altro = (
     <div>
       {header("Altro", ((ns: string[]) => ns.length > 1 ? `${ns.slice(0, -1).map((n, i) => (i ? n.toLowerCase() : n)).join(", ")} e ${ns[ns.length - 1].toLowerCase()}` : ns[0] ?? "")(AREAS.filter((a) => ["relazioni", "crescita", "vita"].includes(a.id)).map((a) => a.name)))}
       <div style={{ ...col(14), padding: "14px 16px 0" }}>
-        <div style={{ ...card, padding: "2px 16px" }}>{(["relazioni", "crescita", "vita"] as AreaId[]).filter((id) => AREAS.some((a) => a.id === id)).map((id, i, ids) => areaRow(area(id), i === ids.length - 1))}</div>
+        {desk ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>{(["relazioni", "crescita", "vita"] as AreaId[]).filter((id) => AREAS.some((a) => a.id === id)).map((id) => areaTile(area(id)))}</div>
+          : <div style={{ ...card, padding: "2px 16px" }}>{(["relazioni", "crescita", "vita"] as AreaId[]).filter((id) => AREAS.some((a) => a.id === id)).map((id, i, ids) => areaRow(area(id), i === ids.length - 1))}</div>}
       </div>
     </div>
   );
@@ -794,6 +906,40 @@ export default function App() {
     { id: "home", label: "Home", icon: "home" }, { id: "corpo", label: areaName("corpo", "Corpo"), icon: "body" }, { id: "salute", label: areaName("salute", "Salute"), icon: "heart" },
     { id: "lavoro", label: areaName("lavoro", "Lavoro"), icon: "work" }, { id: "finanze", label: areaName("finanze", "Finanze"), icon: "money" }, { id: "altro", label: "Altro", icon: "more" },
   ];
+  const goTab = (id: Tab) => { if (id === "corpo") { setCorpoTab("home"); setCorpoScreen(false); } if (id !== "salute" || view.tab !== "salute") { saluteOpen.current = false; setSaluteScreen(false); } if (id === "salute") setSaluteTab("medico"); setView({ tab: id, sub: null }); };
+  if (desk) {
+    const scoreOf = (id: Tab | AreaId) => AREAS.find((a) => a.id === id)?.score ?? null;
+    const sideItem = (key: string, label: string, icon: string, on: boolean, go: () => void, score: number | null, sub = false, tab = true) => (
+      <button key={key} className={tab ? "wb-tab" : "dk-sub"} aria-label={label} aria-current={on ? "page" : undefined} onClick={go}
+        style={{ ...btn, ...row, width: "100%", boxSizing: "border-box", gap: 12, height: sub ? 36 : 42, padding: sub ? "0 12px 0 44px" : "0 12px", borderRadius: 10, background: on ? K.card2 : "transparent", border: `1px solid ${on ? K.line : "transparent"}` }}>
+        {sub ? null : ic(icon, on ? K.t1 : "#9AA1A8", 20, on ? 2.1 : 1.7)}
+        <span className="wb-lbl" style={{ flex: 1, fontSize: sub ? 13 : 14, lineHeight: "18px", fontWeight: on ? 700 : 500, color: on ? K.t1 : sub ? K.t3 : K.t2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+        {score !== null ? <span style={num(15, WEAKEST && WEAKEST.id === key ? K.weak : on ? K.t1 : K.t3)}>{score}</span> : null}
+      </button>
+    );
+    const altroIds = (["relazioni", "crescita", "vita"] as AreaId[]).filter((id) => AREAS.some((a) => a.id === id));
+    return (
+      <div className="wb-root dk" style={{ position: "fixed", inset: 0, height: "var(--app-h, 100vh)", background: K.bg, color: K.t1, fontFamily: FONT, overflow: "hidden" }}>
+        <style>{DESK_CSS}</style>
+        <nav className="wb-dock dk-side" aria-label="Navigazione" style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: SIDE_W, zIndex: 8, boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 4, padding: "20px 14px", background: "#0E1215", borderRight: `1px solid ${K.line}`, overflowY: "auto" }}>
+          <div style={{ ...row, gap: 12, padding: "0 6px 18px" }}>
+            {avatar}
+            <div style={{ ...col(1), flex: 1 }}>
+              <span style={{ ...caps, fontSize: 15, lineHeight: "20px", color: K.t1 }}>{LIFE.appName || "Life"}</span>
+              <span style={lbl}>{todayLine}</span>
+            </div>
+          </div>
+          {TABS.map((t) => sideItem(t.id, t.label, t.icon, view.tab === t.id && (t.id !== "altro" || !view.sub), () => goTab(t.id), t.id === "home" ? HAPPINESS : t.id === "altro" ? null : scoreOf(t.id)))}
+          {altroIds.map((id) => sideItem(id, area(id).name, AREA_ICON[id], view.tab === "altro" && view.sub === id, () => openArea(id), scoreOf(id), true, false))}
+          <div style={{ flex: 1 }} />
+          <span style={{ ...lbl, padding: "12px 8px 0" }}>{`Dati aggiornati alle ${DATA.updatedAt.slice(11, 16)}`}</span>
+        </nav>
+        <div ref={scroller} className="wb-view" style={{ position: "absolute", left: SIDE_W, top: 0, right: 0, bottom: 0, overflowY: "auto", boxSizing: "border-box" } as CSSProperties}>
+          <div className="dk-main" style={{ maxWidth: 1560, margin: "0 auto", padding: "0 24px" }}>{screen}</div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="wb-root" style={{ position: "fixed", inset: 0, height: "var(--app-h, 100vh)", background: K.bg, color: K.t1, fontFamily: FONT, overflow: "hidden" }}>
       <div ref={scroller} className="wb-view" style={{ position: "absolute", inset: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "calc(var(--dock-h, 74px) + 28px)", boxSizing: "border-box" } as CSSProperties}>
@@ -804,7 +950,7 @@ export default function App() {
           {TABS.map((t) => {
             const on = view.tab === t.id;
             return (
-              <button key={t.id} className="wb-tab" aria-label={t.label} onClick={() => { if (t.id === "corpo") { setCorpoTab("home"); setCorpoScreen(false); } if (t.id !== "salute" || view.tab !== "salute") { saluteOpen.current = false; setSaluteScreen(false); } if (t.id === "salute") setSaluteTab("medico"); setView({ tab: t.id, sub: null }); }} style={{ ...btn, flex: "1 1 0", minWidth: 0, height: 58, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
+              <button key={t.id} className="wb-tab" aria-label={t.label} onClick={() => goTab(t.id)} style={{ ...btn, flex: "1 1 0", minWidth: 0, height: 58, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
                 {ic(t.icon, on ? K.t1 : "#9AA1A8", 23, on ? 2.1 : 1.7)}
                 <span className="wb-lbl" style={{ fontSize: 10, lineHeight: "12px", fontWeight: on ? 700 : 600, letterSpacing: "0.02em", color: on ? K.t1 : "#9AA1A8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{t.label}</span>
               </button>
