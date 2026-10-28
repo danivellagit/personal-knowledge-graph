@@ -138,6 +138,8 @@ spec in the same turn (rule 9). Times are in the owner's timezone.
 - [Weekly improvement proposals](routines/weekly-improvement-proposals.md) - `30 9 * * 1` - Up to three proposals from the week's failures and friction, into `proposals.md`
 - [Weekly gap review](routines/weekly-gap-review.md) - `0 10 * * 0` - The few gaps of the register worth asking the owner about, as short questions
 - [Weekly Life App recap](routines/weekly-life-recap.md) - `0 7 * * 1` - Build `data/happiness/weekly-summary.json` from the area files, validate, publish
+- [Daily Life App freshness check](routines/daily-life-app-freshness-check.md) - `30 8 * * *` - Each `data/happiness/` area fresh and the published build current; stale areas go to their owning agent
+- [Work repo PR review](routines/work-repo-pr-review.md) - on PR opened - Read-only review of each new PR on a shared work repo, verdict to the owner in a couple of lines
 - [Daily upstream template sync (maintainers of a public template only)](routines/upstream-template-sync.md) - `30 6 * * *` - Run `tools/template_sync.py` from the private instance to the public template: verbatim only for paths classified generic, everything else into a pending report to anonymize by hand
 
 ## Where it lives
