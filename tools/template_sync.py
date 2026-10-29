@@ -50,6 +50,7 @@ SYNC = [
     "tools/life-app/area-modules.mjs", "tools/life-app/grok-canvas-shim.js", "tools/life-app/make_icons.py",
     "tools/life-app/training.mjs", "tools/life-app/training-patches.mjs", "tools/life-app/steps-patches.mjs",
     "tools/life-app/archive.mjs", "tools/life-app/archive-patches.mjs",
+    "tools/life-app/misure.mjs", "tools/life-app/misure-patches.mjs",
     "tools/life-app/*.fragments.txt", "tools/life-app/icons/*.png", "tools/life-app/src/*.ts", "tools/life-app/src/*.tsx",
     "tools/life-app/src/*.mjs", "tools/life-app/src/*.jsx", "tools/life-app/tests/*", "tools/life-app/life_config.py",
     "tools/happiness_eval.mjs", "tools/config.py", "tools/template_sync.py", "tools/template_sync.gitleaks.toml",

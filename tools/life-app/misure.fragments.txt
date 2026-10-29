@@ -1,0 +1,127 @@
+// Life App only: Salute > Medico > Pressione (home blood pressure) and the Giro vita block of Corpo > Peso (waist
+// circumference), spliced INSIDE the health App component by misure-patches.mjs (build time). Until 2026-10-29 both lived
+// on one Medico page "Misure"; now separate, waist inside the weight page. Data, real only (MD first): MISURE (misure-data.ts) = misure.mjs over
+// data/health/blood-pressure.md and data/body/waist.md. Nothing here writes data.
+// Layout: Pressione page (7-day average of the default arm, morning / evening, trend chart, every reading newest first, the home
+// thresholds); Giro vita block in Peso (latest, change, trend, every measurement; "Nessuna misura ancora" with zero rows).
+// Home thresholds (health assistant, 2026-10-28): under 120/80 ottimale, up to 129/84 normale, 130-134 / 85-89 normale-alta,
+// average 135/85 or more alta (applied from 4 readings in the window; fewer readings, or a single one: 135 SYS or 90 DIA).
+// Calm copy, no alarms.
+// ==== FRAGMENT: misure ====
+  // ---------- Life: Misure (pressione, giro vita) ----------
+  type MisBp = { date: string; time: string | null; arm: string | null; sys: number; dia: number; pulse: number | null; note: string | null };
+  type MisWaist = { date: string; time: string | null; cm: number; note: string | null };
+  const MIS_BP: MisBp[] = (MISURE as { bp: { rows: MisBp[] } }).bp.rows;
+  const MIS_ARM: string = (MISURE as { bp: { arm: string } }).bp.arm;
+  const MIS_W: MisWaist[] = (MISURE as { waist: { rows: MisWaist[] } }).waist.rows;
+  const misArmIt = (a: string | null) => (a === "left" ? "sinistro" : a === "right" ? "destro" : a ?? "");
+  const misArmS = (a: string | null) => (a === "left" ? "sx" : a === "right" ? "dx" : "");
+  const misCat = (s: number, d: number, isAvg: boolean): { label: string; color: string } =>
+    (isAvg ? s >= 135 || d >= 85 : s >= 135 || d >= 90) ? { label: "alta", color: K.warn }
+      : s < 120 && d < 80 ? { label: "ottimale", color: K.up }
+      : s <= 129 && d <= 84 ? { label: "normale", color: K.up }
+      : { label: "normale-alta", color: K.recMid };
+  const misFrom = addDays(now.date, -6);
+  const misArmRows = MIS_BP.filter((r) => r.arm === MIS_ARM || r.arm === null);
+  const misWeek = misArmRows.filter((r) => r.date >= misFrom && r.date <= now.date);
+  const misAvg = (rs: MisBp[]) => (rs.length ? { sys: Math.round(rs.reduce((a, r) => a + r.sys, 0) / rs.length), dia: Math.round(rs.reduce((a, r) => a + r.dia, 0) / rs.length), n: rs.length } : null);
+  const misAll = misAvg(misWeek);
+  const misAm = misAvg(misWeek.filter((r) => r.time !== null && r.time < "12:00"));
+  const misPm = misAvg(misWeek.filter((r) => r.time !== null && r.time >= "12:00"));
+  const misLastBp = MIS_BP.length ? MIS_BP[MIS_BP.length - 1] : null;
+  const misLastW = MIS_W.length ? MIS_W[MIS_W.length - 1] : null;
+  const misCm = (v: number) => v.toLocaleString("it-IT", { maximumFractionDigits: 1 });
+  // simple trend line(s) over the readings in order (x = position, so two readings the same day stay apart)
+  const misChart = (series: { vals: number[]; color: string; label: string }[], refs: { v: number; label: string }[], unit: string) => {
+    const W = 320, H = 120, pad = 10, all = [...series.flatMap((s) => s.vals), ...refs.map((r) => r.v)];
+    const lo = Math.min(...all) - 4, hi = Math.max(...all) + 4, n = Math.max(...series.map((s) => s.vals.length));
+    const x = (i: number) => (n <= 1 ? W / 2 : pad + (i / (n - 1)) * (W - 2 * pad)), y = (v: number) => pad + (1 - (v - lo) / (hi - lo || 1)) * (H - 2 * pad);
+    return (
+      <div style={st(6)}>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" role="img" aria-label={`Andamento ${unit}`} style={{ display: "block" }}>
+          {refs.map((r) => <line key={r.label} x1={0} x2={W} y1={y(r.v)} y2={y(r.v)} stroke={K.t3} strokeWidth={1} strokeDasharray="3 4" opacity={0.6} />)}
+          {series.map((s) => (
+            <g key={s.label}>
+              {s.vals.length > 1 ? <polyline points={s.vals.map((v, i) => `${x(i)},${y(v)}`).join(" ")} fill="none" stroke={s.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" /> : null}
+              {s.vals.map((v, i) => <circle key={i} cx={x(i)} cy={y(v)} r={3} fill={s.color} />)}
+            </g>
+          ))}
+        </svg>
+        <div style={{ ...row, gap: 14, flexWrap: "wrap" }}>
+          {series.map((s) => <span key={s.label} style={{ ...lbl, color: s.color }}>{s.label}</span>)}
+          {refs.length ? <span style={lbl}>tratteggio: {refs.map((r) => r.label).join(" · ")}</span> : null}
+        </div>
+      </div>
+    );
+  };
+  const misAvgStat = (title: string, a: { sys: number; dia: number; n: number } | null) => {
+    const c = a ? misCat(a.sys, a.dia, a.n >= 4) : null;
+    return (
+      <div style={{ ...st(2), flex: 1, minWidth: 0 }}>
+        <span style={{ ...caps, fontSize: 10, lineHeight: "14px", color: K.t3 }}>{title}</span>
+        <span style={numStyle(20, K.t1)}>{a ? `${a.sys}/${a.dia}` : "—"}</span>
+        <span style={{ ...lbl, color: c ? c.color : K.t3 }}>{a && c ? `${c.label} · ${a.n} ${a.n === 1 ? "misura" : "misure"}` : "nessuna misura"}</span>
+      </div>
+    );
+  };
+  const misBpCat = misAll ? misCat(misAll.sys, misAll.dia, misAll.n >= 4) : null;
+  const pressioneScreen = (
+    <div style={st(14)}>
+      {backBar("Pressione")}
+      <div style={{ ...card, ...st(12) }}>
+        <div style={{ ...row, justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+          <div style={{ ...st(2), flex: 1 }}>
+            <span style={capLbl(12)}>Media ultimi 7 giorni</span>
+            <span style={lbl}>braccio {misArmIt(MIS_ARM)}</span>
+            <span style={numStyle(34, K.t1)}>{misAll ? `${misAll.sys}/${misAll.dia}` : "—"}<span style={{ ...lbl, marginLeft: 6 }}>mmHg</span></span>
+          </div>
+          {misBpCat ? <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: misBpCat.color, flex: "0 0 auto", marginTop: 4 }}>{misBpCat.label}</span> : null}
+        </div>
+        <div style={{ ...row, gap: 12, alignItems: "flex-start" }}>
+          {misAvgStat("Mattina", misAm)}
+          {misAvgStat("Sera", misPm)}
+        </div>
+        {!misAll ? <span style={txt}>{MIS_BP.length ? "Nessuna misura negli ultimi 7 giorni." : "Nessuna misura ancora."}</span> : null}
+      </div>
+      {misArmRows.length ? (
+        <div style={{ ...card, ...st(8) }}>
+          <span style={capLbl(12)}>Andamento</span>
+          {misChart([{ vals: misArmRows.map((r) => r.sys), color: K.strain, label: "massima" }, { vals: misArmRows.map((r) => r.dia), color: K.violet, label: "minima" }], [{ v: 135, label: "135" }, { v: 85, label: "85" }], "pressione")}
+        </div>
+      ) : null}
+      {MIS_BP.length ? plain("Misurazioni", [...MIS_BP].reverse().map((r, i, arr) => {
+        const c = misCat(r.sys, r.dia, false);
+        return line(`bp${r.date}${r.time}${r.arm}${i}`, <span>{hShort(r.date)}{r.time ? ` · ${r.time}` : ""}{r.arm ? <span style={lbl}> · {misArmS(r.arm)}</span> : null}</span>,
+          <span><span style={{ color: K.t1 }}>{r.sys}/{r.dia}</span>{r.pulse !== null ? ` · ${r.pulse} bpm` : ""} · <span style={{ color: c.color }}>{c.label}</span></span>, i === arr.length - 1);
+      })) : null}
+      <div style={{ ...card, ...st(4) }}>
+        <span style={capLbl(12)}>Valori di riferimento a casa</span>
+        <span style={txt}><span style={{ color: K.up }}>Ottimale</span> sotto 120/80 · <span style={{ color: K.up }}>normale</span> fino a 129/84 · <span style={{ color: K.recMid }}>normale-alta</span> 130-134 / 85-89 · <span style={{ color: K.warn }}>alta</span> con una media da 135/85 in su.</span>
+        <span style={lbl}>Conta la media di più giorni, non la singola misura. La media usa solo il braccio {misArmIt(MIS_ARM)}.</span>
+      </div>
+    </div>
+  );
+  // Giro vita: a block of the Corpo > Peso page (waist goes with the weight, not in Medico)
+  const giroVitaBlock = (
+    <>
+      {sectionTitle("Giro vita", misLastW ? <span style={lbl}>ultima {hShort(misLastW.date)}</span> : null)}
+      {misLastW ? (
+        <div style={{ ...card, ...st(10) }}>
+          <div style={{ ...row, justifyContent: "space-between", alignItems: "flex-end", gap: 10 }}>
+            <div style={st(2)}>
+              <span style={capLbl(12)}>Ultima misura</span>
+              <span style={numStyle(34, K.t1)}>{misCm(misLastW.cm)}<span style={{ ...lbl, marginLeft: 6 }}>cm</span></span>
+            </div>
+            {MIS_W.length > 1 ? <span style={{ ...lbl, flex: "0 0 auto" }}>{(() => { const d = misLastW.cm - MIS_W[0].cm; return `${d > 0 ? "+" : d < 0 ? "−" : "±"}${misCm(Math.abs(d))} cm dal ${hShort(MIS_W[0].date)}`; })()}</span> : null}
+          </div>
+          {MIS_W.length > 1 ? misChart([{ vals: MIS_W.map((w) => w.cm), color: K.up, label: "giro vita (cm)" }], [], "giro vita") : null}
+        </div>
+      ) : (
+        <div style={{ ...card, ...st(4) }}>
+          <span style={{ ...txt, color: K.t1 }}>Nessuna misura ancora</span>
+          <span style={lbl}>All'altezza dell'ombelico, a digiuno, prima della doccia.</span>
+        </div>
+      )}
+      {MIS_W.length ? plain("Misure", [...MIS_W].reverse().map((w, i, arr) => line(`w${w.date}${w.time}${i}`, <span>{hShort(w.date)} {parts(w.date).y}{w.time ? ` · ${w.time}` : ""}</span>, `${misCm(w.cm)} cm`, i === arr.length - 1))) : null}
+    </>
+  );
