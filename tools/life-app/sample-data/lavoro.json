@@ -2,63 +2,63 @@
  "updated": "2030-01-14",
  "priorita": {
   "status": "da seguire",
-  "line": "Esempio: tre priorità chiare per la settimana.",
+  "line": "Sample: three clear priorities for the week.",
   "steps": [
-   "Scegli la priorità numero uno (esempio)."
+   "Pick priority number one (sample)."
   ],
-  "source": "esempio"
+  "source": "sample"
  },
- "tip": "Blocca due ore per la priorità numero uno (esempio).",
- "source": "esempio",
+ "tip": "Block two hours for priority number one (sample).",
+ "source": "sample",
  "priorities": [
   {
    "rank": 1,
-   "titolo": "Progetto di esempio",
+   "titolo": "Sample project",
    "status": "da seguire",
-   "line": "In corso",
+   "line": "In progress",
    "q4": null,
-   "next": "Prossimo passo di esempio",
+   "next": "Sample next step",
    "quando": "2030-01-18",
-   "source": "esempio"
+   "source": "sample"
   }
  ],
  "sfere": [
   {
    "key": "clienti",
-   "name": "Clienti",
+   "name": "Clients",
    "status": "bene",
-   "line": "Esempio: rapporti buoni.",
+   "line": "Sample: good relationships.",
    "steps": [
-    "Una chiamata di esempio."
+    "A sample call."
    ]
   },
   {
    "key": "team",
    "name": "Team",
    "status": "da seguire",
-   "line": "Esempio: allineamento da migliorare.",
+   "line": "Sample: alignment to improve.",
    "steps": [
-    "Un 1:1 di esempio."
+    "A sample 1:1."
    ]
   }
  ],
  "wins": [
   {
-   "titolo": "Risultato di esempio",
+   "titolo": "Sample win",
    "data": "2030-01-12",
-   "source": "esempio"
+   "source": "sample"
   }
  ],
  "soddisfazione": null,
  "linkedin": null,
  "openLoops": [
-  "Cosa aperta di esempio"
+  "Sample open item"
  ],
  "events": [
   {
    "date": "2030-01-17",
    "time": "10:00",
-   "name": "Riunione di esempio"
+   "name": "Sample meeting"
   }
  ]
 }

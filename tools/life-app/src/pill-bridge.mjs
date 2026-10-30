@@ -1,10 +1,10 @@
 // Pill taps -> life-log events, WITHOUT touching the health Page code (the health page component in src/health/).
-// The Pillole screen saves every tap to localStorage "salute.capelli.aderenza.v1" as
+// The Pills screen saves every tap to localStorage "salute.capelli.aderenza.v1" as
 //   { "YYYY-MM-DD": { p?: "am" | "pm" | "no", t?: ISO } }   (p missing = the day was cleared by hand)
 // (old format { fin, pa, pp } is migrated by the component on first load). This bridge wraps Storage.setItem for
 // that ONE key, diffs the old and new value day by day and emits:
 //   pill.taken   { date, slot: "morning" | "evening" }
-//   pill.missed  { date }                                   ("non le ho prese")
+//   pill.missed  { date }                                   ("I did not take them")
 //   pill.untaken { date, slot: "morning" | "evening" | null, was: "taken" | "missed" | null }   (a second tap = undo;
 //                compensating event; slot/was null when the cleared value came from the graph, not from this phone)
 // The write itself always goes through first and unchanged, so the UI never waits and never breaks.

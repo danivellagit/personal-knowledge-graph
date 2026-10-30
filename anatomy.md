@@ -313,7 +313,7 @@ raw off-repo, only facts in the repo.
 
 ## Health (in the Life App)
 
-Your health numbers (body, labs, check-ups, training, sleep) live in the Life App's Corpo and
-Salute areas: `tools/life-app/src/health/health-page.tsx`, filled from `data/happiness/` at build
+Your health numbers (body, labs, check-ups, training, sleep) live in the Life App's Body and
+Health areas: `tools/life-app/src/health/health-page.tsx`, filled from `data/happiness/` at build
 and published encrypted, ciphertext-only, like the rest of the app. Setup and security model:
 `tools/life-app/README.md`.

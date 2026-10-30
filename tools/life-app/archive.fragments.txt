@@ -1,18 +1,18 @@
-// Life App only: Salute > Medico > Archivio, spliced INSIDE the health App component by archive-patches.mjs (build time).
+// Life App only: Health > Medical > Archive, spliced INSIDE the health App component by archive-patches.mjs (build time).
 // Data, real only (MD first): ARCHIVE (archive-data.ts) = archive.mjs over data/health/records.md,
 // data/health/vaccinations.md and data/body/labs/. Nothing here writes data; no image is ever shown.
-// Layout: summary line, "In programma" (future dates), "Vaccini" (one row per vaccine, tap = doses),
+// Layout: summary line, "Scheduled" (future dates), "Vaccines" (one row per vaccine, tap = doses),
 // then the timeline grouped by year, newest first (tap a row = details, lab values for a draw).
 // ==== FRAGMENT: archive ====
-  // ---------- Life: Archivio medico ----------
+  // ---------- Life: Archive medico ----------
   type ArcItem = { date: string; type: string; title: string; place: string; summary: string; details: string[]; groups?: { title: string; items: { name: string; value: string; unit: string; ref: string; out: boolean }[] }[]; source: string };
   type ArcVax = { name: string; status: string; doses: { dose: string; date: string; place: string }[]; booked: { date: string; title: string; place: string } | null; note: string | null };
   const ARC_ITEMS: ArcItem[] = (ARCHIVE as { items: ArcItem[] }).items;
   const ARC_VAX: ArcVax[] = (ARCHIVE as { vaccines: ArcVax[] }).vaccines;
   const [arcOpen, setArcOpen] = useState<string | null>(null);
   const arcType: Record<string, { label: string; color: string }> = {
-    visita: { label: "Visita", color: K.strain }, referto: { label: "Referto", color: K.violet }, intervento: { label: "Intervento", color: K.warn },
-    prelievo: { label: "Prelievo", color: K.up }, vaccino: { label: "Vaccino", color: K.sleep }, nascita: { label: "Nascita", color: K.t2 }, esame: { label: "Esame", color: K.violet },
+    visita: { label: "Visit", color: K.strain }, report: { label: "Report", color: K.violet }, intervento: { label: "Surgery", color: K.warn },
+    prelievo: { label: "Blood draw", color: K.up }, vaccine: { label: "Vaccine", color: K.sleep }, nascita: { label: "Birth", color: K.t2 }, esame: { label: "Test", color: K.violet },
   };
   const arcT = (t: string) => arcType[t] ?? { label: t.charAt(0).toUpperCase() + t.slice(1), color: K.t2 };
   const arcDate = (dt: string) => { const p = parts(dt); return `${p.dd < 10 ? "0" : ""}${p.dd}/${p.m < 10 ? "0" : ""}${p.m}/${p.y}`; };
@@ -30,7 +30,7 @@
         <button onClick={() => (more ? setArcOpen(open ? null : id) : undefined)} aria-expanded={more ? open : undefined} aria-label={`${ty.label}: ${x.title}`} style={{ ...btn, display: "block", width: "100%", padding: "12px 0", cursor: more ? "pointer" : "default" }}>
           <div style={{ ...row, justifyContent: "space-between", gap: 10 }}>
             <span style={{ ...caps, fontSize: 10, lineHeight: "14px", color: ty.color }}>{ty.label} · {arcDate(x.date)}</span>
-            {more ? <span style={{ ...lbl, flex: "0 0 auto" }}>{open ? "chiudi" : "dettagli"}</span> : null}
+            {more ? <span style={{ ...lbl, flex: "0 0 auto" }}>{open ? "close" : "details"}</span> : null}
           </div>
           <div style={{ fontSize: 15, lineHeight: "20px", fontWeight: 600, color: K.t1, marginTop: 3 }}>{x.title}</div>
           {x.place ? <div style={{ ...lbl, marginTop: 2 }}>{x.place}</div> : null}
@@ -57,21 +57,21 @@
   };
   const vaxRow = (v: ArcVax, last: boolean) => {
     const id = "vax:" + v.name, open = arcOpen === id;
-    const sub = v.status === "prenotato" && v.booked ? `Prenotato il ${arcDate(v.booked.date)}` : v.doses.length ? `${v.doses.length} ${v.doses.length === 1 ? "dose" : "dosi"}, l'ultima nel ${v.doses[v.doses.length - 1].date.slice(0, 4)}` : v.note ?? "";
+    const sub = v.status === "prenotato" && v.booked ? `Booked on ${arcDate(v.booked.date)}` : v.doses.length ? `${v.doses.length} ${v.doses.length === 1 ? "dose" : "doses"}, the last one in ${v.doses[v.doses.length - 1].date.slice(0, 4)}` : v.note ?? "";
     return (
       <div key={id} style={{ borderBottom: last ? "none" : `1px solid ${K.line}` }}>
-        <button onClick={() => setArcOpen(open ? null : id)} aria-expanded={open} aria-label={`Vaccino ${v.name}`} style={{ ...btn, ...row, width: "100%", justifyContent: "space-between", gap: 10, padding: "12px 0" }}>
+        <button onClick={() => setArcOpen(open ? null : id)} aria-expanded={open} aria-label={`Vaccine ${v.name}`} style={{ ...btn, ...row, width: "100%", justifyContent: "space-between", gap: 10, padding: "12px 0" }}>
           <div style={{ ...st(2), flex: 1, minWidth: 0 }}>
             <span style={{ fontSize: 15, lineHeight: "20px", fontWeight: 600, color: K.t1 }}>{v.name}</span>
             <span style={lbl}>{sub}</span>
           </div>
-          <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: vaxCol[v.status] ?? K.t2, flex: "0 0 auto" }}>{v.status}</span>
+          <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: vaxCol[v.status] ?? K.t2, flex: "0 0 auto" }}>{({ fatto: "done", prenotato: "booked", "da fare": "to do", "non noto": "unknown" } as Record<string, string>)[v.status] ?? v.status}</span>
         </button>
         {open ? (
           <div style={{ ...st(4), padding: "0 0 12px" }}>
             {v.doses.map((d) => <span key={d.date + d.dose} style={{ ...txt, color: K.t1 }}>{d.dose}: {arcDate(d.date)}{d.place ? <span style={lbl}> · {d.place}</span> : null}</span>)}
             {v.note && (v.doses.length || v.status === "prenotato") ? <span style={txt}>{v.note}</span> : null}
-            {v.booked ? <span style={txt}>Prenotato: {v.booked.title}, {arcDate(v.booked.date)}{v.booked.place ? `, ${v.booked.place}` : ""}</span> : null}
+            {v.booked ? <span style={txt}>Booked: {v.booked.title}, {arcDate(v.booked.date)}{v.booked.place ? `, ${v.booked.place}` : ""}</span> : null}
           </div>
         ) : null}
       </div>
@@ -79,13 +79,13 @@
   };
   const archiveScreen = (
     <div style={st(14)}>
-      {backBar("Archivio")}
+      {backBar("Archive")}
       <div style={{ ...card, ...st(4) }}>
-        <span style={capLbl(12)}>{arcPast.length} voci{arcFirst ? ` dal ${arcFirst}` : ""}</span>
-        <span style={txt}>{[["visita", "visite"], ["prelievo", "prelievi"], ["referto", "referti"], ["intervento", "interventi"], ["esame", "esami"], ["vaccino", "sedute di vaccini"]].map(([k, w]) => [arcCount(k), w] as [number, string]).filter(([n]) => n > 0).map(([n, w]) => `${n} ${n === 1 ? ({ visite: "visita", prelievi: "prelievo", referti: "referto", interventi: "intervento", esami: "esame", "sedute di vaccini": "seduta di vaccini" } as Record<string, string>)[w] : w}`).join(" · ") || "Nessuna voce"}</span>
+        <span style={capLbl(12)}>{arcPast.length} entries{arcFirst ? ` since ${arcFirst}` : ""}</span>
+        <span style={txt}>{[["visita", "visits"], ["prelievo", "blood draws"], ["referto", "reports"], ["intervento", "procedures"], ["esame", "tests"], ["vaccino", "vaccine sessions"]].map(([k, w]) => [arcCount(k), w] as [number, string]).filter(([n]) => n > 0).map(([n, w]) => `${n} ${n === 1 ? ({ visits: "visit", "blood draws": "blood draw", reports: "report", procedures: "procedure", tests: "test", "vaccine sessions": "vaccine session" } as Record<string, string>)[w] : w}`).join(" · ") || "No entries"}</span>
       </div>
-      {arcFuture.length ? plain("In programma", arcFuture.map((x, i) => arcRow(x, i === arcFuture.length - 1))) : null}
-      {ARC_VAX.length ? plain("Vaccini", ARC_VAX.map((v, i) => vaxRow(v, i === ARC_VAX.length - 1))) : null}
+      {arcFuture.length ? plain("Scheduled", arcFuture.map((x, i) => arcRow(x, i === arcFuture.length - 1))) : null}
+      {ARC_VAX.length ? plain("Vaccines", ARC_VAX.map((v, i) => vaxRow(v, i === ARC_VAX.length - 1))) : null}
       {arcYears.map((y) => {
         const its = arcPast.filter((x) => x.date.startsWith(y));
         return <div key={y}>{plain(y, its.map((x, i) => arcRow(x, i === its.length - 1)))}</div>;

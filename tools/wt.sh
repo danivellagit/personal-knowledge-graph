@@ -260,7 +260,7 @@ cmd_doctor() {
     [ -f "$MAIN/data/agents/$a/memory.md" ] || problems+=("agents/$a: no data/agents/$a/memory.md")
     [ -d "$MAIN/agents/$a/routines" ] || problems+=("agents/$a: no routines/ folder")
   done
-  # Life App / Salute data (data/happiness): stale area files, canvas <-> JSON drift, old recaps
+  # Life App / Health data (data/happiness): stale area files, canvas <-> JSON drift, old recaps
   if [ -f "$MAIN/tools/happiness.py" ]; then
     while IFS= read -r line; do [ -n "$line" ] && problems+=("happiness: $line"); done \
       < <(cd "$MAIN" && python3 tools/happiness.py check --problems 2>&1)

@@ -4,7 +4,7 @@
 //
 // 1. static: index.html carries the payload and none of the app's plaintext (no area names, no sample strings);
 // 2. served on 127.0.0.1 (a secure context, so WebCrypto works) at iPhone size: the lock screen shows, a wrong password
-//    is refused, the right one renders Home, then every tab and the three "Altro" areas open without a page error.
+//    is refused, the right one renders Home, then every tab and the three "More" areas open without a page error.
 // Screenshots go to --shots (default tools/life-app/out/verify). Uses an installed Chrome (or CHROME_PATH) through
 // playwright-core (a dev dependency: `npm ci` in tools/life-app). Exits 1 on any failed check.
 import { readFileSync, existsSync, mkdirSync } from "node:fs";
@@ -31,7 +31,7 @@ let server = null;
 if (!/^https?:/.test(site)) {
   const html = readFileSync(join(site, "index.html"), "utf8");
   ok(html.includes('"c":"'), "index.html carries an encrypted payload");
-  const plain = ["Life Health", "esempio", ...CFG.areas.map((a) => a.name).filter((n) => n.length > 4)];
+  const plain = ["Life Health", "sample", ...CFG.areas.map((a) => a.name).filter((n) => n.length > 4)];
   ok(!plain.some((w) => html.toLowerCase().includes(`>${w.toLowerCase()}<`) || html.includes(w + "</")), "no app plaintext in index.html");
   const TYPES = { ".html": "text/html", ".js": "text/javascript", ".webmanifest": "application/manifest+json", ".png": "image/png", ".txt": "text/plain" };
   server = createServer((q, r) => {
@@ -67,10 +67,10 @@ for (const t of tabs) {
   ok(errs.length === 0, `tab ${t} opens without a page error`);
 }
 for (const a of CFG.areas.filter((x) => ["relazioni", "crescita", "vita"].includes(x.id) && x.enabled)) {
-  await pg.click(`button[aria-label='Apri ${a.name}']`); await pg.waitForTimeout(600);
+  await pg.click(`button[aria-label='Open ${a.name}']`); await pg.waitForTimeout(600);
   await pg.screenshot({ path: join(shots, `area-${a.id}.png`) });
   ok(errs.length === 0, `area ${a.name} opens without a page error`);
-  await pg.click("button[aria-label='Indietro']"); await pg.waitForTimeout(300);
+  await pg.click("button[aria-label='Back']"); await pg.waitForTimeout(300);
 }
 if (errs.length) console.log(errs.slice(0, 5).join("\n"));
 await browser.close(); if (server) server.close();

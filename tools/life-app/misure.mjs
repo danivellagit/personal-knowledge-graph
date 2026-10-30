@@ -1,7 +1,7 @@
-// Home measurements for the Life App (Salute > Medico > Misure), generated from the knowledge graph (MD first):
-//   data/health/blood-pressure.md -> "Pressione": table | date | time | arm | SYS | DIA | pulse | notes |
-//   data/body/waist.md            -> "Giro vita": table | date | time | waist_cm | notes |
-// Both files are optional (a fresh instance gets empty lists, the app shows "Nessuna misura ancora"). The default arm for
+// Home measurements for the Life App (Health > Medical > Measurements), generated from the knowledge graph (MD first):
+//   data/health/blood-pressure.md -> "Blood pressure": table | date | time | arm | SYS | DIA | pulse | notes |
+//   data/body/waist.md            -> "Waist": table | date | time | waist_cm | notes |
+// Both files are optional (a fresh instance gets empty lists, the app shows "No readings yet"). The default arm for
 // the averages is the `default_arm:` frontmatter key of blood-pressure.md when present, else "left". Nothing personal
 // lives in this code: every value comes from the files. Rows without an ISO date or without numbers are skipped.
 import { readFileSync, existsSync } from "node:fs";

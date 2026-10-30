@@ -1,5 +1,5 @@
 // Happiness orb (Home): a soft sphere that breathes slowly, with the 7 area colours flowing inside as blurred,
-// slowly rotating colour fields. Each colour's share follows its area score; areas "in arrivo" stay grey.
+// slowly rotating colour fields. Each colour's share follows its area score; areas "coming" stay grey.
 // Brightness and saturation follow the Happiness value. CSS-only animation (compositor, 60fps), paused when the
 // page is hidden, static under prefers-reduced-motion.
 import { useEffect, useState } from "grok/canvas";

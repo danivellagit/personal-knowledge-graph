@@ -4,16 +4,16 @@
  "to": "2030-01-13",
  "generatedAt": "2030-01-14T08:00",
  "conclusion": [
-  "Settimana di esempio: questi testi sono finti.",
-  "Il tuo agente li riscrive ogni lunedì."
+  "Sample week: these texts are fake.",
+  "Your agent rewrites them every Monday."
  ],
  "good": [
-  "Esempio: sonno regolare."
+  "Sample: regular sleep."
  ],
  "bad": [
-  "Esempio: poco movimento."
+  "Sample: little movement."
  ],
  "improve": [
-  "Esempio: due allenamenti."
+  "Sample: two workouts."
  ]
 }

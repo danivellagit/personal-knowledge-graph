@@ -18,8 +18,8 @@
    "meals": [
     {
      "time": "08:00",
-     "name": "Colazione",
-     "dish": "Yogurt e frutta (esempio)",
+     "name": "Breakfast",
+     "dish": "Yogurt and fruit (sample)",
      "kcal": 350,
      "protein": 20.0,
      "carbs": 45.0,
@@ -30,8 +30,8 @@
     },
     {
      "time": "13:00",
-     "name": "Pranzo",
-     "dish": "Pasta al pomodoro (esempio)",
+     "name": "Lunch",
+     "dish": "Pasta with tomato sauce (sample)",
      "kcal": 650,
      "protein": 25.0,
      "carbs": 95.0,
@@ -42,8 +42,8 @@
     },
     {
      "time": "20:00",
-     "name": "Cena",
-     "dish": "Pollo e verdure (esempio)",
+     "name": "Dinner",
+     "dish": "Chicken and vegetables (sample)",
      "kcal": 600,
      "protein": 45.0,
      "carbs": 40.0,
@@ -84,8 +84,8 @@
    "meals": [
     {
      "time": "08:00",
-     "name": "Colazione",
-     "dish": "Yogurt e frutta (esempio)",
+     "name": "Breakfast",
+     "dish": "Yogurt and fruit (sample)",
      "kcal": 350,
      "protein": 20.0,
      "carbs": 45.0,
@@ -96,8 +96,8 @@
     },
     {
      "time": "13:00",
-     "name": "Pranzo",
-     "dish": "Pasta al pomodoro (esempio)",
+     "name": "Lunch",
+     "dish": "Pasta with tomato sauce (sample)",
      "kcal": 650,
      "protein": 25.0,
      "carbs": 95.0,
@@ -108,8 +108,8 @@
     },
     {
      "time": "20:00",
-     "name": "Cena",
-     "dish": "Pollo e verdure (esempio)",
+     "name": "Dinner",
+     "dish": "Chicken and vegetables (sample)",
      "kcal": 600,
      "protein": 45.0,
      "carbs": 40.0,
@@ -122,9 +122,9 @@
    "workouts": [
     {
      "time": "18:30",
-     "name": "Palestra (esempio)",
+     "name": "Gym (sample)",
      "status": "fatto",
-     "detail": "Allenamento di esempio",
+     "detail": "Sample workout",
      "kind": "palestra",
      "kcal": 320,
      "durationMin": 55,
@@ -161,8 +161,8 @@
    "meals": [
     {
      "time": "08:00",
-     "name": "Colazione",
-     "dish": "Yogurt e frutta (esempio)",
+     "name": "Breakfast",
+     "dish": "Yogurt and fruit (sample)",
      "kcal": 350,
      "protein": 20.0,
      "carbs": 45.0,
@@ -173,8 +173,8 @@
     },
     {
      "time": "13:00",
-     "name": "Pranzo",
-     "dish": "Pasta al pomodoro (esempio)",
+     "name": "Lunch",
+     "dish": "Pasta with tomato sauce (sample)",
      "kcal": 650,
      "protein": 25.0,
      "carbs": 95.0,
@@ -185,8 +185,8 @@
     },
     {
      "time": "20:00",
-     "name": "Cena",
-     "dish": "Pollo e verdure (esempio)",
+     "name": "Dinner",
+     "dish": "Chicken and vegetables (sample)",
      "kcal": 600,
      "protein": 45.0,
      "carbs": 40.0,
@@ -227,8 +227,8 @@
    "meals": [
     {
      "time": "08:00",
-     "name": "Colazione",
-     "dish": "Yogurt e frutta (esempio)",
+     "name": "Breakfast",
+     "dish": "Yogurt and fruit (sample)",
      "kcal": 350,
      "protein": 20.0,
      "carbs": 45.0,
@@ -239,8 +239,8 @@
     },
     {
      "time": "13:00",
-     "name": "Pranzo",
-     "dish": "Pasta al pomodoro (esempio)",
+     "name": "Lunch",
+     "dish": "Pasta with tomato sauce (sample)",
      "kcal": 650,
      "protein": 25.0,
      "carbs": 95.0,
@@ -251,8 +251,8 @@
     },
     {
      "time": "20:00",
-     "name": "Cena",
-     "dish": "Pollo e verdure (esempio)",
+     "name": "Dinner",
+     "dish": "Chicken and vegetables (sample)",
      "kcal": 600,
      "protein": 45.0,
      "carbs": 40.0,
@@ -265,9 +265,9 @@
    "workouts": [
     {
      "time": "19:00",
-     "name": "Tennis (esempio)",
+     "name": "Tennis (sample)",
      "status": "fatto",
-     "detail": "Partita di esempio",
+     "detail": "Sample match",
      "kind": "tennis",
      "kcal": 480,
      "durationMin": 75,
@@ -304,8 +304,8 @@
    "meals": [
     {
      "time": "08:00",
-     "name": "Colazione",
-     "dish": "Yogurt e frutta (esempio)",
+     "name": "Breakfast",
+     "dish": "Yogurt and fruit (sample)",
      "kcal": 350,
      "protein": 20.0,
      "carbs": 45.0,
@@ -316,8 +316,8 @@
     },
     {
      "time": "13:00",
-     "name": "Pranzo",
-     "dish": "Pasta al pomodoro (esempio)",
+     "name": "Lunch",
+     "dish": "Pasta with tomato sauce (sample)",
      "kcal": 650,
      "protein": 25.0,
      "carbs": 95.0,
@@ -328,8 +328,8 @@
     },
     {
      "time": "20:00",
-     "name": "Cena",
-     "dish": "Pollo e verdure (esempio)",
+     "name": "Dinner",
+     "dish": "Chicken and vegetables (sample)",
      "kcal": 600,
      "protein": 45.0,
      "carbs": 40.0,
@@ -342,9 +342,9 @@
    "workouts": [
     {
      "time": "18:30",
-     "name": "Palestra (esempio)",
+     "name": "Gym (sample)",
      "status": "fatto",
-     "detail": "Allenamento di esempio",
+     "detail": "Sample workout",
      "kind": "palestra",
      "kcal": 320,
      "durationMin": 55,
@@ -381,8 +381,8 @@
    "meals": [
     {
      "time": "08:00",
-     "name": "Colazione",
-     "dish": "Yogurt e frutta (esempio)",
+     "name": "Breakfast",
+     "dish": "Yogurt and fruit (sample)",
      "kcal": 350,
      "protein": 20.0,
      "carbs": 45.0,
@@ -393,8 +393,8 @@
     },
     {
      "time": "13:00",
-     "name": "Pranzo",
-     "dish": "Pasta al pomodoro (esempio)",
+     "name": "Lunch",
+     "dish": "Pasta with tomato sauce (sample)",
      "kcal": 650,
      "protein": 25.0,
      "carbs": 95.0,
@@ -405,8 +405,8 @@
     },
     {
      "time": "20:00",
-     "name": "Cena",
-     "dish": "Pollo e verdure (esempio)",
+     "name": "Dinner",
+     "dish": "Chicken and vegetables (sample)",
      "kcal": 600,
      "protein": 45.0,
      "carbs": 40.0,
@@ -448,9 +448,9 @@
    "workouts": [
     {
      "time": "19:00",
-     "name": "Palestra (esempio)",
+     "name": "Gym (sample)",
      "status": "pianificato",
-     "detail": "In programma",
+     "detail": "Scheduled",
      "kind": "palestra"
     }
    ],
@@ -475,9 +475,9 @@
   {
    "date": "2030-01-16",
    "time": "19:00",
-   "name": "Tennis (esempio)",
+   "name": "Tennis (sample)",
    "kind": "tennis",
-   "detail": "Partita di esempio"
+   "detail": "Sample match"
   }
  ],
  "gymWeeklyGoal": 2,
@@ -490,7 +490,7 @@
  "tomorrowFirst": {
   "date": "2030-01-15",
   "time": "09:00",
-  "title": "Impegno di esempio"
+  "title": "Sample appointment"
  },
  "history": [
   {
@@ -1091,11 +1091,11 @@
  },
  "coach": {
   "updatedAt": "2030-01-14T08:00",
-  "headline": "Settimana di esempio",
-  "verdict": "Dati finti: sostituiscili con i tuoi.",
+  "headline": "Sample week",
+  "verdict": "Fake data: replace it with yours.",
   "actions": [
-   "Stasera a letto entro le 23:00 (esempio).",
-   "Un pasto proteico in più oggi (esempio)."
+   "In bed by 23:00 tonight (sample).",
+   "One more protein meal today (sample)."
   ]
  }
 }

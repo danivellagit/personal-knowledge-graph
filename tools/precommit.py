@@ -43,8 +43,8 @@ MEDIA_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic", ".heif", ".svg",
              ".mp4", ".mov", ".m4a", ".mp3", ".ogg", ".opus", ".wav", ".docx", ".xlsx", ".pptx"}
 MEDIA_OK = re.compile(r"^tools/[^/]+/(icons|assets)/")
 # Bank data: raw movements never enter the repo; an optional bank-sync folder holds monthly totals + README only.
-REVOLUT_DIR = "data/finance/bank/"
-REVOLUT_OK = {"README.md", "monthly-totals.md", "monthly-totals.json"}
+BANK_EXPORT_DIR = "data/finance/bank/"
+BANK_EXPORT_OK = {"README.md", "monthly-totals.md", "monthly-totals.json"}
 RAW_FINANCE = re.compile(r"^(transactions-\d{4}-\d{2}\.csv|balances\.json)$")
 IBAN = re.compile(r"\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){3,7}(?: ?[A-Z0-9]{1,4})?\b")
 BAD_PART = {"node_modules", "__pycache__", ".venv", "venv", "out", "dist", ".next", "_archive"}
@@ -95,13 +95,13 @@ def check_layout(files):
         ext = os.path.splitext(name)[1].lower()
         if parts[0] not in TOP_LEVEL:
             bad.append("%s: new top-level entry; the repo layout is %s" % (p, ", ".join(sorted(TOP_LEVEL))))
-        elif p.startswith(REVOLUT_DIR) and p[len(REVOLUT_DIR):] not in REVOLUT_OK:
+        elif p.startswith(BANK_EXPORT_DIR) and p[len(BANK_EXPORT_DIR):] not in BANK_EXPORT_OK:
             bad.append("%s: raw bank data never enters the repo (only %s); raw files live in "
-                       "a private folder outside the repo" % (p, ", ".join(sorted(REVOLUT_OK))))
+                       "a private folder outside the repo" % (p, ", ".join(sorted(BANK_EXPORT_OK))))
         elif RAW_FINANCE.match(name):
             bad.append("%s: looks like a raw bank export (transactions/balances); keep it in "
                        "a private folder outside the repo" % p)
-        elif p.startswith(REVOLUT_DIR) and IBAN.search(git("show", ":" + p).stdout or ""):
+        elif p.startswith(BANK_EXPORT_DIR) and IBAN.search(git("show", ":" + p).stdout or ""):
             bad.append("%s: contains an IBAN-like string; the repo gets totals only" % p)
         elif BAD_NAME.match(name):
             bad.append("%s: local config / secret file, never committed" % p)

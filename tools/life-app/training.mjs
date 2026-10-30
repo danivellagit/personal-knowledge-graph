@@ -1,9 +1,9 @@
 // Build-time only: data/training/*.md (MD first: the markdown is the source of truth, the app only displays it) ->
-// TRAINING { logs, sessions, plans } and the lift history (LIFTS) for the Life App Corpo pages.
+// TRAINING { logs, sessions, plans } and the lift history (LIFTS) for the Life App Body pages.
 // Format: data/agents/fitness-coach/memory.md "Training log format (Life App)".
 //   - one "## " heading per session in data/training/training-YYYY-MM-DD.md; the first HH:MM in it is the start time
-//   - under it an "### Esercizi" table: | Esercizio | Serie | Ripetizioni | kg | Note |  (empty cell = not stated, "~60" = about 60)
-//   - plan templates in data/training/plans/*.md: frontmatter name, kind, match, default + the same "### Esercizi" table
+//   - under it an "### Exercises" table: | Exercise | Sets | Reps | kg | Notes |  (Italian headers also accepted; empty cell = not stated, "~60" = about 60)
+//   - plan templates in data/training/plans/*.md: frontmatter name, kind, match, default + the same "### Exercises" table
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -13,7 +13,7 @@ const hhmm = (s) => { const m = /(\d{1,2})[:.](\d{2})/.exec(s || ""); return m ?
 // session kind from the heading text (falls back to the file's frontmatter kind)
 export const kindOfHeading = (h, fileKind) => {
   const t = h.toLowerCase();
-  if (/\bgrid\b|crossfit/.test(t)) return "grid";
+  if (/\b(circuit|hiit|crossfit)\b/.test(t)) return "grid";
   if (/\bgym\b|palestra|weights|strength|upper body|lower body/.test(t)) return "palestra";
   if (/padel/.test(t)) return "padel";
   if (/beach/.test(t)) return "beach";
@@ -24,7 +24,7 @@ export const kindOfHeading = (h, fileKind) => {
   return fk === "gym" ? "palestra" : fk === "beach-volley" ? "beach" : null;
 };
 const num = (c) => { const m = /(\d+(?:[.,]\d+)?)/.exec(c || ""); return m ? Number(m[1].replace(",", ".")) : null; };
-// the "### Esercizi" (or "### Exercises") table of a block of lines; only tables in the documented column format
+// the "### Exercises" (or the older "### Esercizi") table of a block of lines; only tables in the documented column format
 export const parseExercises = (lines) => {
   const out = [];
   const i0 = lines.findIndex((l) => /^###\s+(Esercizi|Exercises)\b/i.test(l));

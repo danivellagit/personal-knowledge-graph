@@ -4,9 +4,9 @@
 One JSON file per area; each is written by the agent role that owns the area (config.local.yml life_app.areas.<id>.agents,
 defaults below). Edit only your own file, then run the publisher (tools/life-app/publish.sh).
   corpo.json      the health page DATA block (fitness-coach)        medico.json    MEDICO (health-advisor)
-  mente.json      psychologist (null = "in arrivo")                 lavoro.json    founder-assistant (+ linkedin-coach: `linkedin`)
+  mente.json      psychologist (null = "coming")                    lavoro.json    founder-assistant (+ linkedin-coach: `linkedin`)
   finanze.json    accountant                                        relazioni.json best-friend
-  crescita.json / vita.json  best-friend (null = "in arrivo")       weekly-summary.json  the Home conclusion (weekly)
+  crescita.json / vita.json  best-friend (null = "coming")          weekly-summary.json  the Home conclusion (weekly)
   corpo-history.json, life-health-history.json  written by the Life build (never by hand)
 plus generated, never hand-edited MD recaps (happiness.md + <area>.md) linked to [[_me]].
 Model and field docs: tools/life-app/DATA-MODEL.md. Sample (fake) files: tools/life-app/sample-data/.
@@ -154,12 +154,12 @@ def check(v, spec, where, errs):
 
 
 SIMPLE = N({"updated": "date", "status": E(*STATUS), "line": "str", "tip?": N("str")})
-# one sub-area with its verdict and next steps (Relazioni; also Vita and Crescita, optional there)
+# one sub-area with its verdict and next steps (Relationships; also Life and Growth, optional there)
 SFERA = {"key": "str", "name": "str", "status": E(*STATUS), "score?": "num", "line": "str", "steps": ["str"]}
-# Vita: open personal to-dos (fonte: where the agent read them)
+# Life: open personal to-dos (fonte: where the agent read them)
 TODO = {"titolo": "str", "quando": N("str"), "data?": N("date"), "priorita": N(E("alta", "media", "bassa")),
         "fonte": E("open-loops", "personal-tasks")}
-# Lavoro: ranked work priorities (rank 1 = first), optionally mapped to a quarterly company priority (q4); wins with their source
+# Work: ranked work priorities (rank 1 = first), optionally mapped to a quarterly company priority (q4); wins with their source
 PRIO = {"rank": "int", "titolo": "str", "status": E(*STATUS), "line": "str", "q4": N("str"), "next": N("str"),
         "quando": N("date"), "source": "str"}
 WIN = {"titolo": "str", "data": N("date"), "source": "str"}
@@ -195,7 +195,7 @@ SCHEMA = {
                                                 "items": [{"name": "str", "age": N("str"), "year": N("str"), "note": "str", "source": "str"}]}],
                                     "timeline": [{"date": "str", "label": "str", "who": "str", "text": "str"}],
                                     "*": True}),
-               # Capelli sub-view of Medico (health-advisor): therapy, supply, photo protocol; photos only via the build hook
+               # Photos sub-view of Medico (health-advisor): therapy, supply, photo protocol; photos only via the build hook
                "hair?": N({"updated": "date", "restart": "date", "headline": "str", "clinicWords": "str", "plain": "str",
                            "doctor": "str", "clinic": "str",
                            "therapy": [{"key": "str", "name": "str", "slots": ["str"], "status": "str", "*": True}],
@@ -386,7 +386,7 @@ def esc(s):
 
 
 def sc(v):
-    return "in arrivo" if v is None else str(v)
+    return "coming" if v is None else str(v)
 
 
 def cmd_recap(scores=None):

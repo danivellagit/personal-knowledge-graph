@@ -57,8 +57,8 @@ html,body{min-height:var(--app-h)}
     <input type="text" name="username" value="__USERNAME__" autocomplete="username" hidden>
     <label class="f" for="pw">Password</label>
     <input id="pw" type="password" name="password" autocomplete="current-password" required>
-    <label class="r"><input id="rm" type="checkbox" checked> Ricordami su questo dispositivo</label>
-    <button id="go" type="submit">Entra</button>
+    <label class="r"><input id="rm" type="checkbox" checked> Remember me on this device</label>
+    <button id="go" type="submit">Unlock</button>
     <div class="e" id="err" role="alert"></div>
   </form>
 </div>
@@ -115,7 +115,7 @@ var P = __PAYLOAD__;
   // network-first service worker: always fetches index.html with no-store (bypasses Pages' 10-min HTTP cache), offline fallback
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(function () {});
   document.documentElement.setAttribute("data-build", P.b);
-  if (!S) { showLock("Questo browser non supporta la decifratura (serve HTTPS)."); return; }
+  if (!S) { showLock("This browser can't decrypt (HTTPS needed)."); return; }
   if (/[?&]esci\b/.test(location.search)) store(KEY, null);
   $("f").addEventListener("submit", function (ev) {
     ev.preventDefault();
@@ -128,7 +128,7 @@ var P = __PAYLOAD__;
         if ($("rm").checked) return S.exportKey("raw", key).then(function (raw) { store(KEY, u2b(raw)); return js; });
         store(KEY, null); return js;
       });
-    }).then(function (js) { $("pw").blur(); run(js); }, function () { $("go").disabled = false; showLock("Password errata"); $("pw").select(); });
+    }).then(function (js) { $("pw").blur(); run(js); }, function () { $("go").disabled = false; showLock("Wrong password"); $("pw").select(); });
   });
   var k = load(KEY);
   if (k) {

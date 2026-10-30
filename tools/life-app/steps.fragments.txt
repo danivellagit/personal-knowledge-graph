@@ -1,10 +1,10 @@
-// Life App only: Passi (daily steps vs the goal), spliced INSIDE the health App component by steps-patches.mjs (build time).
+// Life App only: Steps (daily steps vs the goal), spliced INSIDE the health App component by steps-patches.mjs (build time).
 // Data, real only (MD first): STEPS_HIST = data/body/steps-history.md (Google Health daily totals) merged with the
 // body day files data/body/body-*.md (build.mjs), then DATA.history and DATA.days (corpo.json) on top; a day keeps its
-// highest total (a day's count only grows). Goal = corpo.json stepsGoal (the owner 2026-10-25: 10.000).
+// highest total (a day's count only grows). Goal = corpo.json stepsGoal (default 10,000).
 // Nothing here writes data and nothing shows how a number is made.
 // ==== FRAGMENT: steps ====
-  // ---------- Life: Passi ----------
+  // ---------- Life: Steps ----------
   const STEP_GOAL: number = isNum((DATA as { stepsGoal?: number }).stepsGoal) ? Number((DATA as { stepsGoal?: number }).stepsGoal) : 10000;
   const stepMap = (() => {
     const m = new Map<string, number>();
@@ -18,7 +18,7 @@
   const stepFirst = stepDates[0] ?? DATA.today;
   const stepsOf = (dt: string): number | null => stepMap.get(dt) ?? null;
   const stepHit = (dt: string) => { const v = stepsOf(dt); return v !== null && v >= STEP_GOAL; };
-  // serie in corso: oggi conta solo quando l'obiettivo è già raggiunto (la giornata è ancora aperta)
+  // current streak: today counts only once the goal is reached (the day is still open)
   const stepStreak = (() => { let n = 0, x = stepHit(DATA.today) ? DATA.today : addDays(DATA.today, -1); while (x >= stepFirst && stepHit(x)) { n++; x = addDays(x, -1); } return n; })();
   const stepBest = (() => {
     let best = { n: 0, from: "", to: "" }, cur = 0, from = "";
@@ -43,25 +43,25 @@
   const stepMonthName = (r: { y: number; m: number }) => `${MO[r.m - 1].charAt(0).toUpperCase()}${MO[r.m - 1].slice(1)}${r.y !== parts(DATA.today).y ? ` ${r.y}` : ""}`;
   const capSmS: CSSProperties = { ...caps, fontSize: 10, lineHeight: "14px", color: K.t3 };
   const shortD = (dt: string) => { const p = parts(dt); return `${p.dd} ${MO[p.m - 1].slice(0, 3)}`; };
-  // card in Corpo, subito sotto le calorie bruciate: passi del giorno scelto vs obiettivo, serie, mese
+  // card in Body, right under calories burned: the chosen day's steps vs the goal, streak, month
   const stepsCard = (() => {
     const v = d.date === DATA.today ? stepsOf(DATA.today) : stepsOf(d.date), f = v === null ? 0 : v / STEP_GOAL, ok = v !== null && v >= STEP_GOAL;
     const left = v === null ? null : Math.max(0, STEP_GOAL - v);
-    const line = v === null ? "Nessun dato per questo giorno." : ok ? (live ? "Obiettivo raggiunto oggi" : "Obiettivo raggiunto") : live ? `Mancano ${kcalTxt(left as number)} passi` : `${kcalTxt(left as number)} sotto l'obiettivo`;
+    const line = v === null ? "No data for this day." : ok ? (live ? "Goal reached today" : "Goal reached") : live ? `${kcalTxt(left as number)} steps to go` : `${kcalTxt(left as number)} below the goal`;
     return (
-      <button onClick={() => open({ kind: "steps" } as Screen)} aria-label="Passi" data-v={v ?? ""} style={{ ...btn, ...card, ...row, gap: 14 }}>
+      <button onClick={() => open({ kind: "steps" } as Screen)} aria-label="Steps" data-v={v ?? ""} style={{ ...btn, ...card, ...row, gap: 14 }}>
         {ring(f, K.strain, 72, 7, <span style={{ ...numStyle(15, v === null ? K.t3 : K.t1) }}>{v === null ? "—" : `${Math.min(999, Math.round(f * 100))}%`}</span>)}
         <div style={{ ...st(3), flex: 1 }}>
-          <span style={capLbl(12)}>{live ? "Passi oggi" : `Passi · ${shortDay(d.date)}`}</span>
-          <span style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}><span aria-label="Passi valore" style={numStyle(32, v === null ? K.t3 : K.t1)}>{v === null ? "—" : kcalTxt(v)}</span><span style={{ ...lbl, ...ell, color: K.t2 }}>/ {kcalTxt(STEP_GOAL)}</span></span>
+          <span style={capLbl(12)}>{live ? "Steps today" : `Steps · ${shortDay(d.date)}`}</span>
+          <span style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}><span aria-label="Steps value" style={numStyle(32, v === null ? K.t3 : K.t1)}>{v === null ? "—" : kcalTxt(v)}</span><span style={{ ...lbl, ...ell, color: K.t2 }}>/ {kcalTxt(STEP_GOAL)}</span></span>
           <span style={{ ...lbl, color: ok ? K.up : K.t2 }}>{line}</span>
-          {live ? <span style={lbl}>{`Serie ${stepStreak} ${stepStreak === 1 ? "giorno" : "giorni"}${stepMonthNow ? ` · ${MO[stepMonthNow.m - 1]} ${stepMonthNow.hit}/${stepMonthNow.n}` : ""}`}</span> : null}
+          {live ? <span style={lbl}>{`Streak ${stepStreak} ${stepStreak === 1 ? "day" : "days"}${stepMonthNow ? ` · ${MO[stepMonthNow.m - 1]} ${stepMonthNow.hit}/${stepMonthNow.n}` : ""}`}</span> : null}
         </div>
         {chev(K.t3)}
       </button>
     );
   })();
-  // pagina Passi: un mondo sui passi
+  // Steps page: everything about steps
   const stepsScreen = () => {
     const t = DATA.today, v = stepsOf(t), f = v === null ? 0 : v / STEP_GOAL, ok = v !== null && v >= STEP_GOAL;
     const from30 = addDays(t, -29), d30: string[] = []; for (let x = from30; x <= t; x = addDays(x, 1)) d30.push(x);
@@ -80,22 +80,22 @@
     const mFirst = parts(stepFirst);
     return (
       <div style={st(14)}>
-        {backBar("Passi")}
-        <div aria-label="Passi di oggi" style={{ ...card, ...st(12), alignItems: "center" }}>
+        {backBar("Steps")}
+        <div aria-label="Today's steps" style={{ ...card, ...st(12), alignItems: "center" }}>
           {ring(f, K.strain, 176, 14, <div style={{ ...st(2), alignItems: "center" }}>
             <span style={numStyle(38, v === null ? K.t3 : K.t1)}>{v === null ? "—" : kcalTxt(v)}</span>
-            <span style={lbl}>di {kcalTxt(STEP_GOAL)}</span>
+            <span style={lbl}>of {kcalTxt(STEP_GOAL)}</span>
           </div>, true)}
-          <span style={{ fontSize: 15, lineHeight: "21px", fontWeight: 600, textAlign: "center", color: ok ? K.up : K.t1 }}>{v === null ? "Oggi ancora nessun dato." : ok ? "Obiettivo di oggi raggiunto." : `Mancano ${kcalTxt(STEP_GOAL - v)} passi all'obiettivo.`}</span>
+          <span style={{ fontSize: 15, lineHeight: "21px", fontWeight: 600, textAlign: "center", color: ok ? K.up : K.t1 }}>{v === null ? "No data yet today." : ok ? "Today's goal reached." : `Missing ${kcalTxt(STEP_GOAL - v)} steps to the goal.`}</span>
         </div>
-        <div aria-label="Passi primati" style={two}>
-          {stat("Serie attuale", String(stepStreak), stepStreak === 1 ? "giorno di fila" : "giorni di fila")}
-          {stat("Record serie", String(stepBest.n), stepBest.n ? `${shortD(stepBest.from)} – ${shortD(stepBest.to)}` : "ancora nessuna")}
-          {stat(stepMonthNow ? MO[stepMonthNow.m - 1] : "Questo mese", stepMonthNow ? `${stepMonthNow.hit}/${stepMonthNow.n}` : "—", "giorni a obiettivo")}
-          {stat("Giorno migliore", stepTop ? kcalTxt(stepTop.v) : "—", stepTop ? longDate(stepTop.date) : "")}
+        <div aria-label="Step records" style={two}>
+          {stat("Current streak", String(stepStreak), stepStreak === 1 ? "day in a row" : "days in a row")}
+          {stat("Best streak", String(stepBest.n), stepBest.n ? `${shortD(stepBest.from)} – ${shortD(stepBest.to)}` : "none yet")}
+          {stat(stepMonthNow ? MO[stepMonthNow.m - 1] : "This month", stepMonthNow ? `${stepMonthNow.hit}/${stepMonthNow.n}` : "—", "days on target")}
+          {stat("Best day", stepTop ? kcalTxt(stepTop.v) : "—", stepTop ? longDate(stepTop.date) : "")}
         </div>
-        <div aria-label="Passi 30 giorni" style={{ ...card, ...st(8) }}>
-          <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Ultimi 30 giorni</span><span style={lbl}>{hit30} a obiettivo</span></div>
+        <div aria-label="Steps 30 days" style={{ ...card, ...st(8) }}>
+          <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Last 30 days</span><span style={lbl}>{hit30} on target</span></div>
           <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block" }}>
             <line x1={0} x2={W} y1={y(STEP_GOAL)} y2={y(STEP_GOAL)} stroke={K.t1} strokeOpacity={0.55} strokeDasharray="4 4" />
             {d30.map((x, i) => {
@@ -103,28 +103,28 @@
               return (
                 <g key={x}>
                   {s !== null ? <rect x={cx - bw / 2} y={y(s)} width={bw} height={Math.max(2, H - pb - y(s))} rx={2} fill={hitX ? K.strain : K.t3} opacity={hitX ? (on ? 1 : 0.9) : on ? 0.8 : 0.45} /> : <rect x={cx - bw / 2} y={H - pb - 2} width={bw} height={2} fill={K.track} />}
-                  {i % 5 === 0 || on ? <text x={on ? W - 1 : cx} y={H - 8} fontSize={10} textAnchor={on ? "end" : "middle"} fill={on ? K.t1 : K.t3} fontWeight={on ? 700 : 500}>{on ? "oggi" : p.dd}</text> : null}
+                  {i % 5 === 0 || on ? <text x={on ? W - 1 : cx} y={H - 8} fontSize={10} textAnchor={on ? "end" : "middle"} fill={on ? K.t1 : K.t3} fontWeight={on ? 700 : 500}>{on ? "today" : p.dd}</text> : null}
                 </g>
               );
             })}
           </svg>
-          {legend([{ label: `${kcalTxt(STEP_GOAL)} o più`, color: K.strain }, { label: "sotto", color: K.t3 }, { label: "obiettivo", color: K.t1 }])}
+          {legend([{ label: `${kcalTxt(STEP_GOAL)} or more`, color: K.strain }, { label: "below", color: K.t3 }, { label: "goal", color: K.t1 }])}
         </div>
-        <div aria-label="Passi medie" style={{ ...card, padding: "14px 16px 4px" }}>
-          <span style={capLbl(12)}>Media al giorno</span>
-          {avgRow("Ultimi 7 giorni", w7, diff(w7, w7p), false)}
-          {avgRow("I 7 giorni prima", w7p, null, false)}
-          {avgRow("Ultimi 30 giorni", m30, null, true)}
+        <div aria-label="Average steps" style={{ ...card, padding: "14px 16px 4px" }}>
+          <span style={capLbl(12)}>Average per day</span>
+          {avgRow("Last 7 days", w7, diff(w7, w7p), false)}
+          {avgRow("The 7 days before", w7p, null, false)}
+          {avgRow("Last 30 days", m30, null, true)}
         </div>
-        {sectionTitle("Mese per mese")}
-        <div aria-label="Passi mese per mese" style={{ ...card, padding: "10px 16px 4px" }}>
+        {sectionTitle("Month by month")}
+        <div aria-label="Steps month by month" style={{ ...card, padding: "10px 16px 4px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 92px 80px", gap: 8, padding: "4px 0 6px" }}>
-            <span style={capSmS}>Mese</span><span style={{ ...capSmS, textAlign: "right" }}>A obiettivo</span><span style={{ ...capSmS, textAlign: "right" }}>Media</span>
+            <span style={capSmS}>Month</span><span style={{ ...capSmS, textAlign: "right" }}>On target</span><span style={{ ...capSmS, textAlign: "right" }}>Average</span>
           </div>
           {stepMonths.map((r) => (
             <div key={r.key} style={{ ...st(6), padding: "10px 0", borderTop: `1px solid ${K.line}` }}>
               <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 92px 80px", gap: 8, alignItems: "baseline" }}>
-                <span style={{ ...ell, fontSize: 14, lineHeight: "20px", fontWeight: 600, color: K.t1 }}>{stepMonthName(r)}{r.key === t.slice(0, 7) ? <span style={{ ...lbl, fontWeight: 400 }}> · in corso</span> : r.first > `${r.key}-01` ? <span style={{ ...lbl, fontWeight: 400 }}>{` · dal ${parts(r.first).dd}`}</span> : null}</span>
+                <span style={{ ...ell, fontSize: 14, lineHeight: "20px", fontWeight: 600, color: K.t1 }}>{stepMonthName(r)}{r.key === t.slice(0, 7) ? <span style={{ ...lbl, fontWeight: 400 }}> · in progress</span> : r.first > `${r.key}-01` ? <span style={{ ...lbl, fontWeight: 400 }}>{` · since ${parts(r.first).dd}`}</span> : null}</span>
                 <span style={{ ...numStyle(16), textAlign: "right" }}>{`${r.hit}/${r.n}`}</span>
                 <span style={{ ...numStyle(16, K.t2), textAlign: "right" }}>{kcalTxt(Math.round(r.tot / r.n))}</span>
               </div>
@@ -132,7 +132,7 @@
             </div>
           ))}
         </div>
-        <span style={{ ...lbl, textAlign: "center" }}>{`Storico dal ${mFirst.dd} ${MO[mFirst.m - 1]} ${mFirst.y} · Google Health`}</span>
+        <span style={{ ...lbl, textAlign: "center" }}>{`History since ${mFirst.dd} ${MO[mFirst.m - 1]} ${mFirst.y} · Google Health`}</span>
       </div>
     );
   };

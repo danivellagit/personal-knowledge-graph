@@ -8,13 +8,13 @@ an app; without the password the site is noise.
 | tab / area | data file in `data/happiness/` | default owner (role) |
 | --- | --- | --- |
 | Home: Life Health ring, the weekly picture | `weekly-summary.json`, `life-health-history.json` | whoever writes the Monday recap |
-| Corpo: calories, steps, sleep, training, body trends | `corpo.json` (+ `corpo-history.json`) | fitness-coach |
-| Salute: labs, check-ups, pills, mind | `medico.json`, `mente.json` | health-advisor, psychologist |
-| Lavoro | `lavoro.json` | founder-assistant, linkedin-coach |
-| Finanze | `finanze.json` (+ `data/finance/scadenzario.md` deadlines if present) | accountant |
-| Altro: Relazioni, Crescita, Vita | `relazioni.json`, `crescita.json`, `vita.json` | best-friend |
+| Body: calories, steps, sleep, training, body trends | `corpo.json` (+ `corpo-history.json`) | fitness-coach |
+| Health: labs, check-ups, pills, mind | `medico.json`, `mente.json` | health-advisor, psychologist |
+| Work | `lavoro.json` | founder-assistant, linkedin-coach |
+| Finances | `finanze.json` (+ `data/finance/scadenzario.md` deadlines if present) | accountant |
+| More: Relationships, Growth, Life | `relazioni.json`, `crescita.json`, `vita.json` | best-friend |
 
-The app's own wording is Italian today (area names, labels); the area names, the agent names and the app name are
+The app's wording is English (area names, labels); the area names, the agent names and the app name are
 yours to change in `config.local.yml`.
 
 ## Install (once)
@@ -70,14 +70,14 @@ payload plus the shell. Use a long password: anyone can download the ciphertext 
 All under `life_app:` in `config.local.yml`; every key is optional and documented in `config.example.yml`:
 owner name, app name, language tag, timezone, password / cache / salt paths, avatar, the site repo (repo, branch,
 url, token file, commit author), write-back, a few labels, and per area `name`, `agents` (role or persona names shown
-in the app), `weight` in the Life Health total, `enabled` (Relazioni, Crescita, Vita only).
+in the app), `weight` in the Life Health total, `enabled` (Relationships, Growth and Life only).
 `python3 tools/life-app/life_config.py` prints the resolved settings; `... get site.repo` prints one.
 
 ## Hooks and instance config
 
 - `life_app.hooks.hair_photos`: an ES module that exports `writeHairInit(workDir)`, writes
   `<workDir>/hair-init.js` (`globalThis.__SALUTE_HAIR_PHOTOS__ = [{ date, n, dataUrl, pinned? }]`) and returns how many
-  photos it embedded. The photos end up only inside the ciphertext. Without a hook the Capelli view (shown when
+  photos it embedded. The photos end up only inside the ciphertext. Without a hook the Photos view (shown when
   `medico.json` has a `hair` block: therapy, supply, photo protocol, all names from the data) shows placeholders.
 - `life_app.health_page`: build from a health page kept somewhere else (e.g. a page your agents edit in another tool);
   the build adds the `TZ` / `COACH` / `GYM` declarations if that page does not have them.
@@ -105,7 +105,7 @@ pass before every build; `python3 tools/happiness.py check` lists files that are
 | `build.mjs` | bundle (esbuild) + inline + encrypt -> `out/site/` |
 | `shell.html`, `sw.js`, `manifest.webmanifest`, `icons/` | lock screen, offline cache, home-screen metadata |
 | `src/app.tsx`, `src/scores.ts`, `src/recap.ts`, `src/history.ts`, `src/happy-orb.tsx` | Home, areas, scores |
-| `src/health/health-page.tsx` | the Corpo/Salute page (its data blocks are filled from `data/happiness/` at build) |
+| `src/health/health-page.tsx` | the Body/Health page (its data blocks are filled from `data/happiness/` at build) |
 | `*-patches.mjs`, `*.fragments.txt`, `training.mjs`, `area-modules.mjs` | build-time additions to the health page |
 | `src/lifelog*.mjs`, `src/pill-bridge.mjs` | the optional write-back |
 | `make_sample_data.py`, `sample-data/` | the fake data a fresh clone builds with |

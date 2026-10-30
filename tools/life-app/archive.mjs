@@ -1,8 +1,8 @@
-// Medical archive for the Life App (Salute > Medico > Archivio), generated from the knowledge graph (MD first):
+// Medical archive for the Life App (Health > Medical > Archive), generated from the knowledge graph (MD first):
 //   data/health/records.md      -> visits, reports, surgeries, births, booked appointments (one table row each)
-//   data/health/vaccinations.md -> the "Vaccini" table (Record table + the "status unknown" table) and the vaccine
+//   data/health/vaccinations.md -> the "Vaccines" table (Record table + the "status unknown" table) and the vaccine
 //                                  sessions in the timeline
-//   data/body/labs/lab-*.md     -> one "Prelievo" timeline entry per lab report (frontmatter: date, drawn, lab, site,
+//   data/body/labs/lab-*.md     -> one "Blood draw" timeline entry per lab report (frontmatter: date, drawn, lab, site,
 //                                  category, out_of_range), its values from the "Markers over time" table of labs.md
 // Every file is optional (a fresh instance gets an empty archive). Nothing personal lives in this code: names, places
 // and values all come from the files. Never reads images; image/scan columns are ignored on purpose.
@@ -29,22 +29,22 @@ const tables = (txt) => {
 };
 const section = (txt, title) => { const i = txt.search(new RegExp(`^#{2,3} ${title}\\b`, "m")); if (i < 0) return ""; const rest = txt.slice(i).split("\n"); const lvl = rest[0].match(/^#+/)[0].length; const end = rest.slice(1).findIndex((l) => new RegExp(`^#{1,${lvl}} `).test(l)); return rest.slice(0, end < 0 ? undefined : end + 1).join("\n"); };
 
-// ---- vaccine families: English names in vaccinations.md -> Italian label, match words for booked rows ----
+// ---- vaccine families: English names in vaccinations.md -> display label, match words for booked rows ----
 const VAX = [
-  { re: /^hepatitis b/i, key: "hepb", name: "Epatite B", words: ["epatite b"] },
-  { re: /^diphtheria-tetanus/i, key: "dt", name: "Difterite e tetano (DT)", words: ["difterite"] },
-  { re: /^tetanus/i, key: "tet", name: "Tetano, richiamo", words: ["tetano"] },
+  { re: /^hepatitis b/i, key: "hepb", name: "Hepatitis B", words: ["epatite b"] },
+  { re: /^diphtheria-tetanus/i, key: "dt", name: "Diphtheria and tetanus (DT)", words: ["difterite"] },
+  { re: /^tetanus/i, key: "tet", name: "Tetanus, booster", words: ["tetano"] },
   { re: /^polio/i, key: "polio", name: "Polio", words: ["polio"] },
-  { re: /^measles/i, key: "mpr", name: "Morbillo, parotite, rosolia (MPR)", words: ["morbillo", "mpr"] },
-  { re: /^pertussis/i, key: "pert", name: "Pertosse", words: ["pertosse"] },
+  { re: /^measles/i, key: "mpr", name: "Measles, mumps, rubella (MMR)", words: ["morbillo", "mpr"] },
+  { re: /^pertussis/i, key: "pert", name: "Pertussis", words: ["pertosse"] },
   { re: /^haemophilus/i, key: "hib", name: "Haemophilus influenzae b (Hib)", words: ["hib", "haemophilus"] },
-  { re: /^meningococc/i, key: "men", name: "Meningococco (C, ACWY, B)", words: ["meningococco"] },
+  { re: /^meningococc/i, key: "men", name: "Meningococcal (C, ACWY, B)", words: ["meningococco"] },
   { re: /^hpv/i, key: "hpv", name: "HPV (papilloma virus)", words: ["hpv", "papilloma"] },
   { re: /^varicella/i, key: "var", name: "Varicella", words: ["varicella"] },
 ];
 const famOf = (n) => VAX.find((v) => v.re.test(n)) || { key: n.toLowerCase(), name: clean(n), words: [n.toLowerCase()] };
-const doseIt = (d) => clean(d).replace(/^(\d+)(st|nd|rd|th)$/i, "$1ª dose").replace(/^(\d+)(st|nd|rd|th) booster$/i, "$1° richiamo").replace(/^booster$/i, "richiamo");
-const placeIt = (p) => clean(p).replace(/, Rome$/, ", Roma").replace(/, Milan$/, ", Milano");
+const doseIt = (d) => clean(d).replace(/^(\d+)(st|nd|rd|th)$/i, "dose $1").replace(/^(\d+)(st|nd|rd|th) booster$/i, "booster $1").replace(/^booster$/i, "booster");
+const placeIt = (p) => clean(p);
 
 function readRecords(kb) {
   const t = read(join(kb, "data/health/records.md"));
@@ -74,7 +74,7 @@ function readVaccines(kb, records) {
         const s = sessions.get(date); if (!s.names.includes(f.name)) s.names.push(f.name);
         s.doses = s.doses || []; s.doses.push(`${f.name}: ${doseIt(c[ix("dose")])}`);
       } else if (/not done|non fatt/i.test(raw)) {
-        f.status = "da fare"; const due = /\b(19|20)\d\d\b/.exec(raw); f.note = due ? `Mai fatto (era previsto nel ${due[0]})` : "Mai fatto";
+        f.status = "da fare"; const due = /\b(19|20)\d\d\b/.exec(raw); f.note = due ? `Never done (was due in ${due[0]})` : "Never done";
       } // "none (slot empty)": an empty slot of a complete series, ignored
     }
   }
@@ -82,8 +82,8 @@ function readVaccines(kb, records) {
   if (unk) for (const c of unk.slice(1)) {
     const f = fam(c[0]), st = (c[1] || "").toLowerCase();
     if (f.doses.length) continue;
-    if (/^never|not received|never received/.test(st)) { f.status = "da fare"; f.note = "Mai fatto"; }
-    else { f.status = "non noto"; f.note = /measles|morbillo/.test(st) ? "Non nel libretto; morbillo avuto da piccolo, non confermato da esami" : "Non nel libretto"; }
+    if (/^never|not received|never received/.test(st)) { f.status = "da fare"; f.note = "Never done"; }
+    else { f.status = "non noto"; f.note = "Not in the record"; }
   }
   const today = new Date().toISOString().slice(0, 10);
   const booked = records.filter((r) => r.type === "vaccino" && r.date >= today);
@@ -99,8 +99,9 @@ function readVaccines(kb, records) {
   return { rows, sessions: [...sessions.values()] };
 }
 
-const GROUP_IT = { lipids: "Grassi nel sangue", "glucose / metabolism": "Zuccheri e metabolismo", kidney: "Reni", liver: "Fegato", "inflammation / vascular": "Infiammazione", thyroid: "Tiroide", "blood count": "Emocromo", urine: "Urine" };
-const KEY_MARKERS = [/^colesterolo totale/i, /^ldl/i, /^glucosio/i, /^hba1c/i, /^acido urico/i, /^tsh/i];
+const GROUP_IT = { lipids: "Blood fats", "glucose / metabolism": "Sugar and metabolism", kidney: "Kidneys", liver: "Liver", "inflammation / vascular": "Inflammation", thyroid: "Thyroid", "blood count": "Blood count", urine: "Urine" };
+const enDate = (iso) => { const [y, m, d] = iso.split("-"); return `${Number(d)} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][Number(m) - 1]} ${y}`; };
+const KEY_MARKERS = [/^(colesterolo totale|total cholesterol)/i, /^ldl/i, /^(glucosio|glucose)/i, /^hba1c/i, /^(acido urico|uric acid)/i, /^tsh/i];
 // is "value" outside "ref" (forms: "a - b", "<=x", ">=x")? null when it cannot tell
 const itNum = (x) => String(x).replace(/(\d)\.(\d)/g, "$1,$2");
 const outOf = (value, ref) => {
@@ -123,7 +124,7 @@ function readLabs(kb) {
     const fm = front(read(join(dir, f))), date = fv(fm, "date");
     if (!date || !ISO.test(date)) continue;
     const drawn = fv(fm, "drawn"), oor = fv(fm, "out_of_range");
-    const cat = (reports && reports.slice(1).find((c) => c[0] === date)?.[1]) || fv(fm, "category") || "Analisi";
+    const cat = (reports && reports.slice(1).find((c) => c[0] === date)?.[1]) || fv(fm, "category") || "Tests";
     const groups = [];
     if (markers) {
       const col = markers[0].indexOf(date), unitI = markers[0].findIndex((c) => c.toLowerCase() === "unit"), refI = markers[0].findIndex((c) => c.toLowerCase().startsWith("reference"));
@@ -131,7 +132,7 @@ function readLabs(kb) {
       if (col > 0) for (const c of markers.slice(1)) {
         if (/^\*\*.+\*\*$/.test(c[0]) && !c[col]) { g = { title: GROUP_IT[clean(c[0]).toLowerCase()] ?? clean(c[0]), items: [] }; groups.push(g); continue; }
         const val = (c[col] || "").trim(); if (!val || /comment/i.test(c[0])) continue;
-        if (!g) { g = { title: "Valori", items: [] }; groups.push(g); }
+        if (!g) { g = { title: "Values", items: [] }; groups.push(g); }
         const star = /\*/.test(val), ref = refI > 0 ? clean(c[refI]) : "", v = val.replace(/\*/g, "").trim();
         g.items.push({ name: clean(c[0]).replace(/\s*\([^)]*\)/g, ""), value: itNum(v), unit: unitI > 0 ? clean(c[unitI]) : "", ref: itNum(ref).replace(/<=/g, "\u2264").replace(/>=/g, "\u2265"), out: star || outOf(v, ref) === true });
       }
@@ -141,9 +142,9 @@ function readLabs(kb) {
     const keys = KEY_MARKERS.map((re) => all.find((x) => re.test(x.name))).filter(Boolean).slice(0, 4);
     const lab = [fv(fm, "lab"), fv(fm, "site")].filter(Boolean).join(", ");
     out.push({
-      date: drawn && ISO.test(drawn) ? drawn : date, type: "prelievo", title: `Prelievo: ${clean(cat).replace(/\+/g, "e").replace(/\s+/g, " ").toLowerCase()}`, place: lab,
-      summary: `${nOut === 0 ? "Nessun valore fuori norma" : nOut === 1 ? "1 valore fuori norma" : `${nOut} valori fuori norma`}${keys.length ? ". " + keys.map((k) => `${k.name.replace(/\s*\(.*\)$/, "")} ${k.value.split(" ")[0]}`).join(", ") : ""}.`,
-      details: [drawn && drawn !== date ? `Prelievo del ${drawn.split("-").reverse().join("/")}, referto del ${date.split("-").reverse().join("/")}` : `Referto del ${date.split("-").reverse().join("/")}`],
+      date: drawn && ISO.test(drawn) ? drawn : date, type: "prelievo", title: `Blood draw: ${clean(cat).replace(/\+/g, "and").replace(/\s+/g, " ").toLowerCase()}`, place: lab,
+      summary: `${nOut === 0 ? "No values out of range" : nOut === 1 ? "1 value out of range" : `${nOut} values out of range`}${keys.length ? ". " + keys.map((k) => `${k.name.replace(/\s*\(.*\)$/, "")} ${k.value.split(" ")[0]}`).join(", ") : ""}.`,
+      details: [drawn && drawn !== date ? `Blood draw on ${enDate(drawn)}, report of ${enDate(date)}` : `Report of ${enDate(date)}`],
       groups, out: nOut, source: `data/body/labs/${f}`,
     });
   }
@@ -154,7 +155,7 @@ export function readArchive(kb) {
   const records = readRecords(kb);
   const vax = readVaccines(kb, records);
   const labs = readLabs(kb);
-  const vaxEntries = vax.sessions.map((s) => ({ date: s.date, type: "vaccino", title: `Vaccini: ${s.names.join(", ")}`, place: s.place, summary: `${s.names.length === 1 ? "1 vaccino" : `${s.names.length} vaccini`} dal libretto vaccinale.`, details: s.doses || [], source: "data/health/vaccinations.md" }));
+  const vaxEntries = vax.sessions.map((s) => ({ date: s.date, type: "vaccino", title: `Vaccines: ${s.names.join(", ")}`, place: s.place, summary: `${s.names.length === 1 ? "1 vaccine" : `${s.names.length} vaccines`} from the vaccination record.`, details: s.doses || [], source: "data/health/vaccinations.md" }));
   const items = [...records, ...labs, ...vaxEntries].sort((a, b) => (a.date === b.date ? 0 : a.date < b.date ? 1 : -1));
   return { items, vaccines: vax.rows };
 }

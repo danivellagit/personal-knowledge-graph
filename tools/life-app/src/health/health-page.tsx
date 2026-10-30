@@ -15,40 +15,40 @@ type Day = {
 type BioAge = { updatedAt?: string | null; birthDate?: string | null; heightCm?: number | null; weightKg?: number | null; weightDate?: string | null; vo2max?: number | null; bodyFatPct?: number | null;
   labsDate?: string | null; labs?: { totalChol?: number | null; ldl?: number | null; hdl?: number | null; tg?: number | null; glucose?: number | null; hba1c?: number | null; uricAcid?: number | null; kidneyOk?: boolean | null; liverOk?: boolean | null } | null };
 type Upcoming = { date: string; time: string; name: string; kind?: string | null; detail?: string | null; partners?: string | null };
-// foto profilo: nell'app installata la inserisce la build (data URI dentro il pacchetto cifrato); qui manca e si vede l'iniziale
+// profile photo: in the installed app the build injects it (data URI inside the encrypted bundle); here it is missing and the initial shows
 const AVATAR: string | null = typeof globalThis !== "undefined" ? ((globalThis as unknown as { __SALUTE_AVATAR__?: string | null }).__SALUTE_AVATAR__ ?? null) : null;
-// fuso orario e nome del coach: li inserisce la build (tools/life-app/build.mjs, da config.local.yml life_app.*)
+// timezone and coach name: injected by the build (tools/life-app/build.mjs, from config.local.yml life_app.*)
 const TZ: string = (typeof globalThis !== "undefined" ? (globalThis as unknown as { __LIFE_TZ__?: string }).__LIFE_TZ__ : undefined) ?? "Europe/Rome";
-const COACH: string = (typeof globalThis !== "undefined" ? (globalThis as unknown as { __LIFE_COACH__?: string }).__LIFE_COACH__ : undefined) ?? "il coach";
-const GYM: string = (typeof globalThis !== "undefined" ? (globalThis as unknown as { __LIFE_GYM__?: string }).__LIFE_GYM__ : undefined) ?? "Palestra";
-// foto (vista Capelli): le inserisce solo la build cifrata, dal hook life_app.hooks.hair_photos (mai in git):
-// [{ date, n, file, bytes, dataUrl }] dalla più vecchia. Senza hook: lista vuota, si vedono i segnaposto.
+const COACH: string = (typeof globalThis !== "undefined" ? (globalThis as unknown as { __LIFE_COACH__?: string }).__LIFE_COACH__ : undefined) ?? "the coach";
+const GYM: string = (typeof globalThis !== "undefined" ? (globalThis as unknown as { __LIFE_GYM__?: string }).__LIFE_GYM__ : undefined) ?? "Gym";
+// photos (Photos view): only the encrypted build injects them, from the life_app.hooks.hair_photos hook (never in git):
+// [{ date, n, file, bytes, dataUrl }] oldest first. Without the hook: empty list, placeholders show.
 type HairPhoto = { date: string; n?: number; file?: string; bytes?: number; pinned?: boolean; dataUrl: string };
 const HAIR_PHOTOS: HairPhoto[] = (() => { const g: unknown = typeof globalThis !== "undefined" ? (globalThis as unknown as { __SALUTE_HAIR_PHOTOS__?: unknown }).__SALUTE_HAIR_PHOTOS__ : null; return Array.isArray(g) ? (g as HairPhoto[]).filter((p: HairPhoto) => !!p && typeof p.date === "string" && typeof p.dataUrl === "string") : []; })();
 
-// ==== DATA:START (sostituire solo questo blocco ad ogni aggiornamento; tenere solo gli ultimi 7 giorni) ====
-// SCHEMA (i campi con ? sono opzionali: se mancano o sono null la pagina li salta o mostra "—")
+// ==== DATA:START (replace only this block on every update; keep only the last 7 days) ====
+// SCHEMA (fields with ? are optional: if missing or null the page skips them or shows "—")
 // DATA.updatedAt "YYYY-MM-DDTHH:MM" ora locale (life_app.timezone) · DATA.today "YYYY-MM-DD" · DATA.proteinTarget g/giorno
-// DATA.days[] (7 giorni, dal più vecchio):
-//   date, eatenKcal (mangiate, totale giorno autorevole), proteinG, burnedKcal (NOSTRE = basalKcal nostra + activeKcal Fitbit),
-//   activeKcal (Fitbit), basalKcal (nostra), fitbitTotalKcal (solo secondario), steps, incomplete (bool), note (string|null),
-//   carbsG?, fatG?, sugarG?, fibreG?, saltG? (totali giorno; se null la pagina somma i pasti e segnala "parziale"),
-//   sleepMin?, deepMin?, remMin? (notte che finisce quel mattino), rhr?, hrvMs?,
-//   spo2?, spo2Low? (SpO2 % media e minima della notte), breathing? (respiri/min), tempDev? (°C vs baseline Fitbit), hrSleepMin? (FC minima nel sonno)
-//   -> da `python3 tools/night_vitals.py` (legge data/body/body-YYYY-MM-DD.md); null o assenti se mancano
-//   meals[]: { time, name (Colazione|Pranzo|Spuntino|Cena), dish, kcal, protein, carbs?, fat?, sugar?, fibre?, salt? }
+// DATA.days[] (7 days, dal older):
+//   date, eatenKcal (eaten, authoritative day total), proteinG, burnedKcal (OURS = our basalKcal + wearable activeKcal),
+//   activeKcal (wearable), basalKcal (ours), fitbitTotalKcal (secondary only), steps, incomplete (bool), note (string|null),
+//   carbsG?, fatG?, sugarG?, fibreG?, saltG? (day totals; if null the page sums the meals and flags "partial"),
+//   sleepMin?, deepMin?, remMin? (the night ending that morning), rhr?, hrvMs?,
+//   spo2?, spo2Low? (average and lowest night SpO2 %), breathing? (breaths/min), tempDev? (°C vs wearable baseline), hrSleepMin? (lowest HR in sleep)
+//   -> from `python3 tools/night_vitals.py` (reads data/body/body-YYYY-MM-DD.md); null or absent when missing
+//   meals[]: { time, name (Breakfast|Lunch|Snack|Dinner), dish, kcal, protein, carbs?, fat?, sugar?, fibre?, salt? }
 //   workouts[]: { time, name, status ("fatto"|"pianificato"), detail, kind? (grid|palestra|padel|beach|tennis|camminata|sport),
 //                 kcal? (Fitbit), durationMin?, avgHr?, maxHr?, pctAbove140? (% tempo >140 bpm), minAbove140?,
-//                 partners? ("Da solo" | nomi), zoneMin? { fatBurn?, cardio?, peak? } (minuti zona attiva Fitbit), exercises? string[] }
-// DATA.upcoming[]?: { date, time, name, kind?, detail?, partners? } prossimi impegni sportivi (padel/tennis/torneo = "Giorno partita")
-// DATA.gymWeeklyGoal? numero di sessioni palestra/GRID a settimana (null = nessun obiettivo)
-// DATA.sportWeeklyGoal? { count, kinds: ["padel","beach"] } partite a settimana di quegli sport (tornei = padel)
-// DATA.tomorrowFirst? { date, time "HH:MM", title } primo impegno di domani (anche non sportivo), per l'orario di sveglia
-// days[].bedTarget? "HH:MM" obiettivo letto di quella notte, se fissato; altrimenti la pagina lo ricava
-// days[].bedtime?, days[].wakeTime? "HH:MM" (notte che finisce quel mattino, sessione principale Fitbit)
-// days[].inBedMin?, awakeMin?, wakeups? (stessa notte: totalMinutes, minutesAwake, segmenti AWAKE interni) · napMin? (pisolini di quel giorno, min dormiti)
+//                 partners? ("solo" | names), zoneMin? { fatBurn?, cardio?, peak? } (wearable active zone minutes), exercises? string[] }
+// DATA.upcoming[]?: { date, time, name, kind?, detail?, partners? } upcoming sport events (padel/tennis/tournament = "Match day")
+// DATA.gymWeeklyGoal? number of gym sessions per week (null = no goal)
+// DATA.sportWeeklyGoal? { count, kinds: ["padel","beach"] } matches per week of those sports (tournaments = padel)
+// DATA.tomorrowFirst? { date, time "HH:MM", title } tomorrow's first event (sport or not), for the wake-up time
+// days[].bedTarget? "HH:MM" bedtime target for that night, if set; otherwise the page works it out
+// days[].bedtime?, days[].wakeTime? "HH:MM" (the night ending that morning, main wearable session)
+// days[].inBedMin?, awakeMin?, wakeups? (same night: totalMinutes, minutesAwake, inner AWAKE segments) · napMin? (naps that day, minutes slept)
 // DATA.bioAge?: { updatedAt, birthDate, heightCm, weightKg, weightDate, vo2max?, bodyFatPct?, labsDate, labs { totalChol, ldl, hdl, tg, glucose, hba1c, uricAcid, kidneyOk, liverOk } }
-//   (input della stima età biologica; FC riposo, HRV, sonno, orari e passi la pagina li calcola da days[])
+//   (inputs of the biological age estimate; resting HR, HRV, sleep, times and steps are computed by the page from days[])
 const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day[]; upcoming?: Upcoming[]; gymWeeklyGoal?: number | null; sportWeeklyGoal?: { count: number; kinds: string[] } | null; tomorrowFirst?: { date?: string | null; time: string; title: string } | null; device?: { battery: number | null; at: string } | null; history?: (Partial<Day> & { date: string; zoneMin?: number | null })[] | null; stages?: Record<string, string> | null; zones?: { rhr: number; max: number; days: Record<string, number[]>; sessions?: Record<string, string> | null } | null; hrNow?: { bpm: number; at: string; last60: number[]; h24?: number[] } | null; bioAge?: BioAge; coach?: { updatedAt?: string | null; headline?: string | null; verdict?: string | null; actions?: string[] | null } | null } = {
   updatedAt: "2030-01-14T08:00",
   today: "2030-01-14",
@@ -69,8 +69,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
       meals: [
         {
           time: "08:00",
-          name: "Colazione",
-          dish: "Yogurt e frutta (esempio)",
+          name: "Breakfast",
+          dish: "Yogurt and fruit (sample)",
           kcal: 350,
           protein: 20,
           carbs: 45,
@@ -81,8 +81,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "13:00",
-          name: "Pranzo",
-          dish: "Pasta al pomodoro (esempio)",
+          name: "Lunch",
+          dish: "Pasta with tomato sauce (sample)",
           kcal: 650,
           protein: 25,
           carbs: 95,
@@ -93,8 +93,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "20:00",
-          name: "Cena",
-          dish: "Pollo e verdure (esempio)",
+          name: "Dinner",
+          dish: "Chicken and vegetables (sample)",
           kcal: 600,
           protein: 45,
           carbs: 40,
@@ -135,8 +135,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
       meals: [
         {
           time: "08:00",
-          name: "Colazione",
-          dish: "Yogurt e frutta (esempio)",
+          name: "Breakfast",
+          dish: "Yogurt and fruit (sample)",
           kcal: 350,
           protein: 20,
           carbs: 45,
@@ -147,8 +147,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "13:00",
-          name: "Pranzo",
-          dish: "Pasta al pomodoro (esempio)",
+          name: "Lunch",
+          dish: "Pasta with tomato sauce (sample)",
           kcal: 650,
           protein: 25,
           carbs: 95,
@@ -159,8 +159,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "20:00",
-          name: "Cena",
-          dish: "Pollo e verdure (esempio)",
+          name: "Dinner",
+          dish: "Chicken and vegetables (sample)",
           kcal: 600,
           protein: 45,
           carbs: 40,
@@ -173,9 +173,9 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
       workouts: [
         {
           time: "18:30",
-          name: "Palestra (esempio)",
+          name: "Gym (sample)",
           status: "fatto",
-          detail: "Allenamento di esempio",
+          detail: "Sample workout",
           kind: "palestra",
           kcal: 320,
           durationMin: 55,
@@ -212,8 +212,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
       meals: [
         {
           time: "08:00",
-          name: "Colazione",
-          dish: "Yogurt e frutta (esempio)",
+          name: "Breakfast",
+          dish: "Yogurt and fruit (sample)",
           kcal: 350,
           protein: 20,
           carbs: 45,
@@ -224,8 +224,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "13:00",
-          name: "Pranzo",
-          dish: "Pasta al pomodoro (esempio)",
+          name: "Lunch",
+          dish: "Pasta with tomato sauce (sample)",
           kcal: 650,
           protein: 25,
           carbs: 95,
@@ -236,8 +236,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "20:00",
-          name: "Cena",
-          dish: "Pollo e verdure (esempio)",
+          name: "Dinner",
+          dish: "Chicken and vegetables (sample)",
           kcal: 600,
           protein: 45,
           carbs: 40,
@@ -278,8 +278,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
       meals: [
         {
           time: "08:00",
-          name: "Colazione",
-          dish: "Yogurt e frutta (esempio)",
+          name: "Breakfast",
+          dish: "Yogurt and fruit (sample)",
           kcal: 350,
           protein: 20,
           carbs: 45,
@@ -290,8 +290,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "13:00",
-          name: "Pranzo",
-          dish: "Pasta al pomodoro (esempio)",
+          name: "Lunch",
+          dish: "Pasta with tomato sauce (sample)",
           kcal: 650,
           protein: 25,
           carbs: 95,
@@ -302,8 +302,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "20:00",
-          name: "Cena",
-          dish: "Pollo e verdure (esempio)",
+          name: "Dinner",
+          dish: "Chicken and vegetables (sample)",
           kcal: 600,
           protein: 45,
           carbs: 40,
@@ -316,9 +316,9 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
       workouts: [
         {
           time: "19:00",
-          name: "Tennis (esempio)",
+          name: "Tennis (sample)",
           status: "fatto",
-          detail: "Partita di esempio",
+          detail: "Sample match",
           kind: "tennis",
           kcal: 480,
           durationMin: 75,
@@ -355,8 +355,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
       meals: [
         {
           time: "08:00",
-          name: "Colazione",
-          dish: "Yogurt e frutta (esempio)",
+          name: "Breakfast",
+          dish: "Yogurt and fruit (sample)",
           kcal: 350,
           protein: 20,
           carbs: 45,
@@ -367,8 +367,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "13:00",
-          name: "Pranzo",
-          dish: "Pasta al pomodoro (esempio)",
+          name: "Lunch",
+          dish: "Pasta with tomato sauce (sample)",
           kcal: 650,
           protein: 25,
           carbs: 95,
@@ -379,8 +379,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "20:00",
-          name: "Cena",
-          dish: "Pollo e verdure (esempio)",
+          name: "Dinner",
+          dish: "Chicken and vegetables (sample)",
           kcal: 600,
           protein: 45,
           carbs: 40,
@@ -393,9 +393,9 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
       workouts: [
         {
           time: "18:30",
-          name: "Palestra (esempio)",
+          name: "Gym (sample)",
           status: "fatto",
-          detail: "Allenamento di esempio",
+          detail: "Sample workout",
           kind: "palestra",
           kcal: 320,
           durationMin: 55,
@@ -432,8 +432,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
       meals: [
         {
           time: "08:00",
-          name: "Colazione",
-          dish: "Yogurt e frutta (esempio)",
+          name: "Breakfast",
+          dish: "Yogurt and fruit (sample)",
           kcal: 350,
           protein: 20,
           carbs: 45,
@@ -444,8 +444,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "13:00",
-          name: "Pranzo",
-          dish: "Pasta al pomodoro (esempio)",
+          name: "Lunch",
+          dish: "Pasta with tomato sauce (sample)",
           kcal: 650,
           protein: 25,
           carbs: 95,
@@ -456,8 +456,8 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
         },
         {
           time: "20:00",
-          name: "Cena",
-          dish: "Pollo e verdure (esempio)",
+          name: "Dinner",
+          dish: "Chicken and vegetables (sample)",
           kcal: 600,
           protein: 45,
           carbs: 40,
@@ -499,9 +499,9 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
       workouts: [
         {
           time: "19:00",
-          name: "Palestra (esempio)",
+          name: "Gym (sample)",
           status: "pianificato",
-          detail: "In programma",
+          detail: "Scheduled",
           kind: "palestra"
         }
       ],
@@ -526,9 +526,9 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
     {
       date: "2030-01-16",
       time: "19:00",
-      name: "Tennis (esempio)",
+      name: "Tennis (sample)",
       kind: "tennis",
-      detail: "Partita di esempio"
+      detail: "Sample match"
     }
   ],
   gymWeeklyGoal: 2,
@@ -541,7 +541,7 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
   tomorrowFirst: {
     date: "2030-01-15",
     time: "09:00",
-    title: "Impegno di esempio"
+    title: "Sample commitment"
   },
   history: [
     {
@@ -1142,28 +1142,28 @@ const DATA: { updatedAt: string; today: string; proteinTarget: number; days: Day
   },
   coach: {
     updatedAt: "2030-01-14T08:00",
-    headline: "Settimana di esempio",
-    verdict: "Dati finti: sostituiscili con i tuoi.",
+    headline: "Sample week",
+    verdict: "Fake data: replace it with yours.",
     actions: [
-      "Stasera a letto entro le 23:00 (esempio).",
-      "Un pasto proteico in più oggi (esempio)."
+      "In bed by 23:00 tonight (sample).",
+      "One more protein meal today (sample)."
     ]
   }
 };
 // ==== DATA:END ====
 
 
-// pesate, dalla più vecchia (dati di esempio; la build le sostituisce con data/body/weigh-ins.md se esiste)
+// weigh-ins, oldest first (sample data; the build replaces them with data/body/weigh-ins.md if it exists)
 const WEIGHTS: { date: string; kg: number }[] = [
   { date: "2030-01-01", kg: 80 },
   { date: "2030-01-08", kg: 79.5 },
 ];
-// carichi in palestra: la build li sostituisce con quelli di data/training/*.md (training.mjs)
+// gym loads: the build replaces them with those from data/training/*.md (training.mjs)
 const LIFTS: { date: string; ex: string; kg: number; sets: number | null; reps: number | null }[] = [
-  { date: "2030-01-08", ex: "Esercizio di esempio", kg: 20, sets: 3, reps: 10 },
+  { date: "2030-01-08", ex: "Sample exercise", kg: 20, sets: 3, reps: 10 },
 ];
 
-// ==== MEDICO: dati medici, FUORI dal blocco DATA. La build lo sostituisce con data/happiness/medico.json. ====
+// ==== MEDICO: medical data, OUTSIDE the DATA block. The build replaces it with data/happiness/medico.json. ====
 type MedLab = { name: string; value: string; unit: string; ref: string; status: "ok" | "limite"; long?: boolean; bar?: { v: number; lo: number | null; hi: number | null; min: number; max: number } };
 type MedStatus = "in corso" | "in attesa" | "da fare" | "proposto" | "facoltativo" | "da decidere";
 type MedCheck = { title: string; sub: string; due: string | null; dueText: string; status: MedStatus };
@@ -1183,18 +1183,18 @@ type Pills = { updated: string; rule: string; moments: PillMoment[];
   creatine?: { dose: string; from: string; points: string[] } | null;
   stock?: { name: string; count: number; countDate: string; perDay: number; note: string; reminder: string | null; reminderText: string } | null;
   hold: { name: string; why: string }[]; optional?: { name: string; dose: string; note: string }[]; doctor: string[];
-  // registro giorno per giorno (data/happiness/medico.json pills.log): solo aggiunte in coda, l'ultima riga di un giorno vince
+  // day-by-day log (data/happiness/medico.json pills.log): append-only, the last row of a day wins
   log?: PillLogRow[] };
 type PillLogRow = { date: string; status: "taken" | "missed" | "cleared"; slot?: "mattina" | "sera" | null; at?: string | null; by?: string; note?: string };
 type FamGroup = { key: string; label: string; who: string; side: string; items: { name: string; age: string | null; year: string | null; note: string; source: string }[] };
 type FamilyHistory = { updated: string; source: string; groups: FamGroup[]; timeline: { date: string; label: string; who: string; text: string }[]; undated?: string[];
   forOwner?: { why: string; what: string; when: string }[]; open?: string[] };
-type Medico = { updated: string; lab: { name: string; site: string; date: string; reports: number; outOfRange: number }; nextLabs: string; groups: { title: string; items: MedLab[] }[]; watch: string; checks: MedCheck[]; meds: { name: string; dose: string }[]; visits: { date: string; title: string }[]; family: string; hair?: Hair; pills?: Pills; familyHistory?: FamilyHistory };
-const MEDICO: Medico = {
+type Medical = { updated: string; lab: { name: string; site: string; date: string; reports: number; outOfRange: number }; nextLabs: string; groups: { title: string; items: MedLab[] }[]; watch: string; checks: MedCheck[]; meds: { name: string; dose: string }[]; visits: { date: string; title: string }[]; family: string; hair?: Hair; pills?: Pills; familyHistory?: FamilyHistory };
+const MEDICO: Medical = {
   updated: "2030-01-14",
   lab: {
-    name: "Laboratorio di esempio",
-    site: "Sede di esempio",
+    name: "Sample lab",
+    site: "Sample site",
     date: "2029-09-16",
     reports: 1,
     outOfRange: 0
@@ -1202,10 +1202,10 @@ const MEDICO: Medico = {
   nextLabs: "2030-09-16",
   groups: [
     {
-      title: "Metabolismo",
+      title: "Metabolism",
       items: [
         {
-          name: "Glucosio",
+          name: "Glucose",
           value: "88",
           unit: "mg/dL",
           ref: "70-100",
@@ -1221,10 +1221,10 @@ const MEDICO: Medico = {
       ]
     },
     {
-      title: "Lipidi",
+      title: "Lipids",
       items: [
         {
-          name: "Colesterolo totale",
+          name: "Total cholesterol",
           value: "180",
           unit: "mg/dL",
           ref: "≤ 190",
@@ -1238,7 +1238,7 @@ const MEDICO: Medico = {
           }
         },
         {
-          name: "Colesterolo HDL",
+          name: "HDL cholesterol",
           value: "55",
           unit: "mg/dL",
           ref: "≥ 40",
@@ -1254,26 +1254,26 @@ const MEDICO: Medico = {
       ]
     }
   ],
-  watch: "Valori di esempio: sostituiscili con il tuo ultimo referto.",
+  watch: "Sample values: replace them with your latest report.",
   checks: [
     {
-      title: "Controllo di esempio",
-      sub: "Una riga per ogni controllo da fare",
+      title: "Sample check-up",
+      sub: "One line for each check-up to do",
       due: "2030-02-13",
-      dueText: "entro un mese",
+      dueText: "within a month",
       status: "da fare"
     },
     {
-      title: "Dentista (esempio)",
-      sub: "Una volta l'anno",
+      title: "Dentist (sample)",
+      sub: "Once a year",
       due: null,
-      dueText: "ogni anno",
+      dueText: "every year",
       status: "proposto"
     }
   ],
   meds: [],
   visits: [],
-  family: "Esempio: nessuna storia familiare inserita."
+  family: "Sample: no family history entered."
 };
 
 type Tab = "home" | "sonno" | "recupero" | "sforzo" | "biologia" | "nutrizione" | "altro" | "fitness";
@@ -1286,13 +1286,13 @@ type Trend = { dir: "up" | "down" | "flat"; good: boolean | null };
 type Contrib = { icon: string; label: string; value: string; trend: Trend | null; onClick?: () => void };
 
 const DKEY: Record<MKey, "carbsG" | "fatG" | "sugarG" | "fibreG" | "saltG"> = { carbs: "carbsG", fat: "fatG", sugar: "sugarG", fibre: "fibreG", salt: "saltG" };
-const WD = ["Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
-const MO = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MO = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const parts = (d: string) => { const [y, m, dd] = d.split("-").map(Number); return { y, m, dd, w: new Date(Date.UTC(y, m - 1, dd)).getUTCDay() }; };
 const r1 = (v: number): number => (Math.abs(v) >= 100 ? Math.round(v) : Math.round(v * 10) / 10);
 const isNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
-// migliaia sempre con il punto (anche 9.667: il formato italiano di serie non raggruppa le 4 cifre)
-const fmt = (v: number | null | undefined, u = "") => (!isNum(v) ? "—" : `${r1(v).toLocaleString("it-IT").replace(/^(-?\d)(\d{3})(?=,|$)/, "$1.$2")}${u}`);
+// thousands always grouped with a comma (also 4-digit numbers such as 9,667)
+const fmt = (v: number | null | undefined, u = "") => (!isNum(v) ? "—" : `${r1(v).toLocaleString("en-US").replace(/^(-?\d)(\d{3})(?=,|$)/, "$1.$2")}${u}`);
 const hm = (m: number | null | undefined): string => (!isNum(m) ? "—" : `${Math.floor(Math.round(m) / 60)}:${String(Math.round(m) % 60).padStart(2, "0")}`);
 const nums = (xs: (number | null | undefined)[]): number[] => xs.filter(isNum);
 const avg = (xs: (number | null | undefined)[]): number | null => { const v = nums(xs); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
@@ -1302,16 +1302,16 @@ const clamp = (v: number, a = 0, z = 100) => Math.max(a, Math.min(z, v));
 // < 0.34 red, < 0.67 yellow, else green; empty / no data = null (only the grey track shows)
 const RING_TONES = { lo: "#FF0026", mid: "#FFDE00", hi: "#16EC06" };
 const ringTone = (frac: number | null | undefined): string | null => (!isNum(frac) || frac <= 0 ? null : frac < 0.34 ? RING_TONES.lo : frac < 0.67 ? RING_TONES.mid : RING_TONES.hi);
-const KIND_NAME: Record<string, string> = { grid: "GRID", palestra: "Palestra", padel: "Padel", beach: "Beach volley", tennis: "Tennis", camminata: "Camminata", sport: "Sport" };
-const MEAL_ORDER = ["Colazione", "Pranzo", "Spuntino", "Cena"];
-// fonti proteiche che mangia davvero (dai suoi pasti registrati), per porzione
+const KIND_NAME: Record<string, string> = { grid: "Circuit class", palestra: "Gym", padel: "Padel", beach: "Beach volley", tennis: "Tennis", camminata: "Walk", sport: "Sport" };
+const MEAL_ORDER = ["Breakfast", "Lunch", "Snack", "Dinner"];
+// common protein sources, per portion (generic examples)
 const PROTEIN_FOODS: { name: string; portion: string; p: number; kcal: number }[] = [
-  { name: "Bresaola", portion: "100 g", p: 32, kcal: 150 },
-  { name: "Albumi", portion: "200 g", p: 20, kcal: 86 },
-  { name: "Budino proteico Lidl", portion: "200 g", p: 20, kcal: 150 },
-  { name: "Tramezzini High Protein", portion: "1 confezione", p: 23, kcal: 340 },
-  { name: "Prosciutto crudo", portion: "80 g", p: 20, kcal: 200 },
-  { name: "Mozzarella di bufala", portion: "125 g", p: 21, kcal: 360 },
+  { name: "Chicken breast", portion: "100 g", p: 32, kcal: 150 },
+  { name: "Egg whites", portion: "200 g", p: 20, kcal: 86 },
+  { name: "Greek yogurt", portion: "200 g", p: 20, kcal: 150 },
+  { name: "Cottage cheese", portion: "1 pack", p: 23, kcal: 340 },
+  { name: "Tuna", portion: "80 g", p: 20, kcal: 200 },
+  { name: "Mozzarella", portion: "125 g", p: 21, kcal: 360 },
 ];
 const dayMacro = (d: Day, k: MKey): { v: number | null; partial: boolean } => {
   const f = d[DKEY[k]];
@@ -1326,10 +1326,10 @@ const toMin = (t: string | null | undefined): number | null => {
   const m = /(\d{1,2})[:.](\d{2})/.exec(t);
   if (m) return Number(m[1]) * 60 + Number(m[2]);
   const l = t.toLowerCase();
-  if (l.includes("colazione") || l.includes("mattin")) return 480;
-  if (l.includes("pranzo")) return 780;
-  if (l.includes("pomerigg")) return 960;
-  if (l.includes("cena") || l.includes("sera")) return 1230;
+  if (/breakfast|morning|colazione|mattin/.test(l)) return 480;
+  if (/lunch|pranzo/.test(l)) return 780;
+  if (/afternoon|snack|pomerigg/.test(l)) return 960;
+  if (/dinner|evening|cena|sera/.test(l)) return 1230;
   return null;
 };
 const clock = (m: number | null | undefined): string => {
@@ -1347,16 +1347,16 @@ const pearson = (xs: number[], ys: number[]): number | null => {
   return dx && dy ? n / Math.sqrt(dx * dy) : null;
 };
 const daysBetween = (a: string, b: string): number => { const p = parts(a), q = parts(b); return Math.round((Date.UTC(q.y, q.m - 1, q.dd) - Date.UTC(p.y, p.m - 1, p.dd)) / 86400000); };
-const kindOf = (w: Workout): string => w.kind ?? (w.name.toUpperCase().startsWith("GRID") ? "grid" : "palestra");
+const kindOf = (w: Workout): string => w.kind ?? (/^(circuit|hiit|crossfit)\b/i.test(w.name) ? "grid" : "palestra");
 
-// ---------- punteggi: nostra stima, solo dai DATA ----------
-// SONNO v2, stile WHOOP/Oura: punteggio = Sufficienza^0,6 × Qualità^0,4
-//   Sufficienza = 100 × (ore dormite / bisogno)^2,5 (rigida: 7h su 8h = 72, 6h = 49)
-//   Bisogno = 8h base + sforzo del giorno prima (+3,5 min per punto sopra 10, max +30) + debito delle 3 notti prima
-//             (25% / 15% / 10% dell'ammanco rispetto a 8h, max +45) − pisolino del giorno prima (max 60); limiti 7h–10h
-//   Qualità = media pesata dei componenti disponibili: Regolarità 40% (70% scarto letto/sveglia vs 4 notti prima,
-//             30% orario: −25 punti per ogni ora a letto dopo le 00:30), Ristoratore 35% (profondo vs 17%, REM vs 22%),
-//             Efficienza 25% (sonno / tempo a letto: 75% = 0, 95% = 100; −4 per risveglio oltre il secondo)
+// ---------- scores: our estimate, only from DATA ----------
+// SLEEP v2, WHOOP/Oura style: score = Sufficiency^0.6 × Quality^0.4
+//   Sufficiency = 100 × (hours slept / need)^2.5 (strict: 7h of 8h = 72, 6h = 49)
+//   Need = 8h base + previous day's effort (+3.5 min per point above 10, max +30) + debt of the previous 3 nights
+//             (25% / 15% / 10% of the shortfall vs 8h, max +45) − previous day's nap (max 60); bounds 7h–10h
+//   Quality = weighted average of the available parts: Regularity 40% (70% bed/wake deviation vs the previous 4 nights,
+//             30% timing: −25 points per hour in bed after 00:30), Restorative 35% (deep vs 17%, REM vs 22%),
+//             Efficiency 25% (sleep / time in bed: 75% = 0, 95% = 100; −4 per wake-up beyond the second)
 type SleepParts = {
   score: number | null; need: number; base: number; strainAdd: number; debt: number; napCut: number; ratio: number | null; suff: number | null;
   regDev: number | null; reg: number | null; timing: number | null; cons: number | null; effPct: number | null; eff: number | null;
@@ -1365,8 +1365,8 @@ type SleepParts = {
 const SLEEP_BASE = 480;
 const addDays = (date: string, k: number): string => { const p = parts(date); return new Date(Date.UTC(p.y, p.m - 1, p.dd + k)).toISOString().slice(0, 10); };
 const dayOf = (date: string): Day | undefined => DATA.days.find((y: Day) => y.date === date);
-// OGGI = la data vera nel fuso orario configurato, non l'ultima data dei dati: se i dati sono ancora di ieri (notte non sincronizzata, build
-// di prima di mezzanotte, app riaperta dal background) si aggiungono i giorni mancanti vuoti e si apre comunque su oggi
+// TODAY = the real date in the configured timezone, not the last data date: if the data is still from yesterday (night not synced, build
+// from before midnight, app reopened from the background) the missing days are added empty and the page still opens on today
 const romeISO = (): string => { try { return new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()); } catch (e) { return new Date().toISOString().slice(0, 10); } };
 const LOAD_DAY = romeISO();
 if (LOAD_DAY > DATA.today && daysBetween(DATA.today, LOAD_DAY) <= 14) {
@@ -1375,8 +1375,8 @@ if (LOAD_DAY > DATA.today && daysBetween(DATA.today, LOAD_DAY) <= 14) {
   }
   DATA.today = LOAD_DAY;
 }
-// debito di sonno stile WHOOP: l'ammanco della notte rispetto al bisogno base si porta alla notte dopo per metà e si ripaga
-// dormendo di più (0–4 h, parte da 0 alla prima notte registrata). Il Life App usa la stessa regola sulla sua storia lunga.
+// WHOOP-style sleep debt: half of the night's shortfall vs the base need carries to the next night and is paid back
+// by sleeping more (0–4 h, starting at 0 on the first logged night). The Life App uses the same rule on its long history.
 const DEBT_CARRY = 0.5, DEBT_CAP = 240;
 const sleptOf = (x: Day | undefined): number | null => (x && isNum(x.sleepMin) && x.sleepMin > 0 ? x.sleepMin + (isNum(x.napMin) ? x.napMin : 0) : null);
 const sleepDebtOn = (date: string, list: Day[] = DATA.days): number | null => {
@@ -1389,7 +1389,7 @@ const sleepDebtOn = (date: string, list: Day[] = DATA.days): number | null => {
   }
   return seen ? Math.round(debt) : null;
 };
-// un solo formato per il debito ovunque (anche nel Life App): a 5 minuti, "3h 20m"
+// one debt format everywhere (Life App too): 5-minute steps, "3h 20m"
 const debtText = (m: number): string => { const v = Math.round(m / 5) * 5; return v < 60 ? `${v} min` : `${Math.floor(v / 60)}h${v % 60 ? ` ${String(v % 60).padStart(2, "0")}m` : ""}`; };
 const sleepNeed = (date: string): { need: number; base: number; strainAdd: number; debt: number; napCut: number } => {
   const prev = dayOf(addDays(date, -1));
@@ -1404,7 +1404,7 @@ const sleepParts = (x: Day, list: Day[] = DATA.days): SleepParts => {
   const sl = isNum(x.sleepMin) && x.sleepMin > 0 ? x.sleepMin : null;
   const ratio = sl === null ? null : sl / n.need;
   const suff = ratio === null ? null : 100 * Math.pow(Math.min(1, ratio), 2.5);
-  // regolarità: letto e sveglia rispetto alla media delle (fino a) 4 notti precedenti
+  // regularity: bed and wake times vs the average of the previous (up to) 4 nights
   const prev = list.filter((y: Day) => y.date < x.date).sort((a: Day, b: Day) => (a.date < b.date ? -1 : 1)).slice(-4);
   const pb = nums(prev.map((y: Day) => bedRel(y.bedtime))), pw = nums(prev.map((y: Day) => toMin(y.wakeTime)));
   const b = bedRel(x.bedtime), wk = toMin(x.wakeTime);
@@ -1425,56 +1425,56 @@ const sleepParts = (x: Day, list: Day[] = DATA.days): SleepParts => {
   return { score, ...n, ratio, suff, regDev, reg, timing, cons, effPct, eff, deepPct, remPct, rest };
 };
 const sleepScore = (x: Day): number | null => sleepParts(x).score;
-// ---------- età biologica: tutti i segnali disponibili, pesati come un healthspan (fitness, sonno, cuore, movimento, peso) ----------
-// i fattori senza dato (VO2max, massa magra) restano "da misurare" e non spostano l'età; gli esami li aggiunge App.
-// wearOnly: solo i segnali dell'orologio (serve al Life App per confrontare il ritmo degli ultimi 30 giorni con la sua storia)
+// ---------- biological age: every available signal, weighted like a healthspan (fitness, sleep, heart, movement, weight) ----------
+// factors without data (VO2max, lean mass) stay "to measure" and do not move the age; App adds the lab tests.
+// wearOnly: watch signals only (the Life App uses it to compare the pace of the last 30 days with its history)
 const bioModel = (win: Day[], bio: BioAge | null, today: string, wearOnly = false, ctx?: Day[]): { factors: Factor[]; delta: number } => {
   const F: Factor[] = [];
   const nights = win.filter((x: Day) => isNum(x.sleepMin) && x.sleepMin > 0);
   const full = win.filter((x: Day) => !x.incomplete && x.date !== today && isNum(x.steps));
   const A = (f: (x: Day) => number | null | undefined, list: Day[] = win): number | null => avg(list.map(f));
   const weeks = Math.max(1, win.length / 7);
-  // prudenza: un dato mancante non conta mai come buono; con pochi giorni il fattore pesa meno (sotto 3 giorni è neutro);
-  // nessun fattore sposta l'età di più di un anno
-  const COV: Record<string, (x: Day) => unknown> = { "Costanza del sonno": (x) => sleepParts(x, ctx ?? win).reg, "Durata sonno": (x) => x.sleepMin, "Sonno profondo + REM": (x) => x.deepMin, "FC a riposo": (x) => x.rhr,
-    "FC minima nel sonno": (x) => x.hrSleepMin, HRV: (x) => x.hrvMs, "Respirazione notturna": (x) => x.breathing, "Ossigeno nel sonno": (x) => x.spo2, "Passi al giorno": (x) => (x.incomplete || x.date === today ? null : x.steps) };
+  // caution: a missing value never counts as good; with few days the factor weighs less (under 3 days it is neutral);
+  // no factor moves the age by more than one year
+  const COV: Record<string, (x: Day) => unknown> = { "Sleep consistency": (x) => sleepParts(x, ctx ?? win).reg, "Sleep duration": (x) => x.sleepMin, "Deep + REM sleep": (x) => x.deepMin, "Resting HR": (x) => x.rhr,
+    "Lowest HR in sleep": (x) => x.hrSleepMin, HRV: (x) => x.hrvMs, "Night-time breathing": (x) => x.breathing, "Oxygen in sleep": (x) => x.spo2, "Steps per day": (x) => (x.incomplete || x.date === today ? null : x.steps) };
   const add = (name: string, v: number | null, value: () => string, y: (n: number) => number, good: string, bad: string) => {
-    if (v === null) { F.push({ name, value: "—", years: null, why: "Dato mancante." }); return; }
+    if (v === null) { F.push({ name, value: "—", years: null, why: "Missing data." }); return; }
     const n = COV[name] ? win.filter((x: Day) => isNum(COV[name](x))).length : win.length;
-    if (n < 3) { F.push({ name, value: value(), years: 0, why: "Pochi giorni di dati: per ora non conta." }); return; }
+    if (n < 3) { F.push({ name, value: value(), years: 0, why: "Few days of data: it doesn't count yet." }); return; }
     const yy = Math.round(clamp(y(v) * Math.min(1, n / 7), -1, 1) * 4) / 4;
     F.push({ name, value: value(), years: yy, why: yy <= 0 ? good : bad });
   };
   // sonno
   const cs = avg(nights.map((x: Day) => sleepParts(x, ctx ?? win).reg));
   const csDev = avg(nights.map((x: Day) => sleepParts(x, ctx ?? win).regDev));
-  add("Costanza del sonno", cs, () => (csDev === null ? "—" : `orari: ${Math.round(csDev)} min di scarto in media`), (n) => (n >= 80 ? -1 : n >= 65 ? 0 : n >= 50 ? 0.75 : 1.5), "Vai a letto e ti svegli a orari simili.", "Orari di letto e sveglia che cambiano molto: il ritmo circadiano ne risente.");
+  add("Sleep consistency", cs, () => (csDev === null ? "—" : `times: ${Math.round(csDev)} min of variation on average`), (n) => (n >= 80 ? -1 : n >= 65 ? 0 : n >= 50 ? 0.75 : 1.5), "You go to bed and wake up at similar times.", "Bed and wake times that vary a lot: your circadian rhythm suffers.");
   const sl = A((x: Day) => x.sleepMin, nights);
-  add("Durata sonno", sl, () => `${hm(sl)} a notte`, (n) => (n >= 420 && n <= 540 ? -1 : n >= 390 ? 0 : n >= 360 ? 1 : 1.5), "Sonno sufficiente.", "Sotto le 7 ore consigliate.");
+  add("Sleep duration", sl, () => `${hm(sl)} a night`, (n) => (n >= 420 && n <= 540 ? -1 : n >= 390 ? 0 : n >= 360 ? 1 : 1.5), "Enough sleep.", "Below the recommended 7 hours.");
   const rs = avg(nights.map((x: Day) => (isNum(x.deepMin) && isNum(x.remMin) && isNum(x.sleepMin) ? ((x.deepMin + x.remMin) / x.sleepMin) * 100 : null)));
-  add("Sonno profondo + REM", rs, () => `${Math.round(rs ?? 0)}% della notte`, (n) => (n >= 40 ? -0.25 : n >= 33 ? 0 : 0.5), "Buona quota di sonno ristoratore.", "Poco sonno profondo e REM: notti più lunghe e regolari lo alzano.");
-  // cuore e notte
+  add("Deep + REM sleep", rs, () => `${Math.round(rs ?? 0)}% of the night`, (n) => (n >= 40 ? -0.25 : n >= 33 ? 0 : 0.5), "A good share of restorative sleep.", "Little deep and REM sleep: longer, more regular nights raise it.");
+  // heart and night
   const rh = A((x: Day) => x.rhr);
-  add("FC a riposo", rh, () => fmt(rh, " bpm"), (n) => (n <= 55 ? -1.5 : n <= 60 ? -0.5 : n <= 65 ? 0 : n <= 70 ? 1 : 2), "Cuore efficiente a riposo.", "Un po' alta: più cardio e sonno la abbassano.");
+  add("Resting HR", rh, () => fmt(rh, " bpm"), (n) => (n <= 55 ? -1.5 : n <= 60 ? -0.5 : n <= 65 ? 0 : n <= 70 ? 1 : 2), "An efficient heart at rest.", "A bit high: more cardio and sleep lower it.");
   const hs = A((x: Day) => x.hrSleepMin);
-  add("FC minima nel sonno", hs, () => fmt(hs, " bpm"), (n) => (n <= 55 ? 0 : 0.5), "Di notte il cuore scende bene.", "Di notte il cuore resta alto: cena leggera e niente alcol la sera aiutano.");
+  add("Lowest HR in sleep", hs, () => fmt(hs, " bpm"), (n) => (n <= 55 ? 0 : 0.5), "Your heart rate drops well at night.", "Your heart stays high at night: a light dinner and no alcohol in the evening help.");
   const hv = A((x: Day) => x.hrvMs);
-  add("HRV", hv, () => fmt(hv, " ms"), (n) => (n >= 50 ? -1 : n >= 40 ? -0.5 : n >= 35 ? 0 : n >= 30 ? 0.5 : 1), "Buona variabilità: recupero solido.", "Sotto la media tipica alla tua età: sonno corto e stress la abbassano.");
+  add("HRV", hv, () => fmt(hv, " ms"), (n) => (n >= 50 ? -1 : n >= 40 ? -0.5 : n >= 35 ? 0 : n >= 30 ? 0.5 : 1), "Good variability: solid recovery.", "Below the typical average for your age: short sleep and stress lower it.");
   const br = A((x: Day) => x.breathing);
-  add("Respirazione notturna", br, () => fmt(br, " respiri/min"), (n) => (n >= 10 && n <= 18 ? 0 : 0.5), "Respiro notturno regolare.", "Respiro notturno fuori dal solito intervallo.");
+  add("Night-time breathing", br, () => fmt(br, " breaths/min"), (n) => (n >= 10 && n <= 18 ? 0 : 0.5), "Regular night-time breathing.", "Night-time breathing outside the usual range.");
   const sp = A((x: Day) => x.spo2);
-  add("Ossigeno nel sonno", sp, () => fmt(sp, "%"), (n) => (n >= 93 ? 0 : 0.5), "Ossigenazione notturna buona.", "Ossigeno notturno basso: se resta così parlane con il medico.");
+  add("Oxygen in sleep", sp, () => fmt(sp, "%"), (n) => (n >= 93 ? 0 : 0.5), "Good night-time oxygen.", "Low night-time oxygen: if it stays like this, talk to your doctor.");
   // movimento
   const stp = A((x: Day) => x.steps, full);
-  add("Passi al giorno", stp, () => Math.round(stp ?? 0).toLocaleString("it-IT"), (n) => (n >= 10000 ? -1 : n >= 7500 ? -0.5 : n >= 5000 ? 0 : 1), "Molto attivo: è un tuo punto di forza.", "Pochi passi: una camminata al giorno cambia molto.");
+  add("Steps per day", stp, () => Math.round(stp ?? 0).toLocaleString("en-US"), (n) => (n >= 10000 ? -1 : n >= 7500 ? -0.5 : n >= 5000 ? 0 : 1), "Very active: one of your strengths.", "Few steps: a daily walk changes a lot.");
   const cm = win.length ? sum(win.map(cardioMin)) / weeks : null;
-  add("Cardio a settimana", cm, () => `${Math.round(cm ?? 0)} min`, (n) => (n >= 150 ? -1 : n >= 75 ? 0 : 1), "Sopra i 150 minuti consigliati.", "Sotto i 150 minuti di cardio consigliati.");
-  // segnali che misurano la stessa cosa non si sommano senza limite: tetto per gruppo
+  add("Cardio per week", cm, () => `${Math.round(cm ?? 0)} min`, (n) => (n >= 150 ? -1 : n >= 75 ? 0 : 1), "Above the recommended 150 minutes.", "Below the recommended 150 minutes of cardio.");
+  // signals that measure the same thing do not add up without limit: a cap per group
   const GROUPS: [string[], number, number][] = [
-    [["Costanza del sonno", "Durata sonno", "Sonno profondo + REM"], -1, 2],
-    [["FC a riposo", "FC minima nel sonno", "HRV"], -1.5, 2],
-    [["Respirazione notturna", "Ossigeno nel sonno"], 0, 1],
-    [["Passi al giorno", "Cardio a settimana", "Minuti ad alta intensità", "Allenamento di forza"], -1.5, 2],
+    [["Sleep consistency", "Sleep duration", "Deep + REM sleep"], -1, 2],
+    [["Resting HR", "Lowest HR in sleep", "HRV"], -1.5, 2],
+    [["Night-time breathing", "Oxygen in sleep"], 0, 1],
+    [["Steps per day", "Cardio per week", "High-intensity minutes", "Strength training"], -1.5, 2],
   ];
   const total = () => {
     const inG = new Set(GROUPS.flatMap((g) => g[0]));
@@ -1485,30 +1485,30 @@ const bioModel = (win: Day[], bio: BioAge | null, today: string, wearOnly = fals
   const done = win.flatMap((x: Day) => x.workouts.filter((w: Workout) => w.status === "fatto"));
   const hiN = done.map((w: Workout) => w.minAbove140).filter(isNum);
   const hi = hiN.length ? sum(hiN) / weeks : null;
-  add("Minuti ad alta intensità", hi, () => `${Math.round(hi ?? 0)} min a settimana`, (n) => (n >= 30 ? -0.5 : n >= 10 ? 0 : 0.5), "Ogni settimana hai lavoro ad alta intensità.", "Poco lavoro intenso: una partita tirata o qualche scatto a settimana bastano.");
+  add("High-intensity minutes", hi, () => `${Math.round(hi ?? 0)} min a week`, (n) => (n >= 30 ? -0.5 : n >= 10 ? 0 : 0.5), "You have high-intensity work every week.", "Little intense work: a hard match or a few sprints a week are enough.");
   const fz = done.filter((w: Workout) => kindOf(w) === "grid" || kindOf(w) === "palestra").length / weeks;
-  add("Allenamento di forza", fz, () => `${r1(fz).toLocaleString("it-IT")} sedute a settimana`, (n) => (n >= 2 ? -0.75 : n >= 1 ? 0 : 0.75), "Forza almeno due volte a settimana.", "Meno di due sedute di forza a settimana.");
-  // peso: BMI e andamento
+  add("Strength training", fz, () => `${r1(fz).toLocaleString("en-US")} sessions a week`, (n) => (n >= 2 ? -0.75 : n >= 1 ? 0 : 0.75), "Strength at least twice a week.", "Fewer than two strength sessions a week.");
+  // weight: BMI and trend
   const last = WEIGHTS.length ? WEIGHTS[WEIGHTS.length - 1] : null;
   const kg = last ? last.kg : isNum(bio?.weightKg) ? bio.weightKg : null;
   const bmi = kg !== null && isNum(bio?.heightCm) ? kg / (bio.heightCm / 100) ** 2 : null;
   const ref = last ? WEIGHTS.find((w) => daysBetween(w.date, last.date) <= 60) ?? null : null;
   const tr = last && ref && ref.date !== last.date ? last.kg - ref.kg : null;
-  if (bmi === null) F.push({ name: "Peso", value: "—", years: null, why: "Mancano peso o altezza." });
+  if (bmi === null) F.push({ name: "Weight", value: "—", years: null, why: "Weight or height missing." });
   else {
     const y = (bmi < 18.5 ? 0.5 : bmi < 25 ? 0 : bmi < 30 ? 0.75 : 1.5) + (bmi >= 25 && tr !== null ? (tr <= -1 ? -0.25 : tr >= 1 ? 0.25 : 0) : 0);
-    F.push({ name: "Peso", value: `${fmt(kg, " kg")}${tr !== null ? ` · ${tr < 0 ? "−" : "+"}${fmt(Math.abs(tr), " kg")} in ${daysBetween(ref!.date, last!.date)} giorni` : ""}`, years: y, why: bmi < 25 ? "Peso nella norma." : tr !== null && tr <= -1 ? "Sopra il peso ideale, ma sta scendendo: continua così." : "Sopra il peso ideale: scendere un po' ringiovanisce." });
+    F.push({ name: "Weight", value: `${fmt(kg, " kg")}${tr !== null ? ` · ${tr < 0 ? "−" : "+"}${fmt(Math.abs(tr), " kg")} in ${daysBetween(ref!.date, last!.date)} days` : ""}`, years: y, why: bmi < 25 ? "Weight in range." : tr !== null && tr <= -1 ? "Above your ideal weight, but going down: keep it up." : "Above your ideal weight: losing a little makes you younger." });
   }
-  // fitness e composizione: senza misura non si stimano
+  // fitness and composition: not estimated without a measurement
   const vo2 = bio?.vo2max, bf = bio?.bodyFatPct;
-  F.push(isNum(vo2) ? { name: "VO2max", value: fmt(vo2), years: vo2 >= 50 ? -2.5 : vo2 >= 45 ? -1.25 : vo2 >= 40 ? 0 : vo2 >= 35 ? 1.25 : 2.5, why: "Capacità aerobica: il segnale che pesa di più." } : { name: "VO2max", value: "da misurare", years: null, why: "Il segnale che pesa di più: una corsa con GPS o un test da sforzo lo misurano." });
-  F.push(isNum(bf) ? { name: "Massa magra", value: `grasso ${fmt(bf, "%")}`, years: bf < 15 ? -1 : bf < 20 ? 0 : bf < 25 ? 0.75 : 1.5, why: "Composizione corporea." } : { name: "Massa magra", value: "da misurare", years: null, why: "Una bilancia impedenziometrica o una DEXA la misurano." });
+  F.push(isNum(vo2) ? { name: "VO2max", value: fmt(vo2), years: vo2 >= 50 ? -2.5 : vo2 >= 45 ? -1.25 : vo2 >= 40 ? 0 : vo2 >= 35 ? 1.25 : 2.5, why: "Aerobic capacity: the signal that weighs most." } : { name: "VO2max", value: "to measure", years: null, why: "The signal that weighs most: a GPS run or an exercise test measures it." });
+  F.push(isNum(bf) ? { name: "Lean mass", value: `fat ${fmt(bf, "%")}`, years: bf < 15 ? -1 : bf < 20 ? 0 : bf < 25 ? 0.75 : 1.5, why: "Body composition." } : { name: "Lean mass", value: "to measure", years: null, why: "A bioimpedance scale or a DEXA scan measures it." });
   return { factors: F, delta: total() };
 };
 const cardioMin = (x: Day): number => sum(x.workouts.filter((w: Workout) => w.status === "fatto" && isNum(w.avgHr) && w.avgHr >= 120).map((w: Workout) => w.durationMin));
 const strainOf = (load: number): number => Math.round(21 * (1 - Math.exp(-load / 1500)) * 10) / 10;
-// le kcal di una sessione comprendono il metabolismo di base di quei minuti: per lo sforzo conta solo la parte attiva,
-// così lo sforzo del giorno non è mai più basso di quello di una sua sessione
+// a session's kcal include the basal metabolism of those minutes: only the active part counts for effort,
+// so the day's effort is never lower than that of one of its sessions
 const BASAL_MIN = (() => { const v = nums(DATA.days.filter((y: Day) => y.date !== DATA.today && !y.incomplete).map((y: Day) => y.basalKcal)); return (v.length ? v.reduce((a, b) => a + b, 0) / v.length : 1900) / 1440; })();
 const actActive = (w: Workout): number => (w.status === "fatto" && isNum(w.kcal) ? Math.max(0, w.kcal - (isNum(w.durationMin) ? w.durationMin * BASAL_MIN : 0)) : 0);
 const strainScore = (x: Day): number | null => (isNum(x.activeKcal) ? strainOf(Math.max(x.activeKcal, sum(x.workouts.map(actActive))) + 5 * cardioMin(x)) : null);
@@ -1518,8 +1518,8 @@ const actLoad = (w: Workout): number | null => {
   return k + c > 0 ? k + c : null;
 };
 const actStrain = (w: Workout): number | null => { const l = actLoad(w); return l === null ? null : strainOf(l); };
-// RECUPERO stile WHOOP, uguale nelle due app: HRV e FC a riposo della notte rispetto alla tua norma degli ultimi 30 giorni
-// (la stessa norma delle frecce e dei grafici) + il punteggio Sonno mostrato; dopo una notte da bollino rosso non si va sul verde
+// WHOOP-style RECOVERY, the same in both apps: the night's HRV and resting HR vs your norm over the last 30 days
+// (the same norm as the arrows and charts) + the Sleep score shown; after a red night it never goes green
 const HIST_ALL: Day[] = [...(DATA.history ?? []).map((h) => ({ workouts: [], meals: [], incomplete: false, ...h }) as unknown as Day), ...DATA.days].sort((a: Day, z: Day) => (a.date < z.date ? -1 : 1));
 const norm30 = (x: Day, f: (y: Day) => number | null | undefined): number | null => avg(HIST_ALL.filter((y: Day) => y.date < x.date && y.date >= addDays(x.date, -30)).map(f));
 const recoveryOf = (x: Day, sl: number | null): number | null => {
@@ -1529,16 +1529,16 @@ const recoveryOf = (x: Day, sl: number | null): number | null => {
   const v = clamp(0.5 * hv + 0.25 * rh + 0.25 * sl, 1, 99);
   return Math.round(sl < 34 ? Math.min(v, 66) : v);
 };
-// un impegno in agenda già svolto (stessa attività, stesso sport o stesso orario nel giorno): non è più "in programma"
+// a calendar event already done (same activity, same sport or same time of day): no longer "scheduled"
 const doneOf = (u: { date: string; time: string; name: string; kind?: string | null }): Workout | null => {
-  const sport = (k: string | null | undefined, n: string) => /padel|tennis|beach|torneo|partita|match/i.test(`${k ?? ""} ${n}`);
+  const sport = (k: string | null | undefined, n: string) => /padel|tennis|beach|torneo|tournament|partita|match/i.test(`${k ?? ""} ${n}`);
   const s0 = toMin(u.time);
   return (dayOf(u.date)?.workouts ?? []).find((w: Workout) => w.status === "fatto" && (w.name === u.name || (!!u.kind && kindOf(w) === u.kind) || (sport(u.kind, u.name) && sport(kindOf(w), w.name)) || (s0 !== null && /\d/.test(u.time) && toMin(w.time) !== null && Math.abs((toMin(w.time) as number) - s0) <= 45))) ?? null;
 };
 
-// ---------- età biologica: blob organico animato (canvas 2D) ----------
-// contorno che "respira" + puntini che brillano vicino al bordo; si ferma se la scheda è nascosta o fuori schermo,
-// un solo fotogramma fisso con prefers-reduced-motion. Massimo 220 puntini, ~30 fps, DPR max 2.
+// ---------- biological age: animated organic blob (2D canvas) ----------
+// a "breathing" outline + dots sparkling near the edge; it stops when the tab is hidden or off screen,
+// a single still frame with prefers-reduced-motion. At most 220 dots, ~30 fps, DPR max 2.
 type BlobTone = { rimA: string; rimB: string; dotA: [number, number, number]; dotB: [number, number, number] };
 function AgeBlob(props: { size: number; tone: BlobTone; children?: ReactNode }) {
   const { size, tone } = props;
@@ -1551,7 +1551,7 @@ function AgeBlob(props: { size: number; tone: BlobTone; children?: ReactNode }) 
     const dpr = Math.min(2, (typeof window !== "undefined" && window.devicePixelRatio) || 1);
     cv.width = Math.round(size * dpr); cv.height = Math.round(size * dpr);
     const c = size / 2, R = size * 0.4;
-    // seme fisso: la forma resta la stessa a ogni apertura
+    // fixed seed: the shape stays the same on every open
     let seed = 7;
     const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
     const waves = [2, 3, 4, 5].map((k, i) => ({ k, a: [0.034, 0.026, 0.016, 0.01][i], p: rnd() * 6.283, w: (0.18 + rnd() * 0.22) * (i % 2 ? -1 : 1) }));
@@ -1568,7 +1568,7 @@ function AgeBlob(props: { size: number; tone: BlobTone; children?: ReactNode }) 
       ctx.clearRect(0, 0, size, size);
       // alone esterno
       ctx.save(); path(t); ctx.shadowColor = tone.rimA + "88"; ctx.shadowBlur = size * 0.07; ctx.fillStyle = "#05080A"; ctx.fill(); ctx.restore();
-      // interno: centro scuro, bagliore colorato verso il bordo
+      // inside: dark centre, coloured glow towards the edge
       ctx.save(); path(t); ctx.clip();
       const lg = ctx.createLinearGradient(0, c - R, 0, c + R); lg.addColorStop(0, tone.rimA); lg.addColorStop(1, tone.rimB);
       ctx.fillStyle = lg; ctx.fillRect(0, 0, size, size);
@@ -1580,14 +1580,14 @@ function AgeBlob(props: { size: number; tone: BlobTone; children?: ReactNode }) 
         const x = c + rr * Math.cos(th), y = c + rr * Math.sin(th);
         const tw = 0.5 + 0.5 * Math.sin(t * d.sp + d.ph);
         const al = Math.min(1, (0.12 + 0.95 * Math.pow(d.rho, 2)) * (0.45 + 0.6 * tw));
-        // colore del puntino: segue il gradiente verticale (nel tono misto blu in alto, ambra in basso)
+        // dot colour: follows the vertical gradient (blue at the top, amber at the bottom)
         const f = Math.max(0, Math.min(1, (y - (c - R)) / (2 * R)));
         const A = tone.dotA, B = tone.dotB;
         ctx.fillStyle = `rgba(${Math.round(A[0] + (B[0] - A[0]) * f)},${Math.round(A[1] + (B[1] - A[1]) * f)},${Math.round(A[2] + (B[2] - A[2]) * f)},${al.toFixed(3)})`;
         ctx.beginPath(); ctx.arc(x, y, d.s * (0.85 + 0.25 * tw), 0, 6.283); ctx.fill();
       }
       ctx.restore();
-      // bordo luminoso
+      // glowing edge
       ctx.save(); path(t); ctx.lineWidth = 1.3; ctx.strokeStyle = lg; ctx.shadowColor = tone.rimA; ctx.shadowBlur = 4; ctx.globalAlpha = 0.85; ctx.stroke(); ctx.restore();
     };
     const reduce = typeof window !== "undefined" && !!window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1622,7 +1622,7 @@ function AgeBlob(props: { size: number; tone: BlobTone; children?: ReactNode }) 
 
 export default function App() {
   const base = useGrokTheme();
-  // palette scura stile app di recupero: colori con significato fisso
+  // dark palette in the style of a recovery app: colours with a fixed meaning
   const K = {
     bg: "#0B0E10", top: "#2A3843", mid: "#121A20", card: "#1A2026", card2: "#222A31", line: "#2A3239", track: "#2C353C",
     t1: "#FFFFFF", t2: "#B7BEC4", t3: "#7F888F",
@@ -1654,21 +1654,21 @@ export default function App() {
   const shift = (k: number) => { const n = selIdx + k; if (n >= 0 && n < days.length) go(days[n].date); };
   const upcoming = (DATA.upcoming ?? []).filter((u: Upcoming) => u.date >= DATA.today && !doneOf(u));
   const time = DATA.updatedAt.slice(11, 16);
-  // batteria del Fitbit: solo se letta nelle ultime 12 ore; neutra, ambra sotto il 30%, rossa sotto il 15%
+  // wearable battery: only if read in the last 12 hours; neutral, amber under 30%, red under 15%
   const dev = DATA.device ?? null;
   const batt = dev && isNum(dev.battery) && Date.now() - Date.parse(`${dev.at}:00+01:00`) < 12 * 3600e3 ? Math.round(dev.battery) : null;
   const battCol = batt === null ? K.t3 : batt < 15 ? K.recLo : batt < 30 ? K.warn : K.t2;
   const battBadge = batt === null ? null : (
-    <span aria-label="Batteria Fitbit" data-v={batt} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, lineHeight: "16px", whiteSpace: "nowrap", color: battCol, fontWeight: batt < 30 ? 700 : 400 }}>
+    <span aria-label="Wearable battery" data-v={batt} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, lineHeight: "16px", whiteSpace: "nowrap", color: battCol, fontWeight: batt < 30 ? 700 : 400 }}>
       <svg width={18} height={10} viewBox="0 0 18 10" style={{ display: "block" }}><rect x={0.5} y={0.5} width={15} height={9} rx={2} fill="none" stroke="currentColor" /><rect x={16} y={3} width={1.5} height={4} rx={0.5} fill="currentColor" /><rect x={2} y={2} width={Math.max(1, (12 * batt) / 100)} height={6} rx={1} fill="currentColor" /></svg>
       {`${batt}%${batt < 15 ? " · caricalo" : ""}`}
     </span>
   );
-  const dayTitle = (date: string) => { const p = parts(date); return date === DATA.today ? "Oggi" : `${WD[p.w]} ${p.dd} ${MO[p.m - 1]}`; };
-  const shortDay = (date: string) => { const p = parts(date); return date === DATA.today ? "Oggi" : `${WD[p.w]} ${p.dd}`; };
+  const dayTitle = (date: string) => { const p = parts(date); return date === DATA.today ? "Today" : `${WD[p.w]} ${p.dd} ${MO[p.m - 1]}`; };
+  const shortDay = (date: string) => { const p = parts(date); return date === DATA.today ? "Today" : `${WD[p.w]} ${p.dd}`; };
   const longDate = (dt: string) => { const p = parts(dt); return `${p.dd} ${MO[p.m - 1]} ${p.y}`; };
   const live = d.date === DATA.today;
-  const dayName = (date: string) => (date === DATA.today ? "oggi" : dayTitle(date));
+  const dayName = (date: string) => (date === DATA.today ? "today" : dayTitle(date));
 
   // ---------- viewport e scroll ----------
   const viewportH = (): number => {
@@ -1688,7 +1688,7 @@ export default function App() {
   const scroller = useRef<HTMLDivElement>(null);
   const scrollKey = `${tab}|${screen ? JSON.stringify(screen) : ""}`;
   useEffect(() => { if (scroller.current) scroller.current.scrollTop = 0; }, [scrollKey]);
-  // sottopagine: Indietro (o il gesto indietro del telefono / browser) torna alla pagina di partenza nella stessa posizione
+  // subpages: Back (or the phone / browser back gesture) returns to the starting page at the same position
   const fromY = useRef<number>(0), backY = useRef<number | null>(null), pushed = useRef<boolean>(false), scrNow = useRef<Screen>(null);
   scrNow.current = screen;
   useEffect(() => { if (!screen && backY.current !== null && scroller.current) scroller.current.scrollTop = backY.current; backY.current = null; }, [scrollKey]);
@@ -1704,10 +1704,10 @@ export default function App() {
     if (!screen) { fromY.current = scroller.current ? scroller.current.scrollTop : 0; try { window.history.pushState({ wbScreen: true }, ""); pushed.current = true; } catch { pushed.current = false; } }
     setScreen(s);
   };
-  const closeScreen = () => { if (pushed.current) { pushed.current = false; try { window.history.back(); return; } catch { /* niente cronologia */ } } shut(); };
-  const goTab = (t: Tab) => { setInfo(false); if (pushed.current) { pushed.current = false; try { window.history.back(); } catch { /* niente cronologia */ } } setScreen(null); setCal(false); setTab(t); };
+  const closeScreen = () => { if (pushed.current) { pushed.current = false; try { window.history.back(); return; } catch { /* no history */ } } shut(); };
+  const goTab = (t: Tab) => { setInfo(false); if (pushed.current) { pushed.current = false; try { window.history.back(); } catch { /* no history */ } } setScreen(null); setCal(false); setTab(t); };
 
-  // ---------- baseline: media degli altri giorni ----------
+  // ---------- baseline: average of the other days ----------
   const others = (x: Day) => days.filter((y: Day) => y.date !== x.date);
   const baseOf = (x: Day, f: (y: Day) => number | null | undefined, cumulative = false): number | null =>
     avg(others(x).filter((y: Day) => !cumulative || (y.date !== DATA.today && !y.incomplete)).map(f));
@@ -1721,7 +1721,7 @@ export default function App() {
   };
   const recColor = (v: number | null) => (v === null ? K.t3 : v >= 67 ? K.recHi : v >= 34 ? K.recMid : K.recLo);
   const bal = (x: Day): number | null => (isNum(x.eatenKcal) && isNum(x.burnedKcal) ? x.eatenKcal - x.burnedKcal : null);
-  const signed = (v: number | null) => (v === null ? "—" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${String(Math.abs(Math.round(v))).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`);
+  const signed = (v: number | null) => (v === null ? "—" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${String(Math.abs(Math.round(v))).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`);
 
   // ---------- primitive grafiche ----------
   const st = (gap: number): CSSProperties => ({ display: "flex", flexDirection: "column", gap, minWidth: 0 });
@@ -1732,10 +1732,10 @@ export default function App() {
   const capLbl = (size = 12): CSSProperties => ({ ...caps, fontSize: size, lineHeight: `${size + 4}px`, color: K.t1 });
   const card: CSSProperties = { boxSizing: "border-box", width: "100%", minWidth: 0, background: `linear-gradient(180deg, ${K.card2} 0%, ${K.card} 100%)`, border: `1px solid ${K.line}`, borderRadius: 16, padding: 16 };
   const btn: CSSProperties = { background: "transparent", border: "none", padding: 0, margin: 0, cursor: "pointer", fontFamily: FONT, textAlign: "left", color: K.t1 };
-  // un solo header per schermata: fisso in alto, vetro smerigliato, il contenuto scorre sotto; copre anche la barra di stato iOS
+  // one header per screen: fixed at the top, frosted glass, content scrolls under it; it also covers the iOS status bar
   const safeTop = "var(--sa-t, env(safe-area-inset-top, 0px))";
   const frost: CSSProperties = { position: "sticky", top: 0, zIndex: 6, boxSizing: "border-box", background: `${K.bg}B8`, backdropFilter: "blur(20px) saturate(160%)", WebkitBackdropFilter: "blur(20px) saturate(160%)", borderBottom: `1px solid ${K.t1}10` } as CSSProperties;
-  // dentro il contenuto (colonna con padding 16 e 14 in alto): il header si allarga a tutta la colonna
+  // inside the content (column with padding 16 and 14 at the top): the header spans the full column
   const frostIn: CSSProperties = { ...frost, margin: "-14px -16px 0", padding: `calc(${safeTop} + 13px) 16px 14px` };
   const numStyle = (size: number, color: string = K.t1): CSSProperties => ({ fontFamily: NUM, fontWeight: 700, fontSize: size, lineHeight: `${Math.round(size * 1.05)}px`, color, fontVariantNumeric: "tabular-nums", letterSpacing: "0.01em" });
 
@@ -1776,7 +1776,7 @@ export default function App() {
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: "block", transform: "rotate(-90deg)", filter: glow && f > 0 ? `drop-shadow(0 0 6px ${color}55)` : "none" }}>
           <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={K.track} strokeWidth={stroke} />
           {f > 0 ? <circle className="wb-fill" cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="butt" strokeDasharray={`${C} ${C}`} strokeDashoffset={C * (1 - f)} style={{ "--wb-c": C } as CSSProperties} /> : null}
-          {band ? <circle aria-label="Fascia obiettivo" cx={size / 2} cy={size / 2} r={rb} fill="none" stroke={K.t1} strokeOpacity={0.6} strokeWidth={4} strokeLinecap="round" strokeDasharray={`${Math.max(2, (clamp(band[1], 0, 1) - clamp(band[0], 0, 1)) * Cb)} ${Cb}`} strokeDashoffset={-clamp(band[0], 0, 1) * Cb} /> : null}
+          {band ? <circle aria-label="Target band" cx={size / 2} cy={size / 2} r={rb} fill="none" stroke={K.t1} strokeOpacity={0.6} strokeWidth={4} strokeLinecap="round" strokeDasharray={`${Math.max(2, (clamp(band[1], 0, 1) - clamp(band[0], 0, 1)) * Cb)} ${Cb}`} strokeDashoffset={-clamp(band[0], 0, 1) * Cb} /> : null}
         </svg>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>{center}</div>
       </div>
@@ -1820,7 +1820,7 @@ export default function App() {
   const three: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 8 };
   const two: CSSProperties = { display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 8 };
 
-  // card insight con bordo sfumato viola-blu
+  // insight card with a violet-blue gradient border
   const insight = (text: ReactNode, link?: { label: string; onClick: () => void }) => (
     <div style={{ borderRadius: 16, padding: 1, background: `linear-gradient(135deg, ${K.inA}, ${K.inB})` }}>
       <div style={{ ...st(10), borderRadius: 15, padding: 16, background: K.mid }}>
@@ -1830,8 +1830,8 @@ export default function App() {
     </div>
   );
 
-  // elenco contributori (icona · etichetta · valore · freccia vs media)
-  const contribCard = (rows: Contrib[], legendText = "vs ultimi 30 giorni", notch = true) => (
+  // contributor list (icon · label · value · arrow vs average)
+  const contribCard = (rows: Contrib[], legendText = "vs last 30 days", notch = true) => (
     <div style={{ position: "relative", marginTop: notch ? 10 : 0 }}>
       {notch ? <div style={{ position: "absolute", top: -7, left: "50%", marginLeft: -7, width: 14, height: 14, background: K.card2, borderLeft: `1px solid ${K.line}`, borderTop: `1px solid ${K.line}`, transform: "rotate(45deg)" }} /> : null}
       <div style={{ ...card, padding: "4px 16px 14px" }}>
@@ -1854,7 +1854,7 @@ export default function App() {
     </div>
   );
 
-  // barre settimanali (tocca per cambiare giorno)
+  // weekly bars (tap to change day)
   const weekBars = (vals: (number | null | undefined)[], max: number, color: (v: number) => string, f: (v: number) => string, ref?: number) => {
     const W = 340, H = 168, pt = 22, pb = 34, n = days.length, bw = (W / n) * 0.52;
     const top = Math.max(max, ...nums(vals), 1);
@@ -1878,7 +1878,7 @@ export default function App() {
     );
   };
 
-  // grafico a linee per i trend
+  // line chart for trends
   const smooth = (pts: [number, number][]) => {
     if (!pts.length) return "";
     let p = `M${pts[0][0]},${pts[0][1]}`;
@@ -1916,9 +1916,9 @@ export default function App() {
     );
   };
 
-  // ---------- valori del giorno selezionato ----------
+  // ---------- values of the selected day ----------
   const dSl = sleepScore(d), dStr = strainScore(d);
-  // la tua norma: ultimi 30 giorni (storico compatto + giorni della settimana); i punteggi restano sui 7 giorni
+  // your norm: last 30 days (compact history + this week's days); scores stay on 7 days
   const H30: Day[] = [...(DATA.history ?? []).map((h) => ({ workouts: [], meals: [], incomplete: false, ...h }) as unknown as Day), ...days].sort((a: Day, z: Day) => (a.date < z.date ? -1 : 1));
   const prior = (x: Day, n = 30): Day[] => H30.filter((y: Day) => y.date < x.date && y.date >= addDays(x.date, -n));
   const norm = (x: Day, f: (y: Day) => number | null | undefined, cumulative = false): number | null => avg(prior(x).filter((y: Day) => !cumulative || (y.date !== DATA.today && !y.incomplete)).map(f));
@@ -1930,7 +1930,7 @@ export default function App() {
   };
   const inNorm = (v: number | null | undefined, b: { lo: number; hi: number } | null): boolean | null => (!isNum(v) || !b ? null : v >= b.lo && v <= b.hi);
   const spH = (y: Day) => sleepParts(y, H30);
-  // SONNO: un solo numero ovunque (anello, Recupero, grafici, Life App) = la notte con il debito accumulato
+  // SLEEP: one number everywhere (ring, Recovery, charts, Life App) = the night including accumulated debt
   const debtOf = (date: string): number | null => sleepDebtOn(date, H30);
   const sonnoOf = (x: Day): number | null => { const s = sleepScore(x); if (s === null) return null; const db = debtOf(x.date); return db === null ? s : Math.round(s * 0.7 + clamp(100 - (db / 60) * 20, 10, 100) * 0.3); };
   const dSn = sonnoOf(d);
@@ -1947,59 +1947,59 @@ export default function App() {
   const strainTarget = dRec === null ? null : dRec >= 67 ? "14–18" : dRec >= 34 ? "10–14" : "6–10";
   const strainRange: [number, number] | null = dRec === null ? null : dRec >= 67 ? [14, 18] : dRec >= 34 ? [10, 14] : [6, 10];
 
-  // ---------- coach (toni calmi, mai colpevolizzanti) ----------
+  // ---------- coach (calm tone, never guilt-tripping) ----------
   const coach = (x: Day): { icon: string; t: string }[] => {
     const out: { icon: string; t: string }[] = [];
-    const isLive = x.date === DATA.today, pre = isLive ? "Finora " : "";
+    const isLive = x.date === DATA.today, pre = isLive ? "So far " : "";
     const wkH = baseOf(x, (y: Day) => y.hrvMs);
     if (isNum(x.proteinG)) {
-      if (x.proteinG >= PT) out.push({ icon: "check", t: `Obiettivo proteine raggiunto: ${fmt(x.proteinG)} g su ${PT}.` });
-      else if (x.proteinG < PT * 0.85) out.push({ icon: "food", t: `${pre}${fmt(x.proteinG)} g di proteine: ne mancano circa ${Math.round(PT - x.proteinG)} per arrivare a ${PT}. Un pasto con carne, pesce, albumi o yogurt greco aiuta.` });
+      if (x.proteinG >= PT) out.push({ icon: "check", t: `Protein goal reached: ${fmt(x.proteinG)} g of ${PT}.` });
+      else if (x.proteinG < PT * 0.85) out.push({ icon: "food", t: `${pre}${fmt(x.proteinG)} g of protein: about ${Math.round(PT - x.proteinG)} to reach ${PT}. A meal with meat, fish, egg whites or Greek yogurt helps.` });
     }
     const salt = dayMacro(x, "salt"), fib = dayMacro(x, "fibre"), sug = dayMacro(x, "sugar");
-    if (salt.v !== null && salt.v > 5) out.push({ icon: "food", t: `Sale ${fmt(salt.v, " g")}, sopra i 5 g consigliati: nei prossimi pasti meno salumi e pane confezionato, e più acqua.` });
-    if (fib.v !== null && fib.v < 30) out.push({ icon: "food", t: isLive ? `Fibre a ${fmt(fib.v, " g")} su 30: una porzione abbondante di verdura a cena chiude il gap.` : `Fibre ${fmt(fib.v, " g")} su 30 g: una porzione di verdura o frutta in più fa la differenza.` });
-    if (sug.v !== null && sug.v > 50) out.push({ icon: "food", t: `Zuccheri ${fmt(sug.v, " g")}, oltre il riferimento di 50 g: niente di grave, basta tenere leggero il resto.` });
+    if (salt.v !== null && salt.v > 5) out.push({ icon: "food", t: `Salt ${fmt(salt.v, " g")}, above the recommended 5 g: fewer cured meats and packaged bread in the next meals, and more water.` });
+    if (fib.v !== null && fib.v < 30) out.push({ icon: "food", t: isLive ? `Fibre at ${fmt(fib.v, " g")} of 30: a generous portion of vegetables at dinner closes the gap.` : `Fibre ${fmt(fib.v, " g")} of 30 g: one more portion of vegetables or fruit makes the difference.` });
+    if (sug.v !== null && sug.v > 50) out.push({ icon: "food", t: `Sugar ${fmt(sug.v, " g")}, over the 50 g reference: nothing serious, just keep the rest of the day light.` });
     const bl = bal(x);
-    if (bl !== null && !isLive && bl > 500) out.push({ icon: "flame", t: `Surplus di ${String(Math.round(bl)).replace(/\B(?=(\d{3})+(?!\d))/g, ".")} kcal: capita, conta la media della settimana.` });
-    if (bl !== null && !isLive && bl < -1000) out.push({ icon: "flame", t: `Deficit ampio (${signed(bl)} kcal): utile per dimagrire, ma occhio a recupero ed energia.` });
-    if (isNum(x.sleepMin) && x.sleepMin < 360) out.push({ icon: "moon", t: `${hm(x.sleepMin)} di sonno: stasera prova ad andare a letto un po' prima.` });
+    if (bl !== null && !isLive && bl > 500) out.push({ icon: "flame", t: `Surplus of ${String(Math.round(bl)).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} kcal: it happens, the weekly average is what counts.` });
+    if (bl !== null && !isLive && bl < -1000) out.push({ icon: "flame", t: `Large deficit (${signed(bl)} kcal): useful for losing weight, but watch recovery and energy.` });
+    if (isNum(x.sleepMin) && x.sleepMin < 360) out.push({ icon: "moon", t: `${hm(x.sleepMin)} of sleep: try going to bed a bit earlier tonight.` });
     const br = bedRel(x.bedtime);
-    if (br !== null && br > 1440 + 60) out.push({ icon: "bed", t: `A letto alle ${clock(br)}: anticipare anche di 30 minuti aiuta sonno e recupero.` });
-    if (isNum(x.hrvMs) && wkH !== null && x.hrvMs < wkH * 0.9) out.push({ icon: "heart", t: `HRV ${fmt(x.hrvMs)} ms, sotto la tua media (${fmt(wkH)}): oggi meglio un allenamento più leggero.` });
+    if (br !== null && br > 1440 + 60) out.push({ icon: "bed", t: `In bed at ${clock(br)}: going to bed even 30 minutes earlier helps sleep and recovery.` });
+    if (isNum(x.hrvMs) && wkH !== null && x.hrvMs < wkH * 0.9) out.push({ icon: "heart", t: `HRV ${fmt(x.hrvMs)} ms, below your average (${fmt(wkH)}): a lighter workout is better today.` });
     const i0 = days.findIndex((y: Day) => y.date === x.date);
     const nextDate = days[i0 + 1]?.date ?? (() => { const p = parts(x.date); return new Date(Date.UTC(p.y, p.m - 1, p.dd + 1)).toISOString().slice(0, 10); })();
-    upcoming.filter((u: Upcoming) => u.date === nextDate).forEach((u: Upcoming) => out.push({ icon: "cal", t: `Domani ${u.name} (${u.time}): carboidrati a cena, acqua e a letto presto.` }));
-    upcoming.filter((u: Upcoming) => u.date === x.date).forEach((u: Upcoming) => out.push({ icon: "cal", t: `Oggi ${u.name} (${u.time}): colazione con carboidrati e bevi spesso.` }));
-    if (!out.length) out.push({ icon: "check", t: x.meals.length || isNum(x.sleepMin) ? "Niente da segnalare: giornata equilibrata." : "Pochi dati per questo giorno." });
+    upcoming.filter((u: Upcoming) => u.date === nextDate).forEach((u: Upcoming) => out.push({ icon: "cal", t: `Tomorrow ${u.name} (${u.time}): carbs at dinner, water and an early night.` }));
+    upcoming.filter((u: Upcoming) => u.date === x.date).forEach((u: Upcoming) => out.push({ icon: "cal", t: `Today ${u.name} (${u.time}): a carb breakfast and drink often.` }));
+    if (!out.length) out.push({ icon: "check", t: x.meals.length || isNum(x.sleepMin) ? "Nothing to flag: a balanced day." : "Little data for this day." });
     return out;
   };
   const coachTips = coach(d);
-  // consigli divisi per pagina: cibo in Nutrizione, recupero in Recupero
+  // tips split by page: food in Nutrition, recovery in Recovery
   const nutTips = coachTips.filter((k) => k.icon === "food" || k.icon === "flame");
   const recTips = ((): { icon: string; t: string }[] => {
     const out: { icon: string; t: string }[] = [];
     const nH = norm(d, (y: Day) => y.hrvMs), nR = norm(d, (y: Day) => y.rhr), prevD = dayOf(addDays(d.date, -1)), ps = prevD ? strainScore(prevD) : null;
     const debt = debtOf(d.date);
     const doneHard = d.date === DATA.today && isNum(dStr) && !!strainRange && dStr >= strainRange[0];
-    if (dRec !== null && doneHard) out.push({ icon: "check", t: `Oggi hai già uno sforzo di ${fmt(dStr)}${strainRange && (dStr as number) > strainRange[1] ? ", sopra la fascia del tuo recupero" : ""}: il resto della giornata è recupero: acqua, un buon pasto e a letto presto.` });
-    else if (dRec !== null) out.push(dRec >= 67 ? { icon: "bolt", t: "Recupero alto: è il giorno giusto per l'allenamento più impegnativo della settimana." } : dRec >= 34 ? { icon: "pulse", t: `Recupero medio: allenati pure, tenendo lo sforzo nella fascia ${strainTarget}.` } : { icon: "walk", t: "Recupero basso: oggi camminata, mobilità o stretching; l'intensità può aspettare domani." });
+    if (dRec !== null && doneHard) out.push({ icon: "check", t: `You already have an effort of ${fmt(dStr)}${strainRange && (dStr as number) > strainRange[1] ? ", above your recovery band" : ""}: the rest of the day is recovery: water, a good meal and an early night.` });
+    else if (dRec !== null) out.push(dRec >= 67 ? { icon: "bolt", t: "High recovery: the right day for the toughest workout of the week." } : dRec >= 34 ? { icon: "pulse", t: `Medium recovery: go ahead and train, keeping the effort in the band ${strainTarget}.` } : { icon: "walk", t: "Low recovery: a walk, mobility or stretching today; intensity can wait for tomorrow." });
     const bdH = bandOf(d, (y: Day) => y.hrvMs), bdR = bandOf(d, (y: Day) => y.rhr);
-    if (isNum(d.hrvMs) && nH !== null && (bdH ? d.hrvMs < bdH.lo : d.hrvMs < nH * 0.9)) out.push({ icon: "heart", t: "HRV sotto la tua norma: bevi di più, niente alcol stasera e cena non troppo tardi." });
-    if (isNum(d.rhr) && nR !== null && (bdR ? d.rhr > bdR.hi : d.rhr > nR + 3)) out.push({ icon: "pulse", t: "FC a riposo sopra la tua norma: spesso è stanchezza accumulata o l'inizio di un malanno, dà priorità al riposo." });
-    if (isNum(debt) && debt >= 60) out.push({ icon: "moon", t: `Hai ${debtText(debt)} di debito di sonno: è la leva più forte sul recupero di domani, il piano per stanotte è in Sonno.` });
-    if (isNum(ps) && ps >= 14) out.push({ icon: "walk", t: "Ieri sforzo alto: 10 minuti di mobilità o una camminata leggera aiutano le gambe a recuperare." });
-    if (!out.length || out.length === 1) out.push({ icon: "check", t: "Orari di sonno regolari e una giornata senza alcol sono quello che tiene il recupero alto." });
+    if (isNum(d.hrvMs) && nH !== null && (bdH ? d.hrvMs < bdH.lo : d.hrvMs < nH * 0.9)) out.push({ icon: "heart", t: "HRV below your normal: drink more, no alcohol tonight and a not-too-late dinner." });
+    if (isNum(d.rhr) && nR !== null && (bdR ? d.rhr > bdR.hi : d.rhr > nR + 3)) out.push({ icon: "pulse", t: "Resting HR above your normal: often built-up fatigue or the start of a cold, put rest first." });
+    if (isNum(debt) && debt >= 60) out.push({ icon: "moon", t: `You have ${debtText(debt)} of sleep debt: it is the strongest lever on tomorrow's recovery, tonight's plan is in Sleep.` });
+    if (isNum(ps) && ps >= 14) out.push({ icon: "walk", t: "High effort yesterday: 10 minutes of mobility or an easy walk help your legs recover." });
+    if (!out.length || out.length === 1) out.push({ icon: "check", t: "Regular sleep times and a day without alcohol are what keep recovery high." });
     return out;
   })();
-  // sforzo del giorno già dentro (o sopra) la fascia del recupero: da qui il consiglio è recuperare
+  // the day's effort already within (or above) the recovery band: from here the tip is to recover
   const dayDone = live && isNum(dStr) && !!strainRange && dStr >= strainRange[0];
-  const outlookTitle = dayDone ? "Sforzo fatto, ora recupero" : dRec === null ? "Prospettiva del giorno" : dRec >= 67 ? "Pronto a spingere" : dRec >= 34 ? "Giornata equilibrata" : "Giornata di recupero";
+  const outlookTitle = dayDone ? "Effort done, now recover" : dRec === null ? "Outlook for the day" : dRec >= 67 ? "Ready to push" : dRec >= 34 ? "Balanced day" : "Recovery day";
   const outlookText = dRec === null
-    ? `Recupero non disponibile${isNum(d.sleepMin) ? "" : ": manca la notte"}. ${coachTips[0].t}`
-    : `Recupero ${dRec}%: sforzo consigliato ${strainTarget}. ${dayDone ? "Lo sforzo di oggi è fatto: il resto della giornata è recupero." : dRec >= 67 ? "Il corpo è pronto a un carico importante." : dRec >= 34 ? "Allenati pure, senza strafare." : "Meglio movimento leggero e una notte lunga."}`;
+    ? `Recovery not available${isNum(d.sleepMin) ? "" : ": the night is missing"}. ${coachTips[0].t}`
+    : `Recovery ${dRec}%: suggested effort ${strainTarget}. ${dayDone ? "Today's effort is done: the rest of the day is recovery." : dRec >= 67 ? "Your body is ready for a big load." : dRec >= 34 ? "Go ahead and train, without overdoing it." : "Better light movement and a long night."}`;
 
-  // ---------- età biologica (stima a regole) ----------
+  // ---------- biological age (rule-based estimate) ----------
   const bio = DATA.bioAge ?? null;
   const chrono = (() => { if (!bio?.birthDate) return null; const b = parts(bio.birthDate), t = parts(DATA.today); return t.y - b.y - (t.m < b.m || (t.m === b.m && t.dd < b.dd) ? 1 : 0); })();
   const wkRhr = avg(days.map((x: Day) => x.rhr)), wkHrv = avg(days.map((x: Day) => x.hrvMs)), wkSleep = avg(days.map((x: Day) => x.sleepMin));
@@ -2007,28 +2007,28 @@ export default function App() {
   const fullDays = days.filter((x: Day) => !x.incomplete && x.date !== DATA.today && isNum(x.steps));
   const bioM = bioModel(DATA.days, bio, DATA.today);
   const factors: Factor[] = [...bioM.factors];
-  const missing: string[] = factors.filter((f) => f.value === "da misurare").map((f) => `${f.name}: da misurare. ${f.why}`);
+  const missing: string[] = factors.filter((f) => f.value === "to measure").map((f) => `${f.name}: to be measured. ${f.why}`);
   {
     const L = bio?.labs ?? null, ld = bio?.labsDate ? longDate(bio.labsDate) : "—";
-    const lab = (name: string, v: number | null | undefined, u: string, y: (n: number) => number, why: (n: number) => string) => { if (isNum(v)) factors.push({ name, value: `${fmt(v, u)} · esami ${ld}`, years: y(v), why: why(v) }); };
+    const lab = (name: string, v: number | null | undefined, u: string, y: (n: number) => number, why: (n: number) => string) => { if (isNum(v)) factors.push({ name, value: `${fmt(v, u)} · tests ${ld}`, years: y(v), why: why(v) }); };
     if (L) {
-      lab("Colesterolo LDL", L.ldl, " mg/dl", (n) => (n < 100 ? -0.5 : n < 130 ? 0 : n < 160 ? 0.5 : 1), (n) => (n < 100 ? "Ottimale (<100)." : "Sopra l'ottimale."));
-      lab("Colesterolo HDL", L.hdl, " mg/dl", (n) => (n < 40 ? 1 : n < 60 ? 0 : -1), (n) => (n < 40 ? "Basso." : n < 60 ? "Nella norma; sopra 60 sarebbe protettivo, lo alza l'attività aerobica." : "Protettivo."));
-      lab("Trigliceridi", L.tg, " mg/dl", (n) => (n < 150 ? 0 : n < 200 ? 0.5 : 1), (n) => (n < 150 ? "Nella norma." : "Alti."));
-      lab("Glicemia", L.glucose, " mg/dl", (n) => (n < 100 ? 0 : n < 126 ? 1 : 2), (n) => (n < 100 ? "Nella norma." : "Sopra la norma."));
-      lab("HbA1c", L.hba1c, " %", (n) => (n < 5.7 ? 0 : n < 6.5 ? 1 : 2), (n) => (n < 5.7 ? "Nella norma." : "Sopra la norma."));
-      lab("Acido urico", L.uricAcid, " mg/dl", (n) => (n <= 7 ? 0 : 0.5), (n) => (n <= 7 ? "Nella norma." : "Entro il limite del laboratorio (7,7) ma nella fascia alta: carne, alcol e bevande zuccherate lo alzano, l'acqua aiuta."));
-      if (typeof L.kidneyOk === "boolean") factors.push({ name: "Reni", value: L.kidneyOk ? "nella norma" : "da rivedere", years: L.kidneyOk ? 0 : null, why: L.kidneyOk ? "Nella norma." : "Parlane con il medico." });
-      if (typeof L.liverOk === "boolean") factors.push({ name: "Fegato", value: L.liverOk ? "nella norma" : "da rivedere", years: L.liverOk ? 0 : null, why: L.liverOk ? "Nella norma." : "Parlane con il medico." });
-      if (bio?.labsDate && daysBetween(bio.labsDate, DATA.today) > 365) missing.push(`Esami del sangue recenti (ultimi del ${longDate(bio.labsDate)})`);
-    } else missing.push("Esami del sangue");
-    missing.push("Pressione arteriosa");
+      lab("LDL cholesterol", L.ldl, " mg/dl", (n) => (n < 100 ? -0.5 : n < 130 ? 0 : n < 160 ? 0.5 : 1), (n) => (n < 100 ? "Optimal (<100)." : "Above optimal."));
+      lab("HDL cholesterol", L.hdl, " mg/dl", (n) => (n < 40 ? 1 : n < 60 ? 0 : -1), (n) => (n < 40 ? "Low." : n < 60 ? "In range; above 60 would be protective, aerobic activity raises it." : "Protective."));
+      lab("Triglycerides", L.tg, " mg/dl", (n) => (n < 150 ? 0 : n < 200 ? 0.5 : 1), (n) => (n < 150 ? "In range." : "High."));
+      lab("Blood sugar", L.glucose, " mg/dl", (n) => (n < 100 ? 0 : n < 126 ? 1 : 2), (n) => (n < 100 ? "In range." : "Above range."));
+      lab("HbA1c", L.hba1c, " %", (n) => (n < 5.7 ? 0 : n < 6.5 ? 1 : 2), (n) => (n < 5.7 ? "In range." : "Above range."));
+      lab("Uric acid", L.uricAcid, " mg/dl", (n) => (n <= 7 ? 0 : 0.5), (n) => (n <= 7 ? "In range." : "Within the lab limit but in the upper band: meat, alcohol and sugary drinks raise it, water helps."));
+      if (typeof L.kidneyOk === "boolean") factors.push({ name: "Kidneys", value: L.kidneyOk ? "in range" : "to review", years: L.kidneyOk ? 0 : null, why: L.kidneyOk ? "In range." : "Talk to your doctor." });
+      if (typeof L.liverOk === "boolean") factors.push({ name: "Liver", value: L.liverOk ? "in range" : "to review", years: L.liverOk ? 0 : null, why: L.liverOk ? "In range." : "Talk to your doctor." });
+      if (bio?.labsDate && daysBetween(bio.labsDate, DATA.today) > 365) missing.push(`Recent blood tests (last ones on ${longDate(bio.labsDate)})`);
+    } else missing.push("Blood tests");
+    missing.push("Blood pressure");
   }
   const bioDelta = bioM.delta + factors.slice(bioM.factors.length).reduce((a, f) => a + (f.years ?? 0), 0);
   const bioAge = chrono === null ? null : Math.round((chrono + bioDelta) * 2) / 2;
   const bioDiff = bioAge !== null && chrono !== null ? Math.round((bioAge - chrono) * 2) / 2 : null;
-  // per fattore solo un giudizio, mai gli anni
-  const yrs = (v: number) => (v > 0 ? "da migliorare" : v < 0 ? "bene" : "nella norma");
+  // per factor only a verdict, never the years
+  const yrs = (v: number) => (v > 0 ? "to improve" : v < 0 ? "good" : "in range");
   const drivers = [...factors].filter((f) => (f.years ?? 0) !== 0).sort((a, z) => Math.abs(z.years ?? 0) - Math.abs(a.years ?? 0));
   const blobTone: BlobTone = bioDiff === null || Math.abs(bioDiff) < 1
     ? { rimA: "#6FB3E8", rimB: "#4F8FCB", dotA: [160, 210, 248], dotB: [125, 182, 236] }
@@ -2036,16 +2036,16 @@ export default function App() {
     : bioDiff < 2.5 ? { rimA: "#5B8FD6", rimB: "#E3B04B", dotA: [180, 208, 246], dotB: [246, 208, 115] }
     : { rimA: "#E9B949", rimB: "#C98F2A", dotA: [250, 216, 122], dotB: [240, 190, 92] };
   const ageLineColor = bioDiff === null || Math.abs(bioDiff) < 1 ? "#86C2EE" : bioDiff < 0 ? "#5FE3A8" : "#F2CC6B";
-  const ageLine = bioDiff === null ? null : bioDiff === 0 ? "pari alla tua età" : `${Math.abs(bioDiff).toLocaleString("it-IT")} ${Math.abs(bioDiff) === 1 ? "anno" : "anni"} più ${bioDiff < 0 ? "giovane" : "vecchio"}`;
+  const ageLine = bioDiff === null ? null : bioDiff === 0 ? "the same as your age" : `${Math.abs(bioDiff).toLocaleString("en-US")} ${Math.abs(bioDiff) === 1 ? "year" : "years"} ${bioDiff < 0 ? "younger" : "older"}`;
   const orb = (size: number) => (
     <AgeBlob size={size} tone={blobTone}>
-      <span style={numStyle(Math.round(size / 4.4))}>{bioAge === null ? "—" : bioAge.toLocaleString("it-IT")}</span>
-      <span style={{ ...caps, fontSize: Math.max(10, Math.round(size / 19)), lineHeight: "1.2", letterSpacing: "0.14em", color: K.t2, marginTop: 4 }}>Età biologica</span>
+      <span style={numStyle(Math.round(size / 4.4))}>{bioAge === null ? "—" : bioAge.toLocaleString("en-US")}</span>
+      <span style={{ ...caps, fontSize: Math.max(10, Math.round(size / 19)), lineHeight: "1.2", letterSpacing: "0.14em", color: K.t2, marginTop: 4 }}>Biological age</span>
       {ageLine && size >= 140 ? <span style={{ fontSize: Math.round(size / 17), lineHeight: "1.2", fontWeight: 700, color: ageLineColor, marginTop: 8 }}>{ageLine}</span> : null}
     </AgeBlob>
   );
 
-  // ---------- liste: attività e pasti ----------
+  // ---------- lists: activities and meals ----------
   const chronoW = days.flatMap((x: Day) => x.workouts.map((w: Workout, i: number) => ({ w, date: x.date, key: `${x.date}w${i}` })));
   const allMeals = days.flatMap((x: Day) => x.meals.map((m: Meal, i: number) => ({ m, date: x.date, key: `${x.date}#${i}` })));
   const listRow = (key: string, badge: ReactNode, title: string, sub: string, onClick: () => void, last: boolean) => (
@@ -2077,14 +2077,14 @@ export default function App() {
       <div style={st(0)}>{rows}</div>
     </div>
   );
-  const upcomingCard = upcoming.length ? listCard("Prossimi impegni", <span style={lbl}>{upcoming.length}</span>, upcoming.map((u: Upcoming, i: number) => (
+  const upcomingCard = upcoming.length ? listCard("Coming up", <span style={lbl}>{upcoming.length}</span>, upcoming.map((u: Upcoming, i: number) => (
     <div key={i} style={{ ...row, padding: "12px 0", borderBottom: i < upcoming.length - 1 ? `1px solid ${K.line}` : "none" }}>
       <div style={{ width: 54, height: 44, borderRadius: 10, border: `1px solid ${K.line}`, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto" }}>{ic(kindIcon(u.kind ?? ""), K.t2, 22)}</div>
       <div style={{ ...st(2), flex: 1 }}><span style={{ ...ell, fontSize: 15, fontWeight: 600, color: K.t1 }}>{u.name}</span><span style={{ ...ell, ...lbl }}>{dayTitle(u.date)} · {u.time}{u.detail ? ` · ${u.detail}` : ""}</span></div>
     </div>
   ))) : null;
 
-  // ---------- intestazione: avatar · selettore data · aggiornamento ----------
+  // ---------- header: avatar · date picker · last update ----------
   const activeDays = days.filter((x: Day) => x.workouts.some((w: Workout) => w.status === "fatto")).length;
   const arrowBtn = (dir: -1 | 1) => {
     const dis = dir < 0 ? selIdx <= 0 : selIdx >= days.length - 1;
@@ -2093,7 +2093,7 @@ export default function App() {
   const datePill = (
     <div style={{ ...row, gap: 2, background: K.card2, border: `1px solid ${K.line}`, borderRadius: 999, padding: "0 4px" }}>
       {arrowBtn(-1)}
-      <button onClick={() => setCal(!cal)} style={{ ...btn, ...caps, fontSize: 12, padding: "6px 8px", color: K.t1, minWidth: 64, textAlign: "center" }}>{live ? "Oggi" : shortDay(d.date)}</button>
+      <button onClick={() => setCal(!cal)} style={{ ...btn, ...caps, fontSize: 12, padding: "6px 8px", color: K.t1, minWidth: 64, textAlign: "center" }}>{live ? "Today" : shortDay(d.date)}</button>
       {arrowBtn(1)}
     </div>
   );
@@ -2123,7 +2123,7 @@ export default function App() {
           <span style={{ ...row, gap: 2, fontSize: 13, fontWeight: 700, color: K.t1 }}>{ic("flame", K.warn, 16, 2)}{activeDays}</span>
         </div>
         {datePill}
-        <span style={{ ...lbl, textAlign: "right", display: "inline-flex", alignItems: "center", gap: 8 }}>{battBadge}<span>agg. {time}</span></span>
+        <span style={{ ...lbl, textAlign: "right", display: "inline-flex", alignItems: "center", gap: 8 }}>{battBadge}<span>upd. {time}</span></span>
       </div>
       {calendar}
     </div>
@@ -2131,62 +2131,62 @@ export default function App() {
 
   // ---------- quadranti ----------
   const dialMeta: Record<DialId, { name: string; v: number | null; frac: number; color: string; unit: string }> = {
-    sonno: { name: "Sonno", v: dSn, frac: (dSn ?? 0) / 100, color: K.sleep, unit: "" },
-    recupero: { name: "Recupero", v: dRec, frac: (dRec ?? 0) / 100, color: recColor(dRec), unit: "%" },
-    sforzo: { name: "Sforzo", v: dStr, frac: (dStr ?? 0) / 21, color: K.strain, unit: "" },
+    sonno: { name: "Sleep", v: dSn, frac: (dSn ?? 0) / 100, color: K.sleep, unit: "" },
+    recupero: { name: "Recovery", v: dRec, frac: (dRec ?? 0) / 100, color: recColor(dRec), unit: "%" },
+    sforzo: { name: "Effort", v: dStr, frac: (dStr ?? 0) / 21, color: K.strain, unit: "" },
   };
   const smallDial = (id: DialId) => {
     const m = dialMeta[id];
     return (
       <button key={id} onClick={() => open({ kind: "dial", id })} style={{ ...btn, ...st(10), alignItems: "center" }}>
-        {ring(m.frac, m.color, 98, 7, <span style={numStyle(28, m.v === null ? K.t3 : K.t1)}>{m.v === null ? "—" : m.v.toLocaleString("it-IT")}{m.v !== null && m.unit ? <span style={{ fontSize: 16 }}>{m.unit}</span> : null}</span>, true)}
+        {ring(m.frac, m.color, 98, 7, <span style={numStyle(28, m.v === null ? K.t3 : K.t1)}>{m.v === null ? "—" : m.v.toLocaleString("en-US")}{m.v !== null && m.unit ? <span style={{ fontSize: 16 }}>{m.unit}</span> : null}</span>, true)}
         <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: K.t1, display: "flex", alignItems: "center", gap: 2 }}>{m.name}{ic("right", K.t2, 12, 2.4)}</span>
       </button>
     );
   };
 
-  // ---------- statistiche chiave ----------
+  // ---------- key stats ----------
   const keyStats: Contrib[] = [
     { icon: "heart", label: "HRV", value: fmt(d.hrvMs, " ms"), trend: trendOf(d.hrvMs, bHrv, true), onClick: () => open({ kind: "dial", id: "recupero" }) },
-    { icon: "pulse", label: "FC a riposo", value: fmt(d.rhr, " bpm"), trend: trendOf(d.rhr, bRhr, false), onClick: () => open({ kind: "dial", id: "recupero" }) },
-    { icon: "moon", label: "Ore di sonno", value: hm(d.sleepMin), trend: trendOf(d.sleepMin, bSleep, true), onClick: () => open({ kind: "dial", id: "sonno" }) },
-    { icon: "bed", label: "Profondo + REM", value: hm(restorative(d)), trend: trendOf(restorative(d), norm(d, restorative), true), onClick: () => open({ kind: "dial", id: "sonno" }) },
-    { icon: "steps", label: "Passi", value: fmt(d.steps), trend: trendOf(d.steps, bSteps, true), onClick: () => open({ kind: "dial", id: "sforzo" }) },
-    { icon: "flame", label: "Calorie attive", value: fmt(d.activeKcal), trend: trendOf(d.activeKcal, bAct, true), onClick: () => open({ kind: "dial", id: "sforzo" }) },
-    { icon: "food", label: "Calorie mangiate", value: fmt(d.eatenKcal), trend: trendOf(d.eatenKcal, bEat, null), onClick: () => goTab("nutrizione") },
-    { icon: "food", label: "Proteine", value: fmt(d.proteinG, " g"), trend: trendOf(d.proteinG, bProt, true), onClick: () => goTab("nutrizione") },
-    { icon: "flame", label: live ? "Bilancio kcal finora" : "Bilancio kcal", value: signed(bal(d)), trend: null, onClick: () => goTab("nutrizione") },
+    { icon: "pulse", label: "Resting HR", value: fmt(d.rhr, " bpm"), trend: trendOf(d.rhr, bRhr, false), onClick: () => open({ kind: "dial", id: "recupero" }) },
+    { icon: "moon", label: "Hours of sleep", value: hm(d.sleepMin), trend: trendOf(d.sleepMin, bSleep, true), onClick: () => open({ kind: "dial", id: "sonno" }) },
+    { icon: "bed", label: "Deep + REM", value: hm(restorative(d)), trend: trendOf(restorative(d), norm(d, restorative), true), onClick: () => open({ kind: "dial", id: "sonno" }) },
+    { icon: "steps", label: "Steps", value: fmt(d.steps), trend: trendOf(d.steps, bSteps, true), onClick: () => open({ kind: "dial", id: "sforzo" }) },
+    { icon: "flame", label: "Active calories", value: fmt(d.activeKcal), trend: trendOf(d.activeKcal, bAct, true), onClick: () => open({ kind: "dial", id: "sforzo" }) },
+    { icon: "food", label: "Calories eaten", value: fmt(d.eatenKcal), trend: trendOf(d.eatenKcal, bEat, null), onClick: () => goTab("nutrizione") },
+    { icon: "food", label: "Protein", value: fmt(d.proteinG, " g"), trend: trendOf(d.proteinG, bProt, true), onClick: () => goTab("nutrizione") },
+    { icon: "flame", label: live ? "Kcal balance so far" : "Kcal balance", value: signed(bal(d)), trend: null, onClick: () => goTab("nutrizione") },
   ];
 
-  // monitor salute: quante metriche sono nella tua norma
+  // health monitor: how many metrics are within your normal
   const rp = restPct(d);
-  // monitor salute: i segnali della notte confrontati con la tua norma (media degli altri giorni)
+  // health monitor: night signals compared with your norm (average of the other days)
   const bBr = norm(d, (y: Day) => y.breathing), bSp = norm(d, (y: Day) => y.spo2);
   const monRows: { name: string; value: string; ok: boolean | null; off: string }[] = [
-    { name: "HRV", value: fmt(d.hrvMs, " ms"), ok: isNum(d.hrvMs) && bHrv !== null ? d.hrvMs >= bHrv * 0.85 : null, off: "più bassa del solito" },
-    { name: "FC a riposo", value: fmt(d.rhr, " bpm"), ok: isNum(d.rhr) && bRhr !== null ? d.rhr <= bRhr + 3 : null, off: "più alta del solito" },
-    { name: "Respirazione", value: fmt(d.breathing, " respiri/min"), ok: isNum(d.breathing) && bBr !== null ? Math.abs(d.breathing - bBr) <= 1 : null, off: "diversa dal solito" },
-    { name: "Ossigeno nel sonno", value: fmt(d.spo2, "%"), ok: isNum(d.spo2) && bSp !== null ? d.spo2 >= bSp - 1 : null, off: "più basso del solito" },
-    { name: "Temperatura pelle", value: isNum(d.tempDev) ? `${d.tempDev > 0 ? "+" : d.tempDev < 0 ? "−" : "±"}${fmt(Math.abs(d.tempDev), " °C")}` : "—", ok: isNum(d.tempDev) ? Math.abs(d.tempDev) <= 0.5 : null, off: "fuori dal solito" },
+    { name: "HRV", value: fmt(d.hrvMs, " ms"), ok: isNum(d.hrvMs) && bHrv !== null ? d.hrvMs >= bHrv * 0.85 : null, off: "lower than usual" },
+    { name: "Resting HR", value: fmt(d.rhr, " bpm"), ok: isNum(d.rhr) && bRhr !== null ? d.rhr <= bRhr + 3 : null, off: "higher than usual" },
+    { name: "Breathing", value: fmt(d.breathing, " breaths/min"), ok: isNum(d.breathing) && bBr !== null ? Math.abs(d.breathing - bBr) <= 1 : null, off: "different from usual" },
+    { name: "Oxygen in sleep", value: fmt(d.spo2, "%"), ok: isNum(d.spo2) && bSp !== null ? d.spo2 >= bSp - 1 : null, off: "lower than usual" },
+    { name: "Skin temperature", value: isNum(d.tempDev) ? `${d.tempDev > 0 ? "+" : d.tempDev < 0 ? "−" : "±"}${fmt(Math.abs(d.tempDev), " °C")}` : "—", ok: isNum(d.tempDev) ? Math.abs(d.tempDev) <= 0.5 : null, off: "out of the ordinary" },
   ];
   const monitor = monRows.map((m) => m.ok).filter((v): v is boolean => v !== null);
   const monOk = monitor.filter(Boolean).length;
   const monAll = monitor.length > 0 && monOk === monitor.length;
   const monOff = monRows.filter((m) => m.ok === false);
-  const monHead = !monitor.length ? "Dati della notte in arrivo" : monAll ? "Tutto nella norma" : monOff.length >= 2 ? "Diversi segnali fuori norma" : "Un segnale da osservare";
-  const monTip = !monitor.length ? "Servono le misure della notte dall'orologio." : monAll ? "I segnali della notte sono nei tuoi valori abituali."
-    : monOff.length >= 2 ? `${monOff.map((m) => `${m.name.toLowerCase()} ${m.off}`).join(", ")}: è come si presenta spesso l'inizio di un malanno, o tanto stress. Oggi riposo, acqua e a letto presto; se domani è ancora così, ascolta il corpo.`
-    : `${monOff[0].name} ${monOff[0].off}: da sola non preoccupa, può dipendere da alcol, cena tardi o un allenamento duro. Guardala domani.`;
+  const monHead = !monitor.length ? "Night data coming" : monAll ? "All in range" : monOff.length >= 2 ? "Several signals out of range" : "One signal to watch";
+  const monTip = !monitor.length ? "The watch's night readings are needed." : monAll ? "The night signals are within your usual values."
+    : monOff.length >= 2 ? `${monOff.map((m) => `${m.name.toLowerCase()} ${m.off}`).join(", ")}: this often looks like the start of a cold, or a lot of stress. Rest today, drink water and go to bed early; if it is still like this tomorrow, listen to your body.`
+    : `${monOff[0].name} ${monOff[0].off}: on its own it is not a worry, it can come from alcohol, a late dinner or a hard workout. Check it again tomorrow.`;
   const monCol = !monitor.length ? K.t3 : monAll ? K.up : K.warn;
   const monitorFull = (
-    <div style={{ ...card, ...st(10) }} aria-label="Monitor salute">
-      <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Monitor salute</span><span style={lbl}>{monitor.length ? `${monOk}/${monitor.length} nella norma` : ""}</span></div>
+    <div style={{ ...card, ...st(10) }} aria-label="Health monitor">
+      <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Health monitor</span><span style={lbl}>{monitor.length ? `${monOk}/${monitor.length} in range` : ""}</span></div>
       <span style={{ fontSize: 17, fontWeight: 700, color: monCol }}>{monHead}</span>
       <div style={{ ...st(0) }}>
         {monRows.map((m, i) => (
           <div key={m.name} style={{ ...row, justifyContent: "space-between", gap: 10, padding: "10px 0", borderTop: i ? `1px solid ${K.line}` : "none" }}>
             <div style={{ ...st(0), minWidth: 0 }}><span style={{ ...caps, ...ell, fontSize: 12, lineHeight: "16px", color: K.t1 }}>{m.name}</span><span style={{ ...lbl, ...ell }}>{m.value}</span></div>
-            <span style={{ ...caps, fontSize: 11, whiteSpace: "nowrap", flex: "0 0 auto", color: m.ok === null ? K.t3 : m.ok ? K.up : K.warn }}>{m.ok === null ? "—" : m.ok ? "nella norma" : "da osservare"}</span>
+            <span style={{ ...caps, fontSize: 11, whiteSpace: "nowrap", flex: "0 0 auto", color: m.ok === null ? K.t3 : m.ok ? K.up : K.warn }}>{m.ok === null ? "—" : m.ok ? "in range" : "to watch"}</span>
           </div>
         ))}
       </div>
@@ -2194,9 +2194,9 @@ export default function App() {
     </div>
   );
   const monitorLine = (
-    <button onClick={() => goTab("biologia")} aria-label="Monitor salute" style={{ ...btn, ...card, ...row, padding: "14px 16px" }}>
+    <button onClick={() => goTab("biologia")} aria-label="Health monitor" style={{ ...btn, ...card, ...row, padding: "14px 16px" }}>
       <div style={{ width: 26, height: 26, borderRadius: 6, background: `${monCol}26`, border: `1px solid ${monCol}66`, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto" }}>{ic(monAll ? "check" : "heart", monCol, 14, 2.4)}</div>
-      <div style={{ ...st(2), flex: 1, minWidth: 0 }}><span style={{ ...caps, fontSize: 12, lineHeight: "16px", color: K.t1 }}>Monitor salute</span><span style={lbl}>{monHead}{monitor.length ? ` · ${monOk}/${monitor.length}` : ""}</span></div>
+      <div style={{ ...st(2), flex: 1, minWidth: 0 }}><span style={{ ...caps, fontSize: 12, lineHeight: "16px", color: K.t1 }}>Health monitor</span><span style={lbl}>{monHead}{monitor.length ? ` · ${monOk}/${monitor.length}` : ""}</span></div>
       {chev(K.t1)}
     </button>
   );
@@ -2211,7 +2211,7 @@ export default function App() {
   );
   const sqBadge = (content: ReactNode, color: string) => <div style={{ width: 26, height: 26, borderRadius: 6, background: `${color}26`, border: `1px solid ${color}66`, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto", color, fontSize: 11, fontWeight: 700 }}>{content}</div>;
 
-  // ---------- ora locale, dal vivo ----------
+  // ---------- local time, live ----------
   const romeNow = (): { date: string; min: number } => {
     try {
       const p: Record<string, string> = {};
@@ -2234,13 +2234,13 @@ export default function App() {
     document.addEventListener("visibilitychange", onVis);
     return () => { clearInterval(t); document.removeEventListener("visibilitychange", onVis); };
   }, []);
-  const WDL = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
-  const dayWord = (date: string) => { const p = parts(date); return date === now.date ? "oggi" : date === addDays(now.date, 1) ? "domani" : `${WDL[p.w]} ${p.dd}`; };
+  const WDL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayWord = (date: string) => { const p = parts(date); return date === now.date ? "today" : date === addDays(now.date, 1) ? "tomorrow" : `${WDL[p.w]} ${p.dd}`; };
   const dur = (m: number) => { const r = Math.max(0, Math.round(m)), h = Math.floor(r / 60), mm = r % 60; return h ? `${h} h ${String(mm).padStart(2, "0")} min` : `${mm} min`; };
 
-  // ---------- impegni (prossimi + pianificati) ----------
+  // ---------- events (upcoming + planned) ----------
   type Plan = { date: string; time: string; name: string; kind: string | null; detail: string | null; partners: string | null };
-  const isMatch = (kind: string | null | undefined, name: string) => kind === "padel" || kind === "tennis" || kind === "beach" || /torneo|partita|match|beach/i.test(name);
+  const isMatch = (kind: string | null | undefined, name: string) => kind === "padel" || kind === "tennis" || kind === "beach" || /torneo|tournament|partita|match|beach/i.test(name);
   const isGym = (k: string | null | undefined) => k === "grid" || k === "palestra";
   const plansOn = (date: string, all = false): Plan[] => {
     const out: Plan[] = [];
@@ -2252,7 +2252,7 @@ export default function App() {
   };
   const matchesOn = (date: string): Plan[] => plansOn(date, true).filter((p) => isMatch(p.kind, p.name));
 
-  // ---------- piano della sera ----------
+  // ---------- evening plan ----------
   const DEFAULT_WAKE = 480;
   const firstOn = (date: string): { t: number; title: string } | null => {
     const c: { t: number; title: string }[] = [];
@@ -2274,7 +2274,7 @@ export default function App() {
     for (let i = days.length - 1; i >= 0; i--) { const o = onTarget(days[i]); if (o === null) { if (i === days.length - 1) continue; break; } if (!o) break; n++; }
     return n;
   })();
-  const streakTxt = (n: number) => `${n} ${n === 1 ? "notte" : "notti"} di fila nell'obiettivo`;
+  const streakTxt = (n: number) => `${n} ${n === 1 ? "night" : "nights"} in a row on target`;
   const eveNight = now.min >= 1260 ? addDays(now.date, 1) : now.min < 300 ? now.date : null;
   const eve = eveNight && daysBetween(DATA.today, eveNight) <= 2 ? planFor(eveNight) : null;
   const eveLeft = eve && eveNight ? eve.bedBy - (now.date === eveNight ? now.min : now.min - 1440) : 0;
@@ -2282,16 +2282,16 @@ export default function App() {
     <button onClick={() => open({ kind: "dial", id: "sonno" })} style={{ ...btn, borderRadius: 16, padding: 1, background: `linear-gradient(135deg, ${K.inA}, ${K.inB})` }}>
       <div style={{ ...st(10), borderRadius: 15, padding: 16, background: K.mid }}>
         <div style={{ ...row, justifyContent: "space-between" }}>
-          <span style={{ ...row, gap: 8 }}>{ic("moon", K.sleep, 18)}<span style={capLbl(12)}>Stanotte</span></span>
+          <span style={{ ...row, gap: 8 }}>{ic("moon", K.sleep, 18)}<span style={capLbl(12)}>Tonight</span></span>
           {bedStreak > 0 ? <span style={{ ...lbl, fontWeight: 700, color: K.up }}>{streakTxt(bedStreak)}</span> : chev(K.t1)}
         </div>
         <div style={{ ...row, justifyContent: "space-between", alignItems: "flex-end" }}>
-          <div style={st(2)}><span style={lbl}>A letto entro</span><span style={numStyle(44, K.sleep)}>{clock(eve.bedBy)}</span></div>
-          <div style={{ ...st(2), alignItems: "flex-end" }}><span style={lbl}>{eveLeft > 0 ? "Mancano" : "Adesso"}</span><span style={numStyle(28)}>{eveLeft > 0 ? dur(eveLeft) : "a letto"}</span></div>
+          <div style={st(2)}><span style={lbl}>In bed by</span><span style={numStyle(44, K.sleep)}>{clock(eve.bedBy)}</span></div>
+          <div style={{ ...st(2), alignItems: "flex-end" }}><span style={lbl}>{eveLeft > 0 ? "Missing" : "Now"}</span><span style={numStyle(28)}>{eveLeft > 0 ? dur(eveLeft) : "in bed"}</span></div>
         </div>
         {hbar(eveLeft > 0 ? 1 - clamp(eveLeft / 180, 0, 1) : 1, K.sleep, 4)}
-        <span style={txt}>{`Ti servono ${hm(eve.need)} · sveglia alle ${clock(eve.wake)}${eve.ev ? ` per ${eve.ev.name} alle ${eve.ev.time}` : ""}. Al minimo (${hm(0.85 * eve.need)}) entro le ${clock(eve.bedBy85)}.`}</span>
-        <span style={lbl}>{eveLeft > 60 ? "Luci basse e schermi giù mezz'ora prima aiutano ad addormentarsi." : eveLeft > 0 ? "È il momento di rallentare: luci basse, telefono lontano dal letto." : eveLeft > -30 ? "Sei in tempo: buona notte." : "Anche adesso va bene: ogni minuto di sonno in più conta."}</span>
+        <span style={txt}>{`You need ${hm(eve.need)} · wake up at ${clock(eve.wake)}${eve.ev ? ` for ${eve.ev.name} at ${eve.ev.time}` : ""}. At the minimum (${hm(0.85 * eve.need)}) by ${clock(eve.bedBy85)}.`}</span>
+        <span style={lbl}>{eveLeft > 60 ? "Dim lights and screens down half an hour before help you fall asleep." : eveLeft > 0 ? "Time to slow down: dim lights, phone away from the bed." : eveLeft > -30 ? "You're on time: good night." : "Even now is fine: every extra minute of sleep counts."}</span>
       </div>
     </button>
   ) : null;
@@ -2302,14 +2302,14 @@ export default function App() {
     <button onClick={() => open({ kind: "dial", id: "sonno" })} style={{ ...btn, ...card, ...row, padding: "14px 16px" }}>
       {sqBadge(ic(lnOk ? "check" : "moon", lnOk ? K.up : K.sleep, 14, 2.4), lnOk ? K.up : K.sleep)}
       <div style={{ ...st(2), flex: 1 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: K.t1 }}>{`A letto alle ${clock(lnBed)}, obiettivo ${clock(lnTarget)}`}</span>
-        <span style={lbl}>{bedStreak > 0 ? streakTxt(bedStreak) : "Stasera si riparte, con calma."}</span>
+        <span style={{ fontSize: 15, fontWeight: 600, color: K.t1 }}>{`In bed at ${clock(lnBed)}, goal ${clock(lnTarget)}`}</span>
+        <span style={lbl}>{bedStreak > 0 ? streakTxt(bedStreak) : "Tonight you start again, calmly."}</span>
       </div>
       {chev(K.t1)}
     </button>
   ) : null;
 
-  // ---------- proteine guidate ----------
+  // ---------- protein guide ----------
   type PFood = { name: string; portion: string; p: number; kcal: number };
   const proteinPlan = (have: number): { gap: number; items: PFood[]; p: number; kcal: number } | null => {
     const gap = PT - have;
@@ -2325,27 +2325,27 @@ export default function App() {
   const pPlan = live ? proteinPlan(isNum(d.proteinG) ? d.proteinG : 0) : null;
   const proteinTip = pPlan ? (
     <div style={{ ...st(8), background: K.bg, borderRadius: 12, padding: 12 }}>
-      <span style={{ ...lbl, color: K.t2 }}>{`Mancano ${Math.round(pPlan.gap)} g. Per esempio:`}</span>
+      <span style={{ ...lbl, color: K.t2 }}>{`Missing ${Math.round(pPlan.gap)} g. For example:`}</span>
       {pPlan.items.map((f) => (
         <div key={f.name} style={{ ...row, justifyContent: "space-between", gap: 8 }}>
           <span style={{ ...txt, ...ell, color: K.t1, flex: 1 }}>{`${f.name} · ${f.portion}`}</span><span style={numStyle(16, K.violet)}>{`+${f.p} g`}</span>
         </div>
       ))}
-      <span style={lbl}>{`Così arrivi a ${Math.round((isNum(d.proteinG) ? d.proteinG : 0) + pPlan.p)}/${PT} g.`}</span>
+      <span style={lbl}>{`That gets you to ${Math.round((isNum(d.proteinG) ? d.proteinG : 0) + pPlan.p)}/${PT} g.`}</span>
     </div>
   ) : null;
   const homeProtein = pPlan && d.meals.length ? (
     <button onClick={() => goTab("nutrizione")} style={{ ...btn, ...card, ...row, padding: "14px 16px" }}>
       {sqBadge(ic("food", K.violet, 14, 2.2), K.violet)}
       <div style={{ ...st(2), flex: 1 }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: K.t1 }}>{`Mancano ${Math.round(pPlan.gap)} g di proteine`}</span>
+        <span style={{ fontSize: 15, fontWeight: 600, color: K.t1 }}>{`Missing ${Math.round(pPlan.gap)} g of protein`}</span>
         <span style={{ ...lbl, ...ell }}>{pPlan.items.map((f) => `${f.name} ${f.portion}`).join(" + ")}</span>
       </div>
       {chev(K.t1)}
     </button>
   ) : null;
 
-  // ---------- settimana palestra + sport ----------
+  // ---------- gym + sport week ----------
   const weekStart = addDays(DATA.today, -((parts(DATA.today).w + 6) % 7));
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const weekEnd = weekDates[6];
@@ -2354,7 +2354,7 @@ export default function App() {
   const sportLabel = sportKinds.map((k) => (k === "beach" ? "beach" : (KIND_NAME[k] ?? k).toLowerCase())).join("/").replace(/^./, (c) => c.toUpperCase());
   const sportKindOf = (kind: string | null | undefined, name: string): string | null => {
     if (/beach/i.test(name) || kind === "beach") return "beach";
-    if (/padel/i.test(name) || kind === "padel" || (/torneo/i.test(name) && (!kind || kind === "sport" || kind === "palestra"))) return "padel";
+    if (/padel/i.test(name) || kind === "padel" || (/torneo|tournament/i.test(name) && (!kind || kind === "sport" || kind === "palestra"))) return "padel";
     return kind === "tennis" || /tennis/i.test(name) ? "tennis" : null;
   };
   const isGoalSport = (kind: string | null | undefined, name: string) => { const k = sportKindOf(kind, name); return k !== null && sportKinds.includes(k); };
@@ -2367,7 +2367,7 @@ export default function App() {
   const sportWeek = sum(weekDates.map(sportDone)), sportPend = sum(weekDates.filter((x) => x >= DATA.today).map(sportPlanned));
   const gymGoal = isNum(DATA.gymWeeklyGoal) && DATA.gymWeeklyGoal > 0 ? DATA.gymWeeklyGoal : null;
   const sportGoal = SG && isNum(SG.count) && SG.count > 0 ? SG.count : null;
-  // sforzo consigliato oggi: recupero di oggi + obiettivi della settimana + sessioni in programma (solo il consiglio, mai il calcolo)
+  // suggested effort today: today's recovery + weekly goals + scheduled sessions (only the tip, never the calculation)
   const effortTip = (() => {
     if (dRec === null || d.date !== DATA.today || !strainTarget) return null;
     const T = DATA.today, tmr = addDays(T, 1), hi = dRec >= 67, mid = dRec >= 34;
@@ -2382,24 +2382,24 @@ export default function App() {
     const out: string[] = [];
     const doneSport = doneT.find((w: Workout) => isGoalSport(kindOf(w), w.name) || isMatch(kindOf(w), w.name)) ?? null;
     const tD = dayOf(T), dS = tD ? strainScore(tD) : null, reached = isNum(dS) && !!strainRange && dS >= strainRange[0], above = reached && !!strainRange && (dS as number) > strainRange[1];
-    if (doneT.some((w: Workout) => isGym(kindOf(w)))) out.push(hi && !matchTmr && !reached ? "forza già fatta, c'è ancora margine per una camminata" : "forza già fatta, per oggi basta carichi");
-    else if (gymToday) out.push(hi ? "palestra sì, a pieno carico" : mid ? "palestra sì, carichi soliti" : "palestra leggera, carichi un po' più bassi");
-    else if (!reached && gymNeed > 0 && mid && !matchTmr) out.push(gymNeed >= daysLeft ? "palestra sì, serve per l'obiettivo della settimana" : "palestra sì se hai tempo");
-    else if (!reached && gymNeed > 0 && !mid) out.push("palestra rimandata a domani");
-    if (doneSport) { const ss = actStrain(doneSport); out.push(`${doneSport.name.toLowerCase()} fatto${ss !== null ? `, sforzo ${fmt(ss)}` : ""}`); }
-    else if (sportT) out.push(hi ? `${sName} a tutta` : mid ? `${sName} tranquillo` : `${sName} leggero`);
-    else if (!reached && sportNeed > 0 && mid && !gymToday) out.push(`${sName} se riesci, ti manca questa settimana`);
-    if (!out.length) out.push(reached ? "sforzo di oggi già fatto" : hi ? "giornata buona per spingere" : mid ? "movimento normale, niente di estremo" : "camminata e stretching, niente carichi");
-    const tail = above ? " Sei sopra la fascia del tuo recupero: per oggi basta, ora acqua, un buon pasto e a letto presto."
-      : reached ? " La fascia di oggi è raggiunta: il resto della giornata è recupero."
-      : matchTmr ? ` Domani c'è ${matchTmr.name}: oggi non arrivare in cima alla fascia.` : !mid ? " Il corpo chiede recupero: una notte lunga vale più di un allenamento." : "";
+    if (doneT.some((w: Workout) => isGym(kindOf(w)))) out.push(hi && !matchTmr && !reached ? "strength done, there is still room for a walk" : "strength done, no more weights today");
+    else if (gymToday) out.push(hi ? "gym yes, full load" : mid ? "gym yes, usual weights" : "light gym, slightly lower weights");
+    else if (!reached && gymNeed > 0 && mid && !matchTmr) out.push(gymNeed >= daysLeft ? "gym yes, it counts towards the week's goal" : "gym yes, if you have time");
+    else if (!reached && gymNeed > 0 && !mid) out.push("gym moved to tomorrow");
+    if (doneSport) { const ss = actStrain(doneSport); out.push(`${doneSport.name.toLowerCase()} done${ss !== null ? `, effort ${fmt(ss)}` : ""}`); }
+    else if (sportT) out.push(hi ? `${sName} all out` : mid ? `${sName} easy` : `${sName} light`);
+    else if (!reached && sportNeed > 0 && mid && !gymToday) out.push(`${sName} if you can, you still need it this week`);
+    if (!out.length) out.push(reached ? "today's effort already done" : hi ? "a good day to push" : mid ? "normal movement, nothing extreme" : "a walk and stretching, no weights");
+    const tail = above ? " You're above your recovery band: that's enough for today, now water, a good meal and an early night."
+      : reached ? " Today's band is reached: the rest of the day is recovery."
+      : matchTmr ? ` Tomorrow there is ${matchTmr.name}: don't go to the top of the band today.` : !mid ? " Your body is asking for recovery: a long night is worth more than a workout." : "";
     const goals = [gymGoal ? `palestra ${gymWeek}/${gymGoal}` : null, sportGoal ? `${sportLabel.toLowerCase()} ${sportWeek}/${sportGoal}` : null].filter(Boolean).join(" · ");
     return { range: strainTarget, head: out.join(", "), text: `${out.join(", ").replace(/^./, (c) => c.toUpperCase())}.${tail}`, goals };
   })();
-  const outlookFull = effortTip && !dayDone ? `${outlookText} Oggi: ${effortTip.head}.` : outlookText;
+  const outlookFull = effortTip && !dayDone ? `${outlookText} Today: ${effortTip.head}.` : outlookText;
   const effortCard = effortTip ? (
-    <div style={{ ...card, ...st(8) }} aria-label="Sforzo consigliato oggi">
-      <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Sforzo consigliato oggi</span><span style={{ ...lbl, color: K.strain, fontWeight: 700 }}>{`fascia ${effortTip.range}`}</span></div>
+    <div style={{ ...card, ...st(8) }} aria-label="Suggested effort today">
+      <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Suggested effort today</span><span style={{ ...lbl, color: K.strain, fontWeight: 700 }}>{`band ${effortTip.range}`}</span></div>
       <span style={txt}>{effortTip.text}</span>
     </div>
   ) : null;
@@ -2407,7 +2407,7 @@ export default function App() {
     const tRec = tDay ? recScore(tDay) : null;
     const out: string[] = [];
     const gymMet = gymGoal !== null && gymWeek >= gymGoal, sportMet = sportGoal !== null && sportWeek >= sportGoal;
-    if (gymMet) out.push(`Obiettivo palestra raggiunto: da qui a domenica solo se ti va.`);
+    if (gymMet) out.push(`Gym goal reached: from here to Sunday only if you feel like it.`);
     else {
       const need = gymGoal !== null ? gymGoal - gymWeek : null;
       const ahead = Array.from({ length: 7 }, (_, i) => addDays(DATA.today, i + 1)).filter((x) => gymGoal === null || x <= weekEnd);
@@ -2415,15 +2415,15 @@ export default function App() {
       const planned = ahead.find((x) => gymPlanned(x) > 0);
       const free = ahead.filter((x) => !matchesOn(x).length);
       const good = free.find((x) => !matchesOn(addDays(x, -1)).length) ?? free[0];
-      const pre = need !== null ? `${need === 1 ? "Manca 1 sessione" : `Mancano ${need} sessioni`} di palestra: ` : "";
-      if (todayOk) out.push(`${pre}${tRec !== null ? `recupero ${tRec}%, ` : ""}oggi è un buon giorno, se ti va.`);
-      else if (planned) out.push(`${pre}la prossima in programma è ${dayWord(planned)}.`);
-      else if (good) out.push(`${pre}il prossimo buon giorno è ${dayWord(good)}.`);
-      else out.push(need !== null ? "La settimana è quasi finita: da lunedì si riparte con calma." : "Settimana piena di partite: la palestra può aspettare.");
+      const pre = need !== null ? `${need === 1 ? "1 session to go" : `${need} sessions to go`} of gym: ` : "";
+      if (todayOk) out.push(`${pre}${tRec !== null ? `recupero ${tRec}%, ` : ""}today is a good day, if you feel like it.`);
+      else if (planned) out.push(`${pre}the next one scheduled is ${dayWord(planned)}.`);
+      else if (good) out.push(`${pre}the next good day is ${dayWord(good)}.`);
+      else out.push(need !== null ? "The week is almost over: start again calmly on Monday." : "A week full of matches: the gym can wait.");
     }
     if (sportGoal !== null && !sportMet) {
       const nextS = weekDates.find((x) => x >= DATA.today && sportPlanned(x) > 0);
-      out.push(nextS ? `${plansOn(nextS).find((p) => isGoalSport(p.kind, p.name))?.name ?? sportLabel} ${dayWord(nextS)}: con quella arrivi all'obiettivo ${sportLabel.toLowerCase()}.` : `Per ${sportLabel.toLowerCase()} c'è tempo fino a domenica.`);
+      out.push(nextS ? `${plansOn(nextS).find((p) => isGoalSport(p.kind, p.name))?.name ?? sportLabel} ${dayWord(nextS)}: that gets you to the goal ${sportLabel.toLowerCase()}.` : `For ${sportLabel.toLowerCase()} there is time until Sunday.`);
     }
     return out.join(" ");
   })();
@@ -2434,8 +2434,8 @@ export default function App() {
         <div style={{ ...row, justifyContent: "space-between", gap: 8 }}>
           <span style={{ ...row, gap: 8, ...caps, fontSize: 12, color: K.t1 }}>{ic(icon, color, 18)}{label}</span>
           <span style={{ ...row, gap: 6 }}>
-            {pend > 0 && !met ? <span style={lbl}>{`+${pend} in programma`}</span> : null}
-            <span style={numStyle(20, met ? K.up : K.t1)}>{goal !== null ? `${done} su ${goal}` : `${done}`}</span>
+            {pend > 0 && !met ? <span style={lbl}>{`+${pend} scheduled`}</span> : null}
+            <span style={numStyle(20, met ? K.up : K.t1)}>{goal !== null ? `${done} of ${goal}` : `${done}`}</span>
             {met ? ic("check", K.up, 16, 2.6) : null}
           </span>
         </div>
@@ -2450,8 +2450,8 @@ export default function App() {
   };
   const gymCard = (
     <div style={{ ...card, ...st(12) }}>
-      <span style={capLbl(12)}>Obiettivi della settimana</span>
-      {goalRow("dumbbell", "Palestra", gymWeek, gymGoal, gymPend, K.strain)}
+      <span style={capLbl(12)}>Goals of the week</span>
+      {goalRow("dumbbell", "Gym", gymWeek, gymGoal, gymPend, K.strain)}
       {goalRow("ball", sportLabel, sportWeek, sportGoal, sportPend, K.teal)}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0,1fr))", gap: 2, marginTop: 2 }}>
         {weekDates.map((x) => {
@@ -2470,9 +2470,9 @@ export default function App() {
           );
         })}
       </div>
-      {legend([{ label: "Palestra", color: K.strain }, { label: sportLabel, color: K.teal }, { label: "In programma", color: K.t3 }])}
+      {legend([{ label: "Gym", color: K.strain }, { label: sportLabel, color: K.teal }, { label: "Scheduled", color: K.t3 }])}
       <span style={txt}>{nextGymText}</span>
-      {gymGoal === null && sportGoal === null ? <span style={lbl}>Imposta un obiettivo settimanale: dillo a {COACH}.</span> : null}
+      {gymGoal === null && sportGoal === null ? <span style={lbl}>Set a weekly goal: tell {COACH}.</span> : null}
     </div>
   );
   const goalChip = (icon: string, label: string, done: number, goal: number | null, color: string) => {
@@ -2487,15 +2487,15 @@ export default function App() {
   };
   const homeGoals = gymGoal !== null || sportGoal !== null ? (
     <button onClick={() => goTab("sforzo")} style={{ ...btn, ...card, ...row, padding: "12px 16px", gap: 10 }}>
-      <span style={{ ...caps, fontSize: 11, color: K.t1, flex: "0 0 auto", marginRight: 6 }}>Obiettivi settimana</span>
-      {goalChip("dumbbell", "Palestra", gymWeek, gymGoal, K.strain)}
+      <span style={{ ...caps, fontSize: 11, color: K.t1, flex: "0 0 auto", marginRight: 6 }}>Week goals</span>
+      {goalChip("dumbbell", "Gym", gymWeek, gymGoal, K.strain)}
       {goalChip("ball", sportLabel, sportWeek, sportGoal, K.teal)}
       <span style={{ flex: 1 }} />{chev(K.t1)}
     </button>
   ) : null;
 
-  // =================== FITNESS (la vista del coach) ===================
-  // DATA.coach (se c'è) vince sul verdetto scritto dai dati
+  // =================== FITNESS (the coach's view) ===================
+  // DATA.coach (if present) wins over the verdict written from the data
   const fitWeek = weekDates.flatMap((x) => (dayOf(x)?.workouts ?? []).map((w: Workout, i: number) => ({ w, date: x, key: `${x}w${i}` }))).filter((e) => e.w.status === "fatto");
   const fitMin = sum(fitWeek.map((e) => e.w.durationMin)), fitKcal = sum(fitWeek.map((e) => e.w.kcal));
   const fitRec = tDay ? recScore(tDay) : null, fitSleep = tDay ? sleepScore(tDay) : null;
@@ -2503,62 +2503,62 @@ export default function App() {
   const goalsMet = (gymGoal === null || gymWeek >= gymGoal) && (sportGoal === null || sportWeek >= sportGoal);
   const autoHeadline = (() => {
     const strong = fitWeek.length >= 3 || goalsMet;
-    const brake = fitSleep !== null && fitSleep < 70 ? "il sonno ti frena" : isNum(tDay?.proteinG) && (tDay?.proteinG as number) < PT * 0.6 ? "le proteine non bastano" : null;
-    return strong ? (brake ? `Settimana forte, ma ${brake}` : "Settimana forte, continua così") : brake ? `Settimana leggera e ${brake}` : "Settimana da costruire";
+    const brake = fitSleep !== null && fitSleep < 70 ? "sleep is holding you back" : isNum(tDay?.proteinG) && (tDay?.proteinG as number) < PT * 0.6 ? "protein is not enough" : null;
+    return strong ? (brake ? `Strong week, but ${brake}` : "Strong week, keep it up") : brake ? `Light week and ${brake}` : "A week to build";
   })();
   const autoVerdict = [
-    gymGoal !== null ? `Palestra ${gymWeek} su ${gymGoal}${sportGoal !== null ? `, ${sportLabel.toLowerCase()} ${sportWeek} su ${sportGoal}` : ""}${goalsMet ? ": obiettivi presi." : "."}` : `${fitWeek.length} allenamenti questa settimana.`,
-    tDay && sonnoOf(tDay) !== null ? `Sonno ${sonnoOf(tDay)}${fitRec !== null ? `, recupero al ${fitRec}%` : ""}.` : "",
-    fitTomorrow ? `Domani ${fitTomorrow.name}${fitTomorrow.time ? ` alle ${fitTomorrow.time.slice(0, 5)}` : ""}: stasera si chiude presto.` : "",
+    gymGoal !== null ? `Gym ${gymWeek} of ${gymGoal}${sportGoal !== null ? `, ${sportLabel.toLowerCase()} ${sportWeek} of ${sportGoal}` : ""}${goalsMet ? ": goals met." : "."}` : `${fitWeek.length} workouts this week.`,
+    tDay && sonnoOf(tDay) !== null ? `Sleep ${sonnoOf(tDay)}${fitRec !== null ? `, recovery at ${fitRec}%` : ""}.` : "",
+    fitTomorrow ? `Tomorrow ${fitTomorrow.name}${fitTomorrow.time ? ` at ${fitTomorrow.time.slice(0, 5)}` : ""}: an early night tonight.` : "",
   ].filter(Boolean).join(" ");
   const C = DATA.coach ?? null;
   const fitHeadline = C?.headline || autoHeadline, fitVerdict = C?.verdict || autoVerdict;
-  // un solo orario per stanotte in tutta l'app: quello del piano della sera (le frasi del coach si allineano)
+  // one bedtime for tonight across the app: the evening plan's (the coach's sentences align to it)
   const bedNight = planFor(now.min >= 300 ? addDays(now.date, 1) : now.date).bedBy;
-  const bedWords = `entro ${clock(bedNight).startsWith("01") ? "l'" : "le "}${clock(bedNight)}`;
-  const alignBed = (t: string) => t.replace(/entro (?:le |l')\d{1,2}[:.]\d{2}/gi, bedWords);
+  const bedWords = `by ${clock(bedNight).startsWith("01") ? "" : ""}${clock(bedNight)}`;
+  const alignBed = (t: string) => t.replace(/(?:entro (?:le |l')|by )\d{1,2}[:.]\d{2}/gi, bedWords);
   const fitActions = C?.actions && C.actions.length ? C.actions.slice(0, 3).map(alignBed) : [
-    `Proteine a ${PT} g ogni giorno${isNum(tDay?.proteinG) ? `: oggi sei a ${fmt(tDay?.proteinG)}` : ""}`,
-    `A letto prima dell'00:30${bedAvg !== null ? `: in media vai alle ${clock(bedAvg)}` : ""}`,
-    gymGoal !== null ? `Palestra upper body ${gymGoal} volte${gymWeek >= gymGoal ? ": questa settimana è fatta" : `: ne mancano ${gymGoal - gymWeek}`}` : "Fissa un obiettivo di palestra settimanale",
+    `Protein at ${PT} g every day${isNum(tDay?.proteinG) ? `: today you are at ${fmt(tDay?.proteinG)}` : ""}`,
+    `Go to bed a little earlier${bedAvg !== null ? `: on average you go to bed at ${clock(bedAvg)}` : ""}`,
+    gymGoal !== null ? `Gym ${gymGoal} times${gymWeek >= gymGoal ? ": done for this week" : `: ${gymGoal - gymWeek} to go`}` : "Set a weekly gym goal",
   ];
-  const fitCall = fitRec === null ? { word: "Ascoltati", color: K.t2, text: "Il recupero di oggi non c'è ancora: carico solo se ti senti bene." }
-    : fitRec >= 67 ? { word: "Spingi", color: K.recHi, text: `Recupero al ${fitRec}%: il corpo regge, oggi puoi caricare.` }
-    : fitRec >= 34 ? { word: "Mantieni", color: K.recMid, text: `Recupero al ${fitRec}%: carico moderato, niente record.${fitTomorrow ? " Domani si gioca: oggi niente pesi pesanti." : ""}` }
-    : { word: "Vacci piano", color: K.recLo, text: `Recupero al ${fitRec}%: oggi recupero attivo, il carico aspetta.` };
+  const fitCall = fitRec === null ? { word: "Listen to yourself", color: K.t2, text: "Today's recovery isn't in yet: load up only if you feel good." }
+    : fitRec >= 67 ? { word: "Push", color: K.recHi, text: `Recovery at ${fitRec}%: your body can take it, you can push today.` }
+    : fitRec >= 34 ? { word: "Maintain", color: K.recMid, text: `Recovery at ${fitRec}%: moderate load, no records.${fitTomorrow ? " Match tomorrow: no heavy lifting today." : ""}` }
+    : { word: "Go easy", color: K.recLo, text: `Recovery at ${fitRec}%: active recovery today, the load can wait.` };
   const fitPlans = Array.from({ length: 10 }, (_, i) => addDays(DATA.today, i)).flatMap((x) => plansOn(x))
     .filter((p) => p.date > now.date || (p.date === now.date && (toMin(p.time) ?? 1440) > now.min)).slice(0, 3);
   const planTip = (p: Plan) => {
-    if (isMatch(p.kind, p.name)) return p.date === addDays(now.date, 1) ? `A letto ${bedWords}, colazione con carboidrati 2-3 ore prima, borraccia piena.` : "Notte piena prima, carboidrati a colazione, acqua a ogni cambio campo.";
-    if (p.kind === "grid") return "Colazione leggera un'ora prima e acqua: è un'ora intensa.";
-    if (p.kind === "palestra") return "Upper body completo: prima i multiarticolari, braccia alla fine. Proteine entro due ore.";
-    if (/calcio/i.test(p.name)) return "Dieci minuti di riscaldamento vero e acqua: la sera prima non saltare la cena.";
-    return "Acqua e un pasto vero un paio d'ore prima.";
+    if (isMatch(p.kind, p.name)) return p.date === addDays(now.date, 1) ? `In bed ${bedWords}, a carb breakfast 2-3 hours before, a full water bottle.` : "A full night before, carbs at breakfast, water at every change of ends.";
+    if (p.kind === "grid") return "A light breakfast an hour before and water: it is an intense hour.";
+    if (p.kind === "palestra") return "Compound lifts first, isolation work at the end. Protein within two hours.";
+    if (/calcio|football|soccer/i.test(p.name)) return "Ten minutes of a real warm-up and water: don't skip dinner the night before.";
+    return "Water and a real meal a couple of hours before.";
   };
   const fitDays = days.slice(-7);
   const fitness = (
     <div style={st(14)}>
       <div style={{ ...st(2), paddingTop: 6 }}>
         <span style={{ fontSize: 24, lineHeight: "30px", fontWeight: 700, color: K.t1 }}>Fitness</span>
-        <span style={lbl}>La settimana vista da {COACH}</span>
+        <span style={lbl}>The week as seen by {COACH}</span>
       </div>
       <div style={{ borderRadius: 18, padding: 1, background: `linear-gradient(135deg, ${K.strain}, ${K.inA})` }}>
         <div style={{ ...st(10), borderRadius: 17, padding: 18, background: K.mid }}>
-          <span style={{ ...row, gap: 8 }}>{ic("dumbbell", K.strain, 18, 2)}<span style={{ ...caps, fontSize: 11, color: K.t2 }}>Il verdetto di {COACH}</span></span>
+          <span style={{ ...row, gap: 8 }}>{ic("dumbbell", K.strain, 18, 2)}<span style={{ ...caps, fontSize: 11, color: K.t2 }}>The verdict from {COACH}</span></span>
           <span style={{ fontSize: 24, lineHeight: "29px", fontWeight: 800, color: K.t1 }}>{fitHeadline}</span>
           <span style={{ ...txt, color: K.t1 }}>{fitVerdict}</span>
-          {C?.updatedAt ? <span style={lbl}>{`Aggiornato ${C.updatedAt.slice(8, 10)}/${C.updatedAt.slice(5, 7)} alle ${C.updatedAt.slice(11, 16)}`}</span> : null}
+          {C?.updatedAt ? <span style={lbl}>{`Updated ${C.updatedAt.slice(8, 10)}/${C.updatedAt.slice(5, 7)} at ${C.updatedAt.slice(11, 16)}`}</span> : null}
         </div>
       </div>
 
-      {sectionTitle("Questa settimana", <span style={lbl}>{`${parts(weekStart).dd}–${parts(weekEnd).dd} ${MO[parts(weekEnd).m - 1].slice(0, 3)}`}</span>)}
+      {sectionTitle("This week", <span style={lbl}>{`${parts(weekStart).dd}–${parts(weekEnd).dd} ${MO[parts(weekEnd).m - 1].slice(0, 3)}`}</span>)}
       <div style={three}>
-        {stat("Sessioni", String(fitWeek.length), "fatte")}
-        {stat("Minuti", fitMin ? Math.round(fitMin).toLocaleString("it-IT") : "—", "di allenamento")}
-        {stat("Kcal", fitKcal ? Math.round(fitKcal).toLocaleString("it-IT") : "—", "in sessione")}
+        {stat("Sessions", String(fitWeek.length), "done")}
+        {stat("Minutes", fitMin ? Math.round(fitMin).toLocaleString("en-US") : "—", "of training")}
+        {stat("Kcal", fitKcal ? Math.round(fitKcal).toLocaleString("en-US") : "—", "in session")}
       </div>
       <div style={{ ...card, ...st(12) }}>
-        {goalRow("dumbbell", "Palestra", gymWeek, gymGoal, gymPend, K.strain)}
+        {goalRow("dumbbell", "Gym", gymWeek, gymGoal, gymPend, K.strain)}
         {goalRow("ball", sportLabel, sportWeek, sportGoal, sportPend, K.teal)}
       </div>
       {fitWeek.length ? (
@@ -2569,7 +2569,7 @@ export default function App() {
             return listRow(e.key, s !== null ? box(fmt(s), KIND_NAME[k] ?? "", K.strain) : box("—", KIND_NAME[k] ?? "", K.strain, false), e.w.name, sub, () => open({ kind: "act", key: e.key }), i === arr.length - 1);
           })}
         </div>
-      ) : <span style={{ ...lbl, padding: "0 4px" }}>Nessun allenamento registrato questa settimana.</span>}
+      ) : <span style={{ ...lbl, padding: "0 4px" }}>No workout logged this week.</span>}
 
       {LIFTS.length ? (() => {
         const exs = Array.from(new Set(LIFTS.map((l) => l.ex)));
@@ -2584,27 +2584,27 @@ export default function App() {
         const lastDate = LIFTS.reduce((a, l) => (l.date > a ? l.date : a), LIFTS[0].date);
         return (
           <>
-            {sectionTitle("Forza", <span style={lbl}>upper body completo</span>)}
-            <div style={{ ...card, padding: "4px 16px" }} aria-label="Forza">
+            {sectionTitle("Strength", <span style={lbl}>full session</span>)}
+            <div style={{ ...card, padding: "4px 16px" }} aria-label="Strength">
               {rows.map((r, i) => (
                 <div key={r.ex} style={{ ...row, justifyContent: "space-between", gap: 10, padding: "12px 0", borderBottom: i < rows.length - 1 ? `1px solid ${K.line}` : "none" }}>
                   <div style={{ ...st(2), minWidth: 0 }}>
                     <span style={{ ...caps, ...ell, fontSize: 12, lineHeight: "16px", color: K.t1 }}>{r.ex}</span>
-                    <span style={{ ...lbl, ...ell }}>{`${r.last.sets && r.last.reps ? `${r.last.sets}×${r.last.reps}` : "serie non annotate"} · ultima ${shortDay(r.last.date)}`}</span>
+                    <span style={{ ...lbl, ...ell }}>{`${r.last.sets && r.last.reps ? `${r.last.sets}×${r.last.reps}` : "sets not logged"} · last ${shortDay(r.last.date)}`}</span>
                   </div>
                   <div style={{ ...st(0), alignItems: "flex-end", flex: "0 0 auto" }}>
                     <span style={numStyle(18)}>{`${fmt(r.best.kg)} kg`}</span>
-                    <span style={{ ...lbl, color: r.ch === null ? K.t3 : r.ch > 0 ? K.up : r.ch < 0 ? K.warn : K.t2 }}>{r.ch === null ? "nuovo" : r.ch === 0 ? "stabile in 4 sett." : `${r.ch > 0 ? "+" : "−"}${fmt(Math.abs(r.ch))} kg in 4 sett.`}</span>
+                    <span style={{ ...lbl, color: r.ch === null ? K.t3 : r.ch > 0 ? K.up : r.ch < 0 ? K.warn : K.t2 }}>{r.ch === null ? "new" : r.ch === 0 ? "stable over 4 wks" : `${r.ch > 0 ? "+" : "−"}${fmt(Math.abs(r.ch))} kg in 4 wks`}</span>
                   </div>
                 </div>
               ))}
             </div>
-            <span style={{ ...txt, padding: "0 4px" }}>{rows.every((r) => r.ch === null) ? `Prima seduta annotata il ${longDate(lastDate)}: dalle prossime vedrai il miglioramento. Quando le ultime ripetizioni vengono facili, sali di 2,5 kg.` : rows.some((r) => (r.ch ?? 0) > 0) ? "Stai salendo di carico: continua così, alza solo quando l'ultima serie viene pulita." : "Carichi fermi da un mese: prova una ripetizione in più per serie prima di alzare il peso."}</span>
+            <span style={{ ...txt, padding: "0 4px" }}>{rows.every((r) => r.ch === null) ? `First logged session on ${longDate(lastDate)}: you will see progress from the next ones. When the last reps feel easy, add 2.5 kg.` : rows.some((r) => (r.ch ?? 0) > 0) ? "Your load is going up: keep it up, raise it only when the last set is clean." : "Loads flat for a month: try one more rep per set before raising the weight."}</span>
           </>
         );
       })() : null}
 
-      {sectionTitle("Carico e recupero", <span style={lbl}>ultimi 7 giorni</span>)}
+      {sectionTitle("Load and recovery", <span style={lbl}>last 7 days</span>)}
       <div style={{ ...card, ...st(12) }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0,1fr))", gap: 4, alignItems: "end" }}>
           {fitDays.map((x: Day) => {
@@ -2618,19 +2618,19 @@ export default function App() {
                 <span style={numStyle(12, K.strain)}>{s === null ? "—" : fmt(s)}</span>
                 <span style={numStyle(12, r === null ? K.t3 : recColor(r))}>{r === null ? "—" : `${r}%`}</span>
                 <span style={numStyle(12, K.sleep)}>{sl === null ? "—" : String(sl)}</span>
-                <span style={{ fontSize: 10, lineHeight: "12px", fontWeight: isT ? 700 : 500, color: isT ? K.t1 : K.t3 }}>{isT ? "Oggi" : WD[parts(x.date).w]}</span>
+                <span style={{ fontSize: 10, lineHeight: "12px", fontWeight: isT ? 700 : 500, color: isT ? K.t1 : K.t3 }}>{isT ? "Today" : WD[parts(x.date).w]}</span>
               </div>
             );
           })}
         </div>
-        {legend([{ label: "Sforzo", color: K.strain }, { label: "Recupero", color: K.recMid }, { label: "Sonno", color: K.sleep }])}
+        {legend([{ label: "Effort", color: K.strain }, { label: "Recovery", color: K.recMid }, { label: "Sleep", color: K.sleep }])}
         <div style={{ ...row, alignItems: "flex-start", gap: 10, background: K.bg, borderRadius: 12, padding: 12 }}>
           <span style={{ ...caps, fontSize: 13, color: fitCall.color, flex: "0 0 auto" }}>{fitCall.word}</span>
           <span style={{ ...txt, flex: 1, color: K.t1 }}>{fitCall.text}</span>
         </div>
       </div>
 
-      {sectionTitle("Prossime sessioni")}
+      {sectionTitle("Next sessions")}
       {fitPlans.length ? (
         <div style={{ ...card, padding: "4px 16px" }}>
           {fitPlans.map((p, i) => (
@@ -2640,14 +2640,14 @@ export default function App() {
                 <span style={{ ...ell, flex: 1, fontSize: 15, fontWeight: 600, color: K.t1 }}>{p.name}</span>
                 <span style={{ ...lbl, flex: "0 0 auto", textTransform: "capitalize" }}>{`${dayWord(p.date)} · ${p.time}`}</span>
               </div>
-              {p.partners ? <span style={{ ...lbl, paddingLeft: 28 }}>{`con ${p.partners}`}</span> : null}
+              {p.partners ? <span style={{ ...lbl, paddingLeft: 28 }}>{`with ${p.partners}`}</span> : null}
               <span style={{ ...txt, paddingLeft: 28 }}>{planTip(p)}</span>
             </div>
           ))}
         </div>
-      ) : <span style={{ ...lbl, padding: "0 4px" }}>Nessuna sessione in calendario nei prossimi giorni.</span>}
+      ) : <span style={{ ...lbl, padding: "0 4px" }}>No sessions on the calendar in the next few days.</span>}
 
-      {sectionTitle("Le 3 priorità della settimana")}
+      {sectionTitle("The week's 3 priorities")}
       <div style={{ ...card, padding: "4px 16px" }}>
         {fitActions.map((a, i) => (
           <div key={i} style={{ ...row, alignItems: "flex-start", gap: 12, padding: "13px 0", borderBottom: i < fitActions.length - 1 ? `1px solid ${K.line}` : "none" }}>
@@ -2659,7 +2659,7 @@ export default function App() {
     </div>
   );
 
-  // ---------- giorno partita ----------
+  // ---------- match day ----------
   const matchRange = (p: Plan) => { const m = /(\d{1,2})[:.](\d{2})\D+(\d{1,2})[:.](\d{2})/.exec(p.time), s = /\d/.test(p.time) ? toMin(p.time) : null; return { s, e: m ? Number(m[3]) * 60 + Number(m[4]) : s !== null ? s + 90 : null }; };
   const sportKey = (p: Plan) => (p.kind === "padel" || p.kind === "tennis" || p.kind === "beach" ? p.kind : /tennis/i.test(p.name) ? "tennis" : /beach/i.test(p.name) ? "beach" : "padel");
   const sameSport = (p: Plan, w: Workout) => { const k = sportKey(p); return kindOf(w) === k || new RegExp(k, "i").test(w.name); };
@@ -2670,10 +2670,10 @@ export default function App() {
     return (
       <button onClick={() => open({ kind: "match", key: `${todayMatch.date}|${todayMatch.name}` })} style={{ ...btn, borderRadius: 16, padding: 1, background: `linear-gradient(135deg, ${K.up}, ${K.inB})` }}>
         <div style={{ ...st(6), borderRadius: 15, padding: 16, background: K.mid }}>
-          <div style={{ ...row, justifyContent: "space-between" }}><span style={{ ...row, gap: 8 }}>{ic("ball", K.up, 18)}<span style={capLbl(12)}>Giorno partita</span></span>{chev(K.t1)}</div>
+          <div style={{ ...row, justifyContent: "space-between" }}><span style={{ ...row, gap: 8 }}>{ic("ball", K.up, 18)}<span style={capLbl(12)}>Match day</span></span>{chev(K.t1)}</div>
           <span style={{ fontSize: 18, lineHeight: "24px", fontWeight: 600, color: K.t1 }}>{todayMatch.name}</span>
-          <span style={txt}>{[todayMatch.time, todayMatch.partners ? `con ${todayMatch.partners}` : ""].filter(Boolean).join(" · ")}</span>
-          <span style={lbl}>{after ? (s !== null ? `Sforzo ${fmt(s)}: tocca per il confronto con le altre partite.` : "Com'è andata? Sforzo e confronto appena arrivano i dati.") : r.s !== null && now.min < r.s - 60 ? `Inizia tra ${dur(r.s - now.min)}: colazione, spuntino e acqua.` : r.s !== null && now.min < r.s ? `Inizia tra ${dur(r.s - now.min)}: spuntino leggero e acqua.` : "In campo: acqua a ogni cambio campo."}</span>
+          <span style={txt}>{[todayMatch.time, todayMatch.partners ? `with ${todayMatch.partners}` : ""].filter(Boolean).join(" · ")}</span>
+          <span style={lbl}>{after ? (s !== null ? `Effort ${fmt(s)}: tap to compare with your other matches.` : "How did it go? Effort and comparison as soon as the data arrives.") : r.s !== null && now.min < r.s - 60 ? `Starts in ${dur(r.s - now.min)}: breakfast, a snack and water.` : r.s !== null && now.min < r.s ? `Starts in ${dur(r.s - now.min)}: a light snack and water.` : "On court: water at every change of ends."}</span>
         </div>
       </button>
     );
@@ -2681,7 +2681,7 @@ export default function App() {
   const matchScreen = (key: string) => {
     const [dt, nm] = key.split("|");
     const p = matchesOn(dt).find((x) => x.name === nm) ?? matchesOn(dt)[0];
-    if (!p) return <div style={st(14)}>{backBar("Giorno partita")}<span style={{ ...lbl, textAlign: "center" }}>Nessuna partita in programma.</span></div>;
+    if (!p) return <div style={st(14)}>{backBar("Match day")}<span style={{ ...lbl, textAlign: "center" }}>No matches scheduled.</span></div>;
     const r = matchRange(p), s0 = r.s ?? 600, e0 = r.e ?? s0 + 90, pd = parts(p.date);
     const done = matchDone(p), ds = done ? actStrain(done) : null;
     const prev = chronoW.filter((e) => e.date < p.date && e.w.status === "fatto" && sameSport(p, e.w)).reverse();
@@ -2689,24 +2689,24 @@ export default function App() {
     const left = p.date === now.date && now.min < s0 ? s0 - now.min : null;
     const post = proteinPlan(PT - 35);
     const steps = [
-      { t: `${clock(s0 - 180)}–${clock(s0 - 120)}`, h: "Colazione", x: "Carboidrati facili e un po' di proteine: pane o fette biscottate con miele o marmellata, un caffellatte o uno yogurt, una banana. Pochi grassi e poca fibra." },
-      { t: `${clock(s0 - 60)}–${clock(s0 - 30)}`, h: "Spuntino", x: "Una banana o una barretta, e un bicchiere d'acqua." },
-      { t: p.time, h: "Durante", x: "Qualche sorso a ogni cambio campo; tra un match e l'altro una banana o qualche cracker." },
-      { t: `da ${clock(e0)}`, h: "Dopo", x: `Entro un'ora proteine e carboidrati${post ? `: per esempio ${post.items.map((f) => `${f.name.toLowerCase()} ${f.portion}`).join(" e ")} con pane o riso` : ""}.` },
+      { t: `${clock(s0 - 180)}–${clock(s0 - 120)}`, h: "Breakfast", x: "Easy carbs and a little protein: bread or toast with honey or jam, a milky coffee or a yogurt, a banana. Little fat and little fibre." },
+      { t: `${clock(s0 - 60)}–${clock(s0 - 30)}`, h: "Snack", x: "A banana or a bar, and a glass of water." },
+      { t: p.time, h: "During", x: "A few sips at every change of ends; between matches a banana or some crackers." },
+      { t: `from ${clock(e0)}`, h: "After", x: `Within an hour, protein and carbs${post ? `: for example ${post.items.map((f) => `${f.name.toLowerCase()} ${f.portion}`).join(" and ")} with bread or rice` : ""}.` },
     ];
     const water = [
-      { h: "Al risveglio", v: "500 ml" }, { h: "Nell'ora prima", v: "300–500 ml" }, { h: "In campo", v: "150–250 ml ogni 15–20 min" }, { h: "Dopo", v: "acqua e un pizzico di sale" },
+      { h: "On waking", v: "500 ml" }, { h: "In the hour before", v: "300–500 ml" }, { h: "On court", v: "150–250 ml every 15–20 min" }, { h: "After", v: "water and a pinch of salt" },
     ];
     return (
       <div style={st(14)}>
-        {backBar("Giorno partita")}
+        {backBar("Match day")}
         <div style={{ ...st(6), alignItems: "center", textAlign: "center", padding: "10px 0 4px" }}>
           {ring(left === null ? 1 : 1 - clamp(left / 600, 0, 1), K.up, 150, 10, (
-            <>{ic("ball", K.up, 30, 1.8)}<span style={{ ...numStyle(left !== null && left >= 60 ? 22 : 26), marginTop: 6 }}>{left !== null ? dur(left) : done ? fmt(ds) : clock(s0)}</span><span style={{ ...caps, fontSize: 10, color: K.t2 }}>{left !== null ? "all'inizio" : done ? "sforzo" : "inizio"}</span></>
+            <>{ic("ball", K.up, 30, 1.8)}<span style={{ ...numStyle(left !== null && left >= 60 ? 22 : 26), marginTop: 6 }}>{left !== null ? dur(left) : done ? fmt(ds) : clock(s0)}</span><span style={{ ...caps, fontSize: 10, color: K.t2 }}>{left !== null ? "at start" : done ? "effort" : "start"}</span></>
           ), true)}
           <span style={{ fontSize: 22, lineHeight: "28px", fontWeight: 600, color: K.t1, marginTop: 8 }}>{p.name}</span>
           <span style={txt}>{`${WDL[pd.w].replace(/^./, (c) => c.toUpperCase())} ${pd.dd} ${MO[pd.m - 1]} · ${p.time}`}</span>
-          {p.partners || p.detail ? <span style={lbl}>{[p.partners ? `Con ${p.partners}` : "", p.detail ?? ""].filter(Boolean).join(" · ")}</span> : null}
+          {p.partners || p.detail ? <span style={lbl}>{[p.partners ? `With ${p.partners}` : "", p.detail ?? ""].filter(Boolean).join(" · ")}</span> : null}
         </div>
         <div style={{ ...card, padding: "4px 16px" }}>
           {steps.map((s, i) => (
@@ -2717,36 +2717,36 @@ export default function App() {
           ))}
         </div>
         <div style={{ ...card, ...st(10) }}>
-          <span style={capLbl(12)}>Acqua</span>
+          <span style={capLbl(12)}>Water</span>
           {water.map((w) => <div key={w.h} style={{ ...row, justifyContent: "space-between" }}><span style={txt}>{w.h}</span><span style={{ ...txt, color: K.t1, fontWeight: 600, textAlign: "right" }}>{w.v}</span></div>)}
         </div>
         <div style={{ ...card, ...st(10) }}>
-          <span style={capLbl(12)}>Dopo la partita</span>
+          <span style={capLbl(12)}>After the match</span>
           {done ? (
             <>
-              <div style={three}>{stat("Sforzo", fmt(ds))}{stat("Durata", isNum(done.durationMin) ? `${done.durationMin}′` : "—", "minuti")}{stat("FC media", fmt(done.avgHr), "bpm")}</div>
-              <span style={txt}>{ds !== null && prevAvg !== null ? `${ds > prevAvg + 0.5 ? "Più intensa della" : ds < prevAvg - 0.5 ? "Più leggera della" : "In linea con la"} media delle ultime ${prevS.length} ${prevS.length === 1 ? "partita" : "partite"} (${fmt(prevAvg)}).` : "Prima partita registrata di questo tipo."}</span>
+              <div style={three}>{stat("Effort", fmt(ds))}{stat("Duration", isNum(done.durationMin) ? `${done.durationMin}′` : "—", "minutes")}{stat("Avg HR", fmt(done.avgHr), "bpm")}</div>
+              <span style={txt}>{ds !== null && prevAvg !== null ? `${ds > prevAvg + 0.5 ? "More intense than the" : ds < prevAvg - 0.5 ? "Lighter than the" : "In line with the"} average of the last ${prevS.length} ${prevS.length === 1 ? "match" : "matches"} (${fmt(prevAvg)}).` : "First match of this kind logged."}</span>
             </>
-          ) : <span style={txt}>{prevAvg !== null ? `Qui comparirà lo sforzo della partita, accanto alla media delle ultime (${fmt(prevAvg)}).` : "Qui comparirà lo sforzo della partita."}</span>}
+          ) : <span style={txt}>{prevAvg !== null ? `The match effort will show here, next to the average of the last (${fmt(prevAvg)}).` : "The match effort will show here."}</span>}
         </div>
-        {prev.length ? listCard("Le ultime partite", <span style={lbl}>{prev.length}</span>, prev.slice(0, 5).map((e, i) => {
+        {prev.length ? listCard("Recent matches", <span style={lbl}>{prev.length}</span>, prev.slice(0, 5).map((e, i) => {
           const s = actStrain(e.w);
-          return listRow(`pm${e.key}`, s !== null ? box(fmt(s), "sforzo", K.strain) : box("—", "sforzo", K.strain, false), e.w.name, [shortDay(e.date), e.w.time, isNum(e.w.durationMin) ? `${e.w.durationMin} min` : "", isNum(e.w.avgHr) ? `FC ${e.w.avgHr}` : ""].filter(Boolean).join(" · "), () => open({ kind: "act", key: e.key }), i === Math.min(prev.length, 5) - 1);
+          return listRow(`pm${e.key}`, s !== null ? box(fmt(s), "effort", K.strain) : box("—", "effort", K.strain, false), e.w.name, [shortDay(e.date), e.w.time, isNum(e.w.durationMin) ? `${e.w.durationMin} min` : "", isNum(e.w.avgHr) ? `FC ${e.w.avgHr}` : ""].filter(Boolean).join(" · "), () => open({ kind: "act", key: e.key }), i === Math.min(prev.length, 5) - 1);
         })) : null}
       </div>
     );
   };
 
   // =================== HOME ===================
-  // guida del giorno: prima il recupero, poi lo sforzo che ne segue
+  // guide for the day: recovery first, then the effort that follows
   const guideLead = dRec === null ? null : (
-    <span aria-label="Recupero e sforzo di oggi" style={{ ...row, gap: 8, flexWrap: "wrap" }}>
-      <span style={numStyle(24, recColor(dRec))}>{`${dRec}%`}</span><span style={lbl}>recupero</span>
+    <span aria-label="Today's recovery and effort" style={{ ...row, gap: 8, flexWrap: "wrap" }}>
+      <span style={numStyle(24, recColor(dRec))}>{`${dRec}%`}</span><span style={lbl}>recovery</span>
       <span style={{ color: K.t2, fontSize: 16, lineHeight: "20px" }}>{"→"}</span>
-      {dayDone ? <><span style={numStyle(24, K.strain)}>{fmt(dStr)}</span><span style={lbl}>{`sforzo di oggi · fascia ${strainTarget}`}</span></> : <><span style={numStyle(24, K.strain)}>{strainTarget}</span><span style={lbl}>{live ? "sforzo di oggi" : "sforzo consigliato"}</span></>}
+      {dayDone ? <><span style={numStyle(24, K.strain)}>{fmt(dStr)}</span><span style={lbl}>{`today's effort · band ${strainTarget}`}</span></> : <><span style={numStyle(24, K.strain)}>{strainTarget}</span><span style={lbl}>{live ? "today's effort" : "suggested effort"}</span></>}
     </span>
   );
-  const outlookAfter = dRec === null ? outlookFull : outlookFull.replace(/^Recupero \d+%: sforzo consigliato [^.]+\. /, "");
+  const outlookAfter = dRec === null ? outlookFull : outlookFull.replace(/^Recovery \d+%: suggested effort [^.]+\. /, "");
   const hrNorm = norm(d, (y: Day) => y.rhr), hrBand = bandOf(d, (y: Day) => y.rhr);
   const twin = (title: string, aria: string, onClick: () => void, big: string, bigColor: string, unit: string, sub: string) => (
     <button aria-label={aria} onClick={onClick} style={{ ...btn, ...card, ...st(6), padding: 14 }}>
@@ -2755,7 +2755,7 @@ export default function App() {
       <span style={lbl}>{sub}</span>
     </button>
   );
-  // BATTITO ORA: l'ultimo battito sincronizzato, la sua zona e gli ultimi 60 minuti colorati per zona; grigio se vecchio di oltre 20 min
+  // HEART RATE NOW: the last synced heart rate, its zone and the last 60 minutes coloured by zone; grey if older than 20 min
   const HN = DATA.hrNow ?? null;
   const hnEdges = DATA.zones ? [0.5, 0.6, 0.7, 0.8, 0.9].map((f) => Math.round((DATA.zones as { rhr: number }).rhr + f * ((DATA.zones as { max: number }).max - (DATA.zones as { rhr: number }).rhr))) : [];
   const hnZone = (b: number) => { for (let i = hnEdges.length - 1; i >= 0; i--) if (b >= hnEdges[i]) return i; return -1; };
@@ -2769,28 +2769,28 @@ export default function App() {
     const X = (i: number) => (i / Math.max(1, v.length - 1)) * W, Y = (b: number) => 4 + (1 - (b - lo) / (hi - lo || 1)) * (H - 8);
     const mark = z < 0 ? 0 : (z + (z < hnEdges.length - 1 ? clamp((HN.bpm - hnEdges[z]) / (hnEdges[z + 1] - hnEdges[z]), 0, 1) : 0.5)) / 5;
     return (
-      <div aria-label="Battito ora" role="button" tabIndex={0} onClick={() => open({ kind: "hr" })} onKeyDown={(e: { key: string }) => { if (e.key === "Enter" || e.key === " ") open({ kind: "hr" }); }} data-stale={stale ? 1 : 0} data-v={HN.bpm} style={{ ...card, ...st(12), cursor: "pointer" }}>
-        <div style={{ ...row, justifyContent: "space-between" }}><span style={{ ...capLbl(12), whiteSpace: "nowrap" }}>Battito ora</span><span style={{ ...row, gap: 6, minWidth: 0 }}><span style={{ ...lbl, color: stale ? K.warn : K.t2, whiteSpace: "nowrap" }}>{stale ? `non aggiornato · ${HN.at.slice(11, 16)}` : `aggiornato alle ${HN.at.slice(11, 16)}`}</span>{chev(K.t3)}</span></div>
+      <div aria-label="Heart rate now" role="button" tabIndex={0} onClick={() => open({ kind: "hr" })} onKeyDown={(e: { key: string }) => { if (e.key === "Enter" || e.key === " ") open({ kind: "hr" }); }} data-stale={stale ? 1 : 0} data-v={HN.bpm} style={{ ...card, ...st(12), cursor: "pointer" }}>
+        <div style={{ ...row, justifyContent: "space-between" }}><span style={{ ...capLbl(12), whiteSpace: "nowrap" }}>Heart rate now</span><span style={{ ...row, gap: 6, minWidth: 0 }}><span style={{ ...lbl, color: stale ? K.warn : K.t2, whiteSpace: "nowrap" }}>{stale ? `not updated · ${HN.at.slice(11, 16)}` : `updated at ${HN.at.slice(11, 16)}`}</span>{chev(K.t3)}</span></div>
         <div style={{ ...row, gap: 12, alignItems: "center" }}>
           <span className="wb-beat" aria-hidden="true" style={{ display: "inline-flex", animation: stale ? "none" : `wb-beat ${(60 / Math.max(30, HN.bpm)).toFixed(2)}s ease-in-out infinite`, filter: stale ? "none" : `drop-shadow(0 0 8px ${col}88)` }}>{ic("heart", col, 30, 2.4)}</span>
           <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}><span style={numStyle(48, stale ? K.t3 : K.t1)}>{HN.bpm}</span><span style={{ ...lbl, color: K.t2 }}>bpm</span></span>
           <span style={{ flex: 1 }} />
-          <span style={{ ...caps, fontSize: 11, lineHeight: "16px", color: col, background: `${col}1F`, border: `1px solid ${col}59`, borderRadius: 999, padding: "3px 10px", whiteSpace: "nowrap" }}>{z < 0 ? "a riposo" : `zona ${z + 1}`}</span>
+          <span style={{ ...caps, fontSize: 11, lineHeight: "16px", color: col, background: `${col}1F`, border: `1px solid ${col}59`, borderRadius: 999, padding: "3px 10px", whiteSpace: "nowrap" }}>{z < 0 ? "at rest" : `zone ${z + 1}`}</span>
         </div>
         {hnEdges.length ? (
-          <div aria-label="Zona attuale" style={{ position: "relative", display: "grid", gridTemplateColumns: "repeat(5, minmax(0,1fr))", gap: 3 }}>
+          <div aria-label="Current zone" style={{ position: "relative", display: "grid", gridTemplateColumns: "repeat(5, minmax(0,1fr))", gap: 3 }}>
             {HZC.map((c, i) => <span key={i} style={{ height: 6, borderRadius: 3, background: c, opacity: stale ? 0.25 : i === z ? 1 : 0.35 }} />)}
             <span style={{ position: "absolute", top: -4, left: `calc(${(mark * 100).toFixed(1)}% - 7px)`, width: 14, height: 14, borderRadius: 7, background: K.t1, border: `3px solid ${K.bg}`, boxSizing: "border-box" }} />
           </div>
         ) : null}
-        <svg aria-label="Battito ultimi 60 minuti" width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block", height: H }}>
+        <svg aria-label="Heart rate, last 60 minutes" width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block", height: H }}>
           {v.map((b, i) => (i > 0 && b > 0 && v[i - 1] > 0 ? <line key={i} x1={X(i - 1)} y1={Y(v[i - 1])} x2={X(i)} y2={Y(b)} stroke={stale ? K.t3 : hnCol((b + v[i - 1]) / 2)} strokeWidth={2.4} strokeLinecap="round" /> : null))}
         </svg>
-        <div style={{ ...row, justifyContent: "space-between" }}><span style={lbl}>60 min fa</span><span style={lbl}>{HN.at.slice(11, 16)}</span></div>
+        <div style={{ ...row, justifyContent: "space-between" }}><span style={lbl}>60 min ago</span><span style={lbl}>{HN.at.slice(11, 16)}</span></div>
       </div>
     );
   })() : null;
-  // dettaglio "Battito" (stile live HR): adesso, ultimi 60 min / 6 h / 24 h colorati per zona, minimo / media / massimo, tempo per zona
+  // "Heart rate" detail (live HR style): now, last 60 min / 6 h / 24 h coloured by zone, min / average / max, time per zone
   const hrHead = (b: number, stale: boolean, size: number) => {
     const z = hnZone(b), col = stale ? K.t3 : hnCol(b);
     return (
@@ -2798,7 +2798,7 @@ export default function App() {
         <span className="wb-beat" aria-hidden="true" style={{ display: "inline-flex", animation: stale ? "none" : `wb-beat ${(60 / Math.max(30, b)).toFixed(2)}s ease-in-out infinite`, filter: stale ? "none" : `drop-shadow(0 0 8px ${col}88)` }}>{ic("heart", col, Math.round(size * 0.62), 2.4)}</span>
         <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}><span style={numStyle(size, stale ? K.t3 : K.t1)}>{b}</span><span style={{ ...lbl, color: K.t2 }}>bpm</span></span>
         <span style={{ flex: 1 }} />
-        <span style={{ ...caps, fontSize: 11, lineHeight: "16px", color: col, background: `${col}1F`, border: `1px solid ${col}59`, borderRadius: 999, padding: "3px 10px", whiteSpace: "nowrap" }}>{z < 0 ? "a riposo" : `zona ${z + 1}`}</span>
+        <span style={{ ...caps, fontSize: 11, lineHeight: "16px", color: col, background: `${col}1F`, border: `1px solid ${col}59`, borderRadius: 999, padding: "3px 10px", whiteSpace: "nowrap" }}>{z < 0 ? "at rest" : `zone ${z + 1}`}</span>
       </div>
     );
   };
@@ -2806,7 +2806,7 @@ export default function App() {
     if (!hnEdges.length) return null;
     const z = hnZone(b), mark = z < 0 ? 0 : (z + (z < hnEdges.length - 1 ? clamp((b - hnEdges[z]) / (hnEdges[z + 1] - hnEdges[z]), 0, 1) : 0.5)) / 5;
     return (
-      <div aria-label="Zona attuale" style={{ position: "relative", display: "grid", gridTemplateColumns: "repeat(5, minmax(0,1fr))", gap: 3 }}>
+      <div aria-label="Current zone" style={{ position: "relative", display: "grid", gridTemplateColumns: "repeat(5, minmax(0,1fr))", gap: 3 }}>
         {HZC.map((c, i) => <span key={i} style={{ height: 6, borderRadius: 3, background: c, opacity: stale ? 0.25 : i === z ? 1 : 0.35 }} />)}
         <span style={{ position: "absolute", top: -4, left: `calc(${(mark * 100).toFixed(1)}% - 7px)`, width: 14, height: 14, borderRadius: 7, background: K.t1, border: `3px solid ${K.bg}`, boxSizing: "border-box" }} />
       </div>
@@ -2832,31 +2832,31 @@ export default function App() {
     const zt = [0, 0, 0, 0, 0, 0]; ok.forEach((b) => { zt[hnZone(b) + 1] += 1; });
     const clk = (m: number) => clock(((Math.round(m) % 1440) + 1440) % 1440);
     const ranges: [number, string][] = [[60, "1 h"], [360, "6 h"], [1440, "24 h"]];
-    const zr: [string, string, number][] = [["A riposo", K.t1, zt[0]], ...HZC.map((c, i) => [`Zona ${i + 1}${hnEdges[i] ? ` · ${hnEdges[i]}${hnEdges[i + 1] ? `–${hnEdges[i + 1] - 1}` : "+"} bpm` : ""}`, c, zt[i + 1]] as [string, string, number])];
+    const zr: [string, string, number][] = [["At rest", K.t1, zt[0]], ...HZC.map((c, i) => [`Zone ${i + 1}${hnEdges[i] ? ` · ${hnEdges[i]}${hnEdges[i + 1] ? `–${hnEdges[i + 1] - 1}` : "+"} bpm` : ""}`, c, zt[i + 1]] as [string, string, number])];
     const zmax = Math.max(1, ...zt);
     return (
       <div style={st(14)}>
-        {backBar("Battito")}
-        <div aria-label="Battito dettaglio" data-range={rg} style={{ ...card, ...st(12) }}>
-          <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Adesso</span><span style={{ ...lbl, color: stale ? K.warn : K.t2 }}>{stale ? `non aggiornato · ultimo alle ${HN.at.slice(11, 16)}` : `aggiornato alle ${HN.at.slice(11, 16)}`}</span></div>
+        {backBar("Heart rate")}
+        <div aria-label="Heart rate detail" data-range={rg} style={{ ...card, ...st(12) }}>
+          <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Now</span><span style={{ ...lbl, color: stale ? K.warn : K.t2 }}>{stale ? `not updated · last at ${HN.at.slice(11, 16)}` : `updated at ${HN.at.slice(11, 16)}`}</span></div>
           {hrHead(HN.bpm, stale, 64)}
           {hrStrip(HN.bpm, stale)}
         </div>
-        <div role="group" aria-label="Intervallo battito" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 6, background: K.card, border: `1px solid ${K.line}`, borderRadius: 12, padding: 4 }}>
-          {ranges.map(([m, l]) => <button key={m} aria-label={`Intervallo ${l}`} aria-pressed={hrRange === m} onClick={() => setHrRange(m)} style={{ ...btn, ...caps, fontSize: 12, lineHeight: "16px", padding: "8px 0", borderRadius: 9, textAlign: "center", color: hrRange === m ? K.bg : K.t1, background: hrRange === m ? K.t1 : "transparent" }}>{l}</button>)}
+        <div role="group" aria-label="Beat interval" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 6, background: K.card, border: `1px solid ${K.line}`, borderRadius: 12, padding: 4 }}>
+          {ranges.map(([m, l]) => <button key={m} aria-label={`Interval ${l}`} aria-pressed={hrRange === m} onClick={() => setHrRange(m)} style={{ ...btn, ...caps, fontSize: 12, lineHeight: "16px", padding: "8px 0", borderRadius: 9, textAlign: "center", color: hrRange === m ? K.bg : K.t1, background: hrRange === m ? K.t1 : "transparent" }}>{l}</button>)}
         </div>
         <div style={{ ...card, ...st(8) }}>
-          <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>{rg <= 60 ? "Minuto per minuto" : `Ultime ${Math.round(rg / 60)} ore`}</span><span style={lbl}>{ok.length ? `${Math.min(...ok)}–${Math.max(...ok)} bpm` : ""}</span></div>
-          {hrLine(v, 150, stale, "Battito grafico")}
+          <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>{rg <= 60 ? "Minute by minute" : `Last ${Math.round(rg / 60)} hours`}</span><span style={lbl}>{ok.length ? `${Math.min(...ok)}–${Math.max(...ok)} bpm` : ""}</span></div>
+          {hrLine(v, 150, stale, "Heart rate chart")}
           <div style={{ ...row, justifyContent: "space-between" }}><span style={lbl}>{clk(at - rg)}</span><span style={lbl}>{clk(at - rg / 2)}</span><span style={lbl}>{HN.at.slice(11, 16)}</span></div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 8 }}>
-          {([["Minimo", mn], ["Media", av], ["Massimo", mx]] as [string, number | null][]).map(([k, x]) => (
-            <div key={k} aria-label={`Battito ${k.toLowerCase()}`} style={{ ...card, ...st(4), padding: 12 }}><span style={{ ...caps, fontSize: 10, lineHeight: "14px", color: K.t3 }}>{k}</span><span style={{ display: "flex", alignItems: "baseline", gap: 4 }}><span style={numStyle(24, x === null ? K.t3 : hnCol(x))}>{x ?? "—"}</span><span style={lbl}>bpm</span></span></div>
+          {([["Minimum", mn], ["Average", av], ["Maximum", mx]] as [string, number | null][]).map(([k, x]) => (
+            <div key={k} aria-label={`Heart rate ${k.toLowerCase()}`} style={{ ...card, ...st(4), padding: 12 }}><span style={{ ...caps, fontSize: 10, lineHeight: "14px", color: K.t3 }}>{k}</span><span style={{ display: "flex", alignItems: "baseline", gap: 4 }}><span style={numStyle(24, x === null ? K.t3 : hnCol(x))}>{x ?? "—"}</span><span style={lbl}>bpm</span></span></div>
           ))}
         </div>
-        <div aria-label="Tempo per zona" style={{ ...card, ...st(10) }}>
-          <span style={capLbl(12)}>Tempo per zona</span>
+        <div aria-label="Time per zone" style={{ ...card, ...st(10) }}>
+          <span style={capLbl(12)}>Time per zone</span>
           {zr.map(([n, c, m]) => (
             <div key={n} style={st(4)}>
               <div style={{ ...row, justifyContent: "space-between" }}><span style={{ ...lbl, color: K.t1 }}>{n}</span><span style={numStyle(14)}>{m >= 60 ? hm(m) : `${m} min`}</span></div>
@@ -2864,21 +2864,21 @@ export default function App() {
             </div>
           ))}
         </div>
-        <span style={{ ...lbl, textAlign: "center" }}>L'orologio sincronizza a blocchi: il dato più recente arriva di solito con 1–15 minuti di ritardo, non è una misura in diretta.</span>
+        <span style={{ ...lbl, textAlign: "center" }}>The watch syncs in batches: the latest value usually arrives 1–15 minutes late, it is not a live reading.</span>
       </div>
     );
   })();
   const homeTwins = (
     <div style={two}>
-      {twin("Monitor salute", "Monitor salute in breve", () => goTab("biologia"), monitor.length ? `${monOk}/${monitor.length}` : "—", monitor.length ? (monAll ? K.up : K.warn) : K.t3, monitor.length ? "nella norma" : "in arrivo", monitor.length ? (monAll ? "segnali della notte" : `${monOff.length} da osservare`) : "servono le misure")}
-      {twin("Cuore da fermo", "Cuore da fermo", () => goTab("recupero"), isNum(d.rhr) ? String(Math.round(d.rhr)) : "—", K.t1, "bpm", `${hrBand ? `norma ${Math.round(hrBand.lo)}–${Math.round(hrBand.hi)} · ` : hrNorm !== null ? `norma ${Math.round(hrNorm)} · ` : ""}${isNum(d.hrvMs) ? `HRV ${Math.round(d.hrvMs)}` : "HRV —"}`)}
+      {twin("Health monitor", "Health monitor at a glance", () => goTab("biologia"), monitor.length ? `${monOk}/${monitor.length}` : "—", monitor.length ? (monAll ? K.up : K.warn) : K.t3, monitor.length ? "in range" : "coming", monitor.length ? (monAll ? "night signals" : `${monOff.length} to watch`) : "readings needed")}
+      {twin("Resting heart rate", "Resting heart rate", () => goTab("recupero"), isNum(d.rhr) ? String(Math.round(d.rhr)) : "—", K.t1, "bpm", `${hrBand ? `normal ${Math.round(hrBand.lo)}–${Math.round(hrBand.hi)} · ` : hrNorm !== null ? `norma ${Math.round(hrNorm)} · ` : ""}${isNum(d.hrvMs) ? `HRV ${Math.round(d.hrvMs)}` : "HRV —"}`)}
     </div>
   );
-  // =================== OGGI IN BREVE: la prima cosa che vedi in Corpo ===================
-  // calorie bruciate del giorno, gli allenamenti fatti (kcal di ognuno), poi passi e mangiate vs bruciate
-  const kcalTxt = (v: number) => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  // =================== TODAY AT A GLANCE: the first thing you see in Body ===================
+  // calories burned today, the workouts done (kcal for each), then steps and eaten vs burned
+  const kcalTxt = (v: number) => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   const durTxt = (m: number) => { const r = Math.round(m); return r >= 60 ? `${Math.floor(r / 60)}h ${String(r % 60).padStart(2, "0")}min` : `${r} min`; };
-  // minuti per zona di una sessione, dai battiti minuto per minuto (le stesse zone personali di Sforzo)
+  // minutes per zone for a session, from minute-by-minute heart rate (the same personal zones as Effort)
   const sessZones = (date: string, w: Workout): number[] | null => {
     const t = /\d{1,2}:\d{2}/.exec(w.time), ser = t && DATA.zones?.sessions ? DATA.zones.sessions[`${date} ${t[0].padStart(5, "0")}`] : null;
     if (!ser || !hnEdges.length) return null;
@@ -2889,7 +2889,7 @@ export default function App() {
   const zoneStrip = (zs: number[]) => {
     const tot = Math.max(1, sum(zs));
     return (
-      <div aria-label="Minuti per zona" style={st(6)}>
+      <div aria-label="Minutes per zone" style={st(6)}>
         <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: K.track }}>{zs.map((v, i) => (v ? <span key={i} style={{ width: `${(v / tot) * 100}%`, height: 6, background: HZC[i] }} /> : null))}</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0,1fr))", gap: 4 }}>
           {zs.map((v, i) => <span key={i} style={{ ...row, gap: 4, fontSize: 11, lineHeight: "14px", color: v ? K.t2 : K.t3, whiteSpace: "nowrap" }}><span style={{ width: 6, height: 6, borderRadius: 2, background: HZC[i], flex: "0 0 auto" }} />{`Z${i + 1} ${v}′`}</span>)}
@@ -2900,13 +2900,13 @@ export default function App() {
   const kindBadge = (k: string, muted = false) => (
     <div style={{ width: 44, height: 44, borderRadius: 10, flex: "0 0 auto", display: "flex", alignItems: "center", justifyContent: "center", background: muted ? "transparent" : `${K.strain}26`, border: muted ? `1px dashed ${K.t3}` : `1px solid ${K.strain}66` }}>{ic(kindIcon(k), muted ? K.t3 : K.strain, 22)}</div>
   );
-  // una riga allenamento: nome, orario, durata, FC media, con chi; a destra le kcal. In Sforzo anche sforzo e minuti per zona
+  // one workout row: name, time, duration, avg HR, with whom; kcal on the right. In Effort also effort and minutes per zone
   const doneRow = (x: Day, w: Workout, i: number, last: boolean, effort: boolean) => {
     const k = kindOf(w), sv = actStrain(w), zs = effort ? sessZones(x.date, w) : null;
     const meta = [w.time, isNum(w.durationMin) ? durTxt(w.durationMin) : ""].filter(Boolean).join(" · ");
-    const meta2 = [isNum(w.avgHr) ? `FC media ${w.avgHr}` : "", w.partners ? `con ${w.partners}` : ""].filter(Boolean).join(" · ");
+    const meta2 = [isNum(w.avgHr) ? `Avg HR ${w.avgHr}` : "", w.partners ? `with ${w.partners}` : ""].filter(Boolean).join(" · ");
     return (
-      <button key={`${x.date}w${i}`} aria-label={`Allenamento ${w.name}`} onClick={() => open({ kind: "act", key: `${x.date}w${i}` })} style={{ ...btn, ...st(10), width: "100%", padding: "12px 0", borderBottom: last ? "none" : `1px solid ${K.line}` }}>
+      <button key={`${x.date}w${i}`} aria-label={`Training ${w.name}`} onClick={() => open({ kind: "act", key: `${x.date}w${i}` })} style={{ ...btn, ...st(10), width: "100%", padding: "12px 0", borderBottom: last ? "none" : `1px solid ${K.line}` }}>
         <div style={{ ...row, alignItems: "center" }}>
           {effort && sv !== null ? box(fmt(sv), KIND_NAME[k] ?? "", K.strain) : kindBadge(k)}
           <div style={{ ...st(2), flex: 1 }}>
@@ -2924,11 +2924,11 @@ export default function App() {
     );
   };
   const planRow = (p: Plan, i: number, last: boolean) => (
-    <div key={`plan${i}`} aria-label={`In programma ${p.name}`} style={{ ...row, padding: "12px 0", borderBottom: last ? "none" : `1px solid ${K.line}` }}>
+    <div key={`plan${i}`} aria-label={`Scheduled ${p.name}`} style={{ ...row, padding: "12px 0", borderBottom: last ? "none" : `1px solid ${K.line}` }}>
       {kindBadge(p.kind ?? "", true)}
       <div style={{ ...st(2), flex: 1 }}>
         <span style={{ fontSize: 15, lineHeight: "20px", fontWeight: 600, color: K.t2 }}>{p.name}</span>
-        <span style={lbl}>{[p.time, p.partners ? `con ${p.partners}` : ""].filter(Boolean).join(" · ")}</span>
+        <span style={lbl}>{[p.time, p.partners ? `with ${p.partners}` : ""].filter(Boolean).join(" · ")}</span>
       </div>
     </div>
   );
@@ -2939,7 +2939,7 @@ export default function App() {
     return (
       <div style={st(0)}>
         {dn.map((e, j) => doneRow(x, e.w, e.i, j === dn.length - 1 && !pl.length, effort))}
-        {pl.length ? <span style={{ ...caps, fontSize: 10, lineHeight: "14px", color: K.t3, paddingTop: dn.length ? 12 : 4 }}>In programma</span> : null}
+        {pl.length ? <span style={{ ...caps, fontSize: 10, lineHeight: "14px", color: K.t3, paddingTop: dn.length ? 12 : 4 }}>Scheduled</span> : null}
         {pl.map((q, j) => planRow(q, j, j === pl.length - 1))}
       </div>
     );
@@ -2953,21 +2953,21 @@ export default function App() {
   const todayHero = (() => {
     const burned = isNum(d.burnedKcal) ? d.burnedKcal : null, rows = workoutRows(d, false), bl = bal(d);
     return (
-      <div aria-label="Oggi in breve" data-v={burned ?? ""} style={{ ...card, ...st(12) }}>
+      <div aria-label="Today at a glance" data-v={burned ?? ""} style={{ ...card, ...st(12) }}>
         <div style={{ ...row, justifyContent: "space-between", alignItems: "flex-end" }}>
           <div style={st(2)}>
-            <span style={capLbl(12)}>Calorie bruciate</span>
-            <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}><span aria-label="Calorie bruciate valore" style={numStyle(56, burned === null ? K.t3 : K.t1)}>{burned === null ? "—" : kcalTxt(burned)}</span><span style={{ ...lbl, color: K.t2 }}>kcal</span></span>
+            <span style={capLbl(12)}>Calories burned</span>
+            <span style={{ display: "flex", alignItems: "baseline", gap: 6 }}><span aria-label="Calories burned value" style={numStyle(56, burned === null ? K.t3 : K.t1)}>{burned === null ? "—" : kcalTxt(burned)}</span><span style={{ ...lbl, color: K.t2 }}>kcal</span></span>
           </div>
-          <span style={{ ...lbl, textAlign: "right", paddingBottom: 6 }}>{[isNum(d.activeKcal) ? `${kcalTxt(d.activeKcal)} attive` : "", live ? "finora" : ""].filter(Boolean).join(" · ")}</span>
+          <span style={{ ...lbl, textAlign: "right", paddingBottom: 6 }}>{[isNum(d.activeKcal) ? `${kcalTxt(d.activeKcal)} active` : "", live ? "so far" : ""].filter(Boolean).join(" · ")}</span>
         </div>
         <div style={{ borderTop: `1px solid ${K.line}` }}>
-          {rows ?? <span style={{ ...txt, display: "block", padding: "12px 0 0" }}>{live ? "Ancora nessun allenamento oggi: anche una camminata conta." : "Nessun allenamento in questo giorno."}</span>}
+          {rows ?? <span style={{ ...txt, display: "block", padding: "12px 0 0" }}>{live ? "No workout yet today: even a walk counts." : "No workout on this day."}</span>}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 8 }}>
-          {miniTile("Passi", isNum(d.steps) ? kcalTxt(d.steps) : "—")}
-          {miniTile("Mangiate", isNum(d.eatenKcal) ? kcalTxt(d.eatenKcal) : "—", "kcal", isNum(d.eatenKcal) ? K.t1 : K.t3)}
-          {miniTile("Bilancio", signed(bl), bl === null ? undefined : "kcal", bl === null ? K.t3 : K.t1)}
+          {miniTile("Steps", isNum(d.steps) ? kcalTxt(d.steps) : "—")}
+          {miniTile("Eaten", isNum(d.eatenKcal) ? kcalTxt(d.eatenKcal) : "—", "kcal", isNum(d.eatenKcal) ? K.t1 : K.t3)}
+          {miniTile("Balance", signed(bl), bl === null ? undefined : "kcal", bl === null ? K.t3 : K.t1)}
         </div>
       </div>
     );
@@ -2993,25 +2993,25 @@ export default function App() {
       {homeProtein}
       {homeGoals}
 
-      {sectionTitle("La mia giornata", <span style={lbl}>{dayTitle(d.date)}</span>)}
+      {sectionTitle("My day", <span style={lbl}>{dayTitle(d.date)}</span>)}
       <button onClick={() => open({ kind: "coach" })} style={{ ...btn, ...card, ...row, padding: "14px 16px", background: `linear-gradient(90deg, ${K.card2}, ${K.rowEnd})` }}>
-        {ic("cal", K.t2, 20)}<span style={{ flex: 1, fontSize: 15, fontWeight: 600 }}>Prospettiva del giorno</span>{chev(K.t1)}
+        {ic("cal", K.t2, 20)}<span style={{ flex: 1, fontSize: 15, fontWeight: 600 }}>Outlook for the day</span>{chev(K.t1)}
       </button>
-      {d.meals.length ? listCard("Pasti", <span style={lbl}>{fmt(d.eatenKcal)} kcal · {fmt(d.proteinG)} g prot.</span>, mealRows(d)) : null}
-      {!d.workouts.length && !d.meals.length ? <span style={{ ...lbl, padding: "0 4px" }}>Nessuna attività o pasto registrato in questo giorno.</span> : null}
+      {d.meals.length ? listCard("Meals", <span style={lbl}>{fmt(d.eatenKcal)} kcal · {fmt(d.proteinG)} g prot.</span>, mealRows(d)) : null}
+      {!d.workouts.length && !d.meals.length ? <span style={{ ...lbl, padding: "0 4px" }}>No activity or meal logged on this day.</span> : null}
       {d.note ? <div style={{ ...card, ...row, alignItems: "flex-start", borderColor: `${K.warn}55` }}>{ic("info", K.warn, 18)}<span style={{ ...txt, flex: 1 }}>{d.note}</span></div> : null}
       {upcomingCard}
 
-      {sectionTitle("Statistiche chiave")}
-      {contribCard(keyStats, "vs ultimi 30 giorni · pasti vs settimana", false)}
+      {sectionTitle("Key stats")}
+      {contribCard(keyStats, "vs last 30 days · meals vs week", false)}
     </div>
   );
 
-  // =================== DETTAGLIO QUADRANTI ===================
+  // =================== DIAL DETAILS ===================
   const formula: Record<DialId, { f: string; v: string }> = {
-    sonno: { f: "Sonno (stile WHOOP) = Sufficienza^0,6 × Qualità^0,4. Sufficienza = (ore dormite / bisogno)^2,5: il bisogno è 8 ore + sforzo del giorno prima (max +30 min) + debito delle 3 notti prima (max +45 min) − pisolino. Qualità = Regolarità 40% (orari di letto e sveglia rispetto alle 4 notti prima, e letto dopo l'00:30 pesa), Sonno ristoratore 35% (profondo verso 17%, REM verso 22%), Efficienza 25% (sonno sul tempo a letto, risvegli). Se un dato manca, gli altri si ripesano. Ottimale ≥ 85, sufficiente 70–84, scarso < 70.", v: isNum(d.sleepMin) ? `${hm(d.sleepMin)} dormite · profondo ${hm(d.deepMin)} · REM ${hm(d.remMin)}` : "Notte non ancora sincronizzata: punteggio non disponibile." },
-    recupero: { f: "Recupero = 50% HRV rispetto alla tua media degli altri giorni (±20% = 0–100) + 25% FC a riposo rispetto alla media (−10% = 100, +10% = 0) + 25% punteggio sonno. Verde 67–99, giallo 34–66, rosso 1–33.", v: `HRV ${fmt(d.hrvMs, " ms")} (media ${fmt(bHrv)}) · FC riposo ${fmt(d.rhr, " bpm")} (media ${fmt(bRhr)}) · sonno ${dSl === null ? "—" : `${dSl}%`}${dRec === null ? " · mancano dati: non calcolato" : ""}` },
-    sforzo: { f: "Sforzo = 21 × (1 − e^(−carico/1500)), scala 0–21. Carico = kcal attive + 5 × minuti di sessioni con FC media ≥ 120.", v: `${fmt(d.activeKcal)} kcal attive · ${cardioMin(d)} min di sessione a FC ≥ 120 · carico ${isNum(d.activeKcal) ? Math.round(d.activeKcal + 5 * cardioMin(d)).toLocaleString("it-IT") : "—"}` },
+    sonno: { f: "Sleep (WHOOP style) = Sufficiency^0.6 × Quality^0.4. Sufficiency = (hours slept / need)^2.5: the need is 8 hours + the previous day's effort (max +30 min) + the debt of the previous 3 nights (max +45 min) − naps. Quality = Regularity 40% (bed and wake times vs the previous 4 nights, and a very late bedtime counts), Restorative sleep 35% (deep vs 17%, REM vs 22%), Efficiency 25% (sleep over time in bed, wake-ups). If a value is missing, the others are reweighted. Optimal ≥ 85, enough 70–84, poor < 70.", v: isNum(d.sleepMin) ? `${hm(d.sleepMin)} slept · deep ${hm(d.deepMin)} · REM ${hm(d.remMin)}` : "Night not synced yet: score not available." },
+    recupero: { f: "Recovery = 50% HRV vs your average of the other days (±20% = 0–100) + 25% resting HR vs the average (−10% = 100, +10% = 0) + 25% sleep score. Green 67–99, yellow 34–66, red 1–33.", v: `HRV ${fmt(d.hrvMs, " ms")} (average ${fmt(bHrv)}) · resting HR ${fmt(d.rhr, " bpm")} (average ${fmt(bRhr)}) · sleep ${dSl === null ? "—" : `${dSl}%`}${dRec === null ? " · missing data: not calculated" : ""}` },
+    sforzo: { f: "Effort = 21 × (1 − e^(−load/1500)), scale 0–21. Load = active kcal + 5 × minutes of sessions with average HR ≥ 120.", v: `${fmt(d.activeKcal)} active kcal · ${cardioMin(d)} min of session at HR ≥ 120 · load ${isNum(d.activeKcal) ? Math.round(d.activeKcal + 5 * cardioMin(d)).toLocaleString("en-US") : "—"}` },
   };
   const detailTop = (id: DialId, withBack: boolean) => {
     const m = dialMeta[id];
@@ -3020,7 +3020,7 @@ export default function App() {
         {withBack ? (
           <div style={frostIn}>
             <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 40px", alignItems: "center" }}>
-              <button onClick={closeScreen} aria-label="Indietro" style={{ ...btn, width: 40, height: 40, display: "flex", alignItems: "center" }}>{ic("back", K.t1, 24, 2.2)}</button>
+              <button onClick={closeScreen} aria-label="Back" style={{ ...btn, width: 40, height: 40, display: "flex", alignItems: "center" }}>{ic("back", K.t1, 24, 2.2)}</button>
               <div style={{ display: "flex", justifyContent: "center" }}>{datePill}</div>
               <span />
             </div>
@@ -3030,9 +3030,9 @@ export default function App() {
         <div style={{ display: "flex", justifyContent: "center", padding: "8px 0 6px" }}>
           {ring(m.frac, m.color, 232, 14, (
             <>
-              <span aria-label={`${m.name} valore`} style={numStyle(72, m.v === null ? K.t3 : K.t1)}>{m.v === null ? "—" : m.v.toLocaleString("it-IT")}{m.v !== null && m.unit ? <span style={{ fontSize: 34 }}>{m.unit}</span> : null}</span>
-              <span style={{ ...caps, fontSize: 13, color: K.t1, marginTop: 6 }}>{id === "sonno" ? "Sonno" : id === "sforzo" ? "Sforzo" : "Recupero"}</span>
-              {id === "sforzo" && m.v !== null ? <span style={{ ...lbl, marginTop: 4 }}>{`su 21${strainRange ? ` · obiettivo ${strainRange[0]}–${strainRange[1]}` : ""}`}</span> : id === "sonno" && isNum(d.sleepMin) ? <span style={{ ...lbl, marginTop: 4 }}>{`${hm(d.sleepMin)} dormite`}</span> : null}
+              <span aria-label={`${m.name} value`} style={numStyle(72, m.v === null ? K.t3 : K.t1)}>{m.v === null ? "—" : m.v.toLocaleString("en-US")}{m.v !== null && m.unit ? <span style={{ fontSize: 34 }}>{m.unit}</span> : null}</span>
+              <span style={{ ...caps, fontSize: 13, color: K.t1, marginTop: 6 }}>{id === "sonno" ? "Sleep" : id === "sforzo" ? "Effort" : "Recovery"}</span>
+              {id === "sforzo" && m.v !== null ? <span style={{ ...lbl, marginTop: 4 }}>{`of 21${strainRange ? ` · goal ${strainRange[0]}–${strainRange[1]}` : ""}`}</span> : id === "sonno" && isNum(d.sleepMin) ? <span style={{ ...lbl, marginTop: 4 }}>{`${hm(d.sleepMin)} slept`}</span> : null}
             </>
           ), true, id === "sforzo" && strainRange ? [strainRange[0] / 21, strainRange[1] / 21] : null)}
         </div>
@@ -3046,18 +3046,18 @@ export default function App() {
   const light = (x: Day) => (isNum(x.sleepMin) ? Math.max(0, x.sleepMin - (x.deepMin ?? 0) - (x.remMin ?? 0)) : null);
   const bedDev = (x: Day) => { const b = bedRel(x.bedtime); return b !== null && bedAvg !== null ? Math.abs(b - bedAvg) : null; };
   const sp = sleepParts(d);
-  const slBand = (v: number | null): { t: string; c: string } => (v === null ? { t: "—", c: K.t3 } : v >= 85 ? { t: "Ottimale", c: K.recHi } : v >= 70 ? { t: "Sufficiente", c: K.recMid } : { t: "Scarso", c: K.recLo });
+  const slBand = (v: number | null): { t: string; c: string } => (v === null ? { t: "—", c: K.t3 } : v >= 85 ? { t: "Optimal", c: K.recHi } : v >= 70 ? { t: "Enough", c: K.recMid } : { t: "Poor", c: K.recLo });
   const pct = (v: number | null) => (v === null ? "—" : `${Math.round(v)}%`);
   const tonight = planFor(addDays(DATA.today, 1));
-  const needWhy = (n: { strainAdd: number; debt: number; napCut: number }) => `8:00 di base${n.strainAdd ? ` + ${n.strainAdd} min per lo sforzo` : ""}${n.debt ? ` + ${n.debt} min di debito` : ""}${n.napCut ? ` − ${n.napCut} min di pisolino` : ""}`;
+  const needWhy = (n: { strainAdd: number; debt: number; napCut: number }) => `8:00 baseline${n.strainAdd ? ` + ${n.strainAdd} min for effort` : ""}${n.debt ? ` + ${n.debt} min of debt` : ""}${n.napCut ? ` − ${n.napCut} min of nap` : ""}`;
   const weakest = [{ k: "suff", v: sp.suff }, { k: "cons", v: sp.cons }, { k: "eff", v: sp.eff }, { k: "rest", v: sp.rest }].filter((c) => c.v !== null).sort((a, b) => (a.v as number) - (b.v as number))[0];
   const weakText: Record<string, string> = {
-    suff: "Il punto debole è la durata: serve più tempo a letto.",
-    cons: "Il punto debole è la regolarità: orari diversi dalle notti prima e letto tardi.",
-    eff: "Il punto debole è l'efficienza: troppo tempo sveglio a letto o troppi risvegli.",
-    rest: "Il punto debole è il sonno ristoratore: profondo o REM sotto l'obiettivo.",
+    suff: "The weak spot is duration: you need more time in bed.",
+    cons: "The weak spot is regularity: times different from previous nights and a late bedtime.",
+    eff: "The weak spot is efficiency: too much time awake in bed or too many wake-ups.",
+    rest: "The weak spot is restorative sleep: deep or REM below the goal.",
   };
-  const sleepInsight = dSl === null || sp.ratio === null ? "Questa notte non è ancora sincronizzata: il punteggio arriva con i dati." : `${dSl >= 85 ? "Notte ottima: mantieni orari simili anche stasera." : weakest ? weakText[weakest.k] : ""}${(debtOf(d.date) ?? 0) >= 60 ? ` Il debito di sonno (${debtText(debtOf(d.date) as number)}) tiene basso il punteggio.` : ""}`;
+  const sleepInsight = dSl === null || sp.ratio === null ? "Last night isn't synced yet: the score comes with the data." : `${dSl >= 85 ? "Great night: keep similar times tonight too." : weakest ? weakText[weakest.k] : ""}${(debtOf(d.date) ?? 0) >= 60 ? ` The sleep debt (${debtText(debtOf(d.date) as number)}) is keeping the score down.` : ""}`;
   const sleepScatter = (() => {
     const pts = days.map((x: Day) => ({ x: bedRel(x.bedtime), y: x.sleepMin, date: x.date })).filter((p): p is { x: number; y: number; date: string } => isNum(p.x) && isNum(p.y));
     if (pts.length < 2) return null;
@@ -3068,7 +3068,7 @@ export default function App() {
     const r = pearson(xs, ys);
     return (
       <>
-        {weekTitle("Ora di letto e durata")}
+        {weekTitle("Bedtime and duration")}
         <div style={{ ...card, ...st(8) }}>
           <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block" }}>
             <line x1={pl} x2={W - pr} y1={Y(480)} y2={Y(480)} stroke={K.t3} strokeDasharray="3 4" />
@@ -3076,13 +3076,13 @@ export default function App() {
             {[x0 + 30, (x0 + x1) / 2, x1 - 30].map((v, i) => <text key={i} x={X(v)} y={H - 6} fontSize={10} textAnchor="middle" fill={K.t3}>{clock(v)}</text>)}
             {pts.map((p) => <circle key={p.date} cx={X(p.x)} cy={Y(p.y)} r={p.date === d.date ? 7 : 5} fill={p.date === d.date ? K.t1 : K.sleep} style={{ cursor: "pointer" }} onClick={() => go(p.date)} />)}
           </svg>
-          <span style={txt}>{r === null ? "Pochi dati per un legame." : r < -0.3 ? "Quando vai a letto più tardi tendi a dormire meno: la sveglia non si sposta abbastanza." : r > 0.3 ? "Quando vai a letto più tardi dormi più a lungo, spesso perché ti svegli più tardi." : "Nessun legame chiaro tra ora di letto e durata in questi giorni."}</span>
-          <span style={lbl}>Orizzontale: ora di letto · verticale: durata · {pts.length} notti{r !== null ? ` · correlazione ${r.toFixed(2).replace(".", ",")}` : ""}</span>
+          <span style={txt}>{r === null ? "Too little data for a link." : r < -0.3 ? "When you go to bed later you tend to sleep less: your wake-up time doesn't move enough." : r > 0.3 ? "When you go to bed later you sleep longer, often because you wake up later." : "No clear link between bedtime and duration in these days."}</span>
+          <span style={lbl}>Horizontal: bedtime · vertical: duration · {pts.length} nights{r !== null ? ` · correlation ${r.toFixed(2)}` : ""}</span>
         </div>
       </>
     );
   })();
-  // ---- Sonno: una sola scomposizione, fasi su corsie, pianificatore, metriche vs la tua norma ----
+  // ---- Sleep: one breakdown, stages in lanes, planner, metrics vs your norm ----
   const statusBar = (v: number | null) => {
     const i = v === null ? -1 : v >= 85 ? 2 : v >= 70 ? 1 : 0, cs = [K.recLo, K.recMid, K.recHi];
     return <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 3 }}>{[0, 1, 2].map((j) => <div key={j} style={{ height: 6, borderRadius: 3, background: j === i ? cs[j] : K.track }} />)}</div>;
@@ -3094,15 +3094,15 @@ export default function App() {
     </div>
   );
   const sleepBreak = [
-    { name: "Ore vs bisogno", v: sp.suff, shown: sp.ratio === null ? null : Math.round(sp.ratio * 100), t: trendOf(sp.ratio, norm(d, (y: Day) => spH(y).ratio), true) },
-    { name: "Orari", v: sp.cons, shown: sp.cons === null ? null : Math.round(sp.cons), t: trendOf(sp.cons, norm(d, (y: Day) => spH(y).cons), true) },
-    { name: "Efficienza", v: sp.eff, shown: sp.effPct === null ? null : Math.round(sp.effPct), t: trendOf(sp.effPct, norm(d, (y: Day) => spH(y).effPct), true, 0.01) },
-    { name: "Sonno ristoratore", v: sp.rest, shown: sp.rest === null ? null : Math.round(sp.rest), t: trendOf(sp.rest, norm(d, (y: Day) => spH(y).rest), true) },
+    { name: "Hours vs need", v: sp.suff, shown: sp.ratio === null ? null : Math.round(sp.ratio * 100), t: trendOf(sp.ratio, norm(d, (y: Day) => spH(y).ratio), true) },
+    { name: "Times", v: sp.cons, shown: sp.cons === null ? null : Math.round(sp.cons), t: trendOf(sp.cons, norm(d, (y: Day) => spH(y).cons), true) },
+    { name: "Efficiency", v: sp.eff, shown: sp.effPct === null ? null : Math.round(sp.effPct), t: trendOf(sp.effPct, norm(d, (y: Day) => spH(y).effPct), true, 0.01) },
+    { name: "Restorative sleep", v: sp.rest, shown: sp.rest === null ? null : Math.round(sp.rest), t: trendOf(sp.rest, norm(d, (y: Day) => spH(y).rest), true) },
   ];
   const breakCard = (
     <div style={{ position: "relative", marginTop: 10 }}>
       <div style={{ position: "absolute", top: -7, left: "50%", marginLeft: -7, width: 14, height: 14, background: K.card2, borderLeft: `1px solid ${K.line}`, borderTop: `1px solid ${K.line}`, transform: "rotate(45deg)" }} />
-      <div aria-label="Scomposizione sonno" style={{ ...card, padding: "4px 16px 14px" }}>
+      <div aria-label="Sleep breakdown" style={{ ...card, padding: "4px 16px 14px" }}>
         {sleepBreak.map((c, i) => (
           <div key={c.name} style={{ ...st(8), padding: "14px 0", borderBottom: i < sleepBreak.length - 1 ? `1px solid ${K.line}` : "none" }}>
             <div style={{ ...row, justifyContent: "space-between" }}>
@@ -3112,7 +3112,7 @@ export default function App() {
             {statusBar(c.v)}
           </div>
         ))}
-        {cmpFoot("vs ultimi 30 giorni")}
+        {cmpFoot("vs last 30 days")}
       </div>
     </div>
   );
@@ -3120,7 +3120,7 @@ export default function App() {
     "",
   ].filter(Boolean).join(" · ");
   const STG: { k: string; name: string; color: string }[] = [
-    { k: "W", name: "Sveglio", color: K.t2 }, { k: "L", name: "Leggero", color: K.sleep }, { k: "D", name: "Profondo", color: K.violet }, { k: "R", name: "REM", color: K.teal },
+    { k: "W", name: "Awake", color: K.t2 }, { k: "L", name: "Light", color: K.sleep }, { k: "D", name: "Deep", color: K.violet }, { k: "R", name: "REM", color: K.teal },
   ];
   const stagesOf = (date: string) => (DATA.stages?.[date] ?? "").split(" ").map((t) => /^([WLDR])(\d+)\+(\d+)$/.exec(t)).filter((m): m is RegExpExecArray => !!m).map((m) => ({ k: m[1], s: Number(m[2]), n: Number(m[3]) }));
   const stageShare = (y: Day, k: string): number | null => {
@@ -3135,9 +3135,9 @@ export default function App() {
     if (!ss.length) return null;
     const T = Math.max(...ss.map((s) => s.s + s.n)), all = sum(ss.map((s) => s.n)) || 1;
     return (
-      <div aria-label="Ultima notte" style={{ ...card, ...st(14) }}>
-        <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>{x.date === DATA.today ? "Ultima notte" : `Notte · ${shortDay(x.date)}`}</span><span style={lbl}>{`${x.bedtime ?? "—"} → ${x.wakeTime ?? "—"}`}</span></div>
-        <span style={{ ...lbl, display: "flex", alignItems: "center", gap: 6 }}><svg width={18} height={8} style={{ display: "block" }}>{stripeDefs("stLeg")}<rect width={18} height={8} rx={2} fill="url(#stLeg)" /></svg>tua norma, ultimi 30 giorni</span>
+      <div aria-label="Last night" style={{ ...card, ...st(14) }}>
+        <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>{x.date === DATA.today ? "Last night" : `Night · ${shortDay(x.date)}`}</span><span style={lbl}>{`${x.bedtime ?? "—"} → ${x.wakeTime ?? "—"}`}</span></div>
+        <span style={{ ...lbl, display: "flex", alignItems: "center", gap: 6 }}><svg width={18} height={8} style={{ display: "block" }}>{stripeDefs("stLeg")}<rect width={18} height={8} rx={2} fill="url(#stLeg)" /></svg>your normal, last 30 days</span>
         {STG.map((g) => {
           const m = sum(ss.filter((s) => s.k === g.k).map((s) => s.n)), p = (100 * m) / all, b = bandOf(x, (y: Day) => stageShare(y, g.k));
           const S = 60, X = (v: number) => (clamp(v, 0, S) / S) * 340;
@@ -3156,7 +3156,7 @@ export default function App() {
                 {b ? <rect x={X(Math.max(0, b.lo))} y={0} width={Math.max(3, X(b.hi) - X(Math.max(0, b.lo)))} height={6} rx={2} fill={`url(#st${g.k})`} /> : null}
                 <rect x={Math.max(0, X(p) - 2)} y={0} width={4} height={6} rx={1} fill={g.color === K.t2 ? K.t1 : g.color} />
               </svg>
-              {b ? <span style={lbl}>{`norma ${Math.round(Math.max(0, b.lo))}–${Math.round(b.hi)}% · ${p >= b.lo && p <= b.hi ? "nella tua norma" : p < b.lo ? "sotto la norma" : "sopra la norma"}`}</span> : null}
+              {b ? <span style={lbl}>{`normal ${Math.round(Math.max(0, b.lo))}–${Math.round(b.hi)}% · ${p >= b.lo && p <= b.hi ? "within your normal" : p < b.lo ? "below range" : "above range"}`}</span> : null}
             </div>
           );
         })}
@@ -3165,20 +3165,20 @@ export default function App() {
   };
   const normPill = (v: number | null | undefined, b: { lo: number; hi: number } | null, higherBetter: boolean) => {
     const ok = inNorm(v, b);
-    if (ok === null || !isNum(v) || !b) return <span style={{ ...lbl }}>norma in arrivo</span>;
+    if (ok === null || !isNum(v) || !b) return <span style={{ ...lbl }}>normal range coming</span>;
     const up = v > b.hi, good = ok ? true : up === higherBetter, c = ok ? K.up : good ? K.up : K.warn;
-    return <span style={{ ...caps, alignSelf: "flex-start", fontSize: 10, lineHeight: "14px", padding: "2px 8px", borderRadius: 999, whiteSpace: "nowrap", color: c, background: `${c}1F`, border: `1px solid ${c}55` }}>{ok ? "nella tua norma" : up ? "sopra la norma" : "sotto la norma"}</span>;
+    return <span style={{ ...caps, alignSelf: "flex-start", fontSize: 10, lineHeight: "14px", padding: "2px 8px", borderRadius: 999, whiteSpace: "nowrap", color: c, background: `${c}1F`, border: `1px solid ${c}55` }}>{ok ? "within your normal" : up ? "above range" : "below range"}</span>;
   };
   const wakeCount = (x: Day): number | null => (isNum(x.wakeups) ? x.wakeups : (() => { const w = stagesOf(x.date).filter((s) => s.k === "W" && s.s > 0); return stagesOf(x.date).length ? w.length : null; })());
   const sleepTiles = isNum(d.sleepMin) ? (
     <div style={two}>
       {[
-        { name: "Tempo a letto", value: hm(d.inBedMin), v: d.inBedMin, b: bandOf(d, (y: Day) => y.inBedMin), hb: true, aria: undefined as string | undefined },
-        { name: "Risvegli", value: `${wakeCount(d) ?? "—"}${isNum(d.awakeMin) ? ` · ${Math.round(d.awakeMin)} min` : ""}`, v: d.awakeMin, b: bandOf(d, (y: Day) => y.awakeMin), hb: false, aria: undefined },
-        { name: "Scarto orari", value: sp.regDev === null ? "—" : `${Math.round(sp.regDev)} min`, v: sp.regDev, b: bandOf(d, (y: Day) => spH(y).regDev), hb: false, aria: "Costanza del sonno" },
-        { name: "Ristoratore", value: hm(restorative(d)), v: restorative(d), b: bandOf(d, restorative), hb: true, aria: undefined },
+        { name: "Time in bed", value: hm(d.inBedMin), v: d.inBedMin, b: bandOf(d, (y: Day) => y.inBedMin), hb: true, aria: undefined as string | undefined },
+        { name: "Wake-ups", value: `${wakeCount(d) ?? "—"}${isNum(d.awakeMin) ? ` · ${Math.round(d.awakeMin)} min` : ""}`, v: d.awakeMin, b: bandOf(d, (y: Day) => y.awakeMin), hb: false, aria: undefined },
+        { name: "Time variation", value: sp.regDev === null ? "—" : `${Math.round(sp.regDev)} min`, v: sp.regDev, b: bandOf(d, (y: Day) => spH(y).regDev), hb: false, aria: "Sleep consistency" },
+        { name: "Restorative", value: hm(restorative(d)), v: restorative(d), b: bandOf(d, restorative), hb: true, aria: undefined },
       ].map((t) => (
-        <div key={t.name} aria-label={t.aria ?? `Sonno ${t.name}`} style={{ ...card, ...st(6), padding: 14 }}>
+        <div key={t.name} aria-label={t.aria ?? `Sleep ${t.name}`} style={{ ...card, ...st(6), padding: 14 }}>
           <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: K.t3 }}>{t.name}</span>
           <span style={numStyle(24)}>{t.value}</span>
           {normPill(t.v, t.b, t.hb)}
@@ -3194,7 +3194,7 @@ export default function App() {
     const cx = (i: number) => (W / n) * (i + 0.5);
     return (
       <div style={{ ...card, ...st(8) }}>
-        {legend([{ label: "Dormite", color: K.sleep }, { label: "Bisogno", color: K.t1 }])}
+        {legend([{ label: "Slept", color: K.sleep }, { label: "Need", color: K.t1 }])}
         <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block" }}>
           <path d={needs.map((v, i) => `${i ? "L" : "M"}${cx(i)},${y(v)}`).join(" ")} fill="none" stroke={K.t1} strokeOpacity={0.7} strokeWidth={2} strokeDasharray="4 4" />
           {days.map((x: Day, i: number) => {
@@ -3211,7 +3211,7 @@ export default function App() {
             );
           })}
         </svg>
-        <span style={lbl}>Barre: ore dormite · linea: il sonno che ti serviva quella notte</span>
+        <span style={lbl}>Bars: hours slept · line: the sleep you needed that night</span>
       </div>
     );
   })();
@@ -3224,7 +3224,7 @@ export default function App() {
       {insight(<>{sleepInsight}{sleepWhy ? <span style={{ display: "block", marginTop: 8, fontSize: 13, lineHeight: "18px", color: K.t2 }}>{`${sleepWhy}.`}</span> : null}</>)}
       {d.date === DATA.today ? (
         <div style={{ ...card, ...st(8) }}>
-          <span style={capLbl(12)}>Stanotte</span>
+          <span style={capLbl(12)}>Tonight</span>
           {(() => {
             const wR = tonight.wake + 1440, b100 = relBed(tonight.bedBy), b85 = relBed(tonight.bedBy85);
             const lo = Math.min(b100, usualBed ?? b100) - 30, hi = Math.max(wR, usualWake ?? wR) + 30, X = (m: number) => ((m - lo) / (hi - lo)) * 100;
@@ -3240,23 +3240,23 @@ export default function App() {
               </div>
             );
             return (
-              <div aria-label="Pianificatore sonno" style={st(12)}>
-                <span style={{ fontSize: 15, lineHeight: "21px", color: K.t1 }}>{`Per recuperare tutto a letto entro le ${clock(tonight.bedBy)}; ne hai abbastanza (85%) entro le ${clock(tonight.bedBy85)}.`}</span>
+              <div aria-label="Sleep planner" style={st(12)}>
+                <span style={{ fontSize: 15, lineHeight: "21px", color: K.t1 }}>{`To recover it all, in bed by ${clock(tonight.bedBy)}; you get enough (85%) by ${clock(tonight.bedBy85)}.`}</span>
                 <div style={{ ...row, gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ ...caps, fontSize: 11, lineHeight: "16px", color: K.sleep, background: `${K.sleep}1F`, border: `1px solid ${K.sleep}59`, borderRadius: 999, padding: "3px 10px", whiteSpace: "nowrap" }}>{`${hm(wR - b100)} a letto`}</span>
-                  {left !== null && left > 0 ? <span style={{ ...lbl, color: K.t2 }}>{`mancano ${dur(left)}`}</span> : null}
+                  <span style={{ ...caps, fontSize: 11, lineHeight: "16px", color: K.sleep, background: `${K.sleep}1F`, border: `1px solid ${K.sleep}59`, borderRadius: 999, padding: "3px 10px", whiteSpace: "nowrap" }}>{`${hm(wR - b100)} in bed`}</span>
+                  {left !== null && left > 0 ? <span style={{ ...lbl, color: K.t2 }}>{`${dur(left)} to go`}</span> : null}
                 </div>
                 <div style={st(10)}>
                   {usualBed !== null && usualWake !== null ? (
                     <div style={{ position: "relative", height: 16 }}>
                       <div style={{ position: "absolute", left: `${X(usualBed)}%`, width: `${X(usualWake) - X(usualBed)}%`, top: 6, height: 8, borderTop: `1.5px dashed ${K.t2}`, borderLeft: `1.5px dashed ${K.t2}`, borderRight: `1.5px dashed ${K.t2}`, boxSizing: "border-box" }} />
-                      <span style={{ ...lbl, position: "absolute", left: `${X(usualBed)}%`, top: -8, background: K.card, padding: "0 4px", marginLeft: 6, whiteSpace: "nowrap" }}>{`di solito ${clock(usualBed)}–${clock(usualWake)}`}</span>
+                      <span style={{ ...lbl, position: "absolute", left: `${X(usualBed)}%`, top: -8, background: K.card, padding: "0 4px", marginLeft: 6, whiteSpace: "nowrap" }}>{`usually ${clock(usualBed)}–${clock(usualWake)}`}</span>
                     </div>
                   ) : null}
-                  {bar(b100, K.sleep, "Recuperare tutto", `${hm(tonight.need)} di sonno`)}
-                  {bar(b85, `${K.sleep}99`, "Abbastanza 85%", `${hm(0.85 * tonight.need)} di sonno`)}
+                  {bar(b100, K.sleep, "Recover it all", `${hm(tonight.need)} of sleep`)}
+                  {bar(b85, `${K.sleep}99`, "Enough 85%", `${hm(0.85 * tonight.need)} of sleep`)}
                 </div>
-                <span style={txt}>{`Sveglia alle ${clock(tonight.wake)}${tonight.ev ? ` per ${tonight.ev.name} alle ${tonight.ev.time}` : ""}. ${tonight.debt > 0 || tonight.strainAdd > 0 ? `Ti serve un po' di più del solito${tonight.strainAdd > 0 ? " per lo sforzo di oggi" : ""}${tonight.debt > 0 ? `${tonight.strainAdd > 0 ? " e" : ""} per recuperare il sonno perso` : ""}.` : "Un sonno pieno ti tiene in pari."}`}</span>
+                <span style={txt}>{`Wake up at ${clock(tonight.wake)}${tonight.ev ? ` for ${tonight.ev.name} at ${tonight.ev.time}` : ""}. ${tonight.debt > 0 || tonight.strainAdd > 0 ? `You need a bit more than usual${tonight.strainAdd > 0 ? " for today's effort" : ""}${tonight.debt > 0 ? `${tonight.strainAdd > 0 ? " e" : ""} to recover lost sleep` : ""}.` : "A full night keeps you even."}`}</span>
               </div>
             );
           })()}
@@ -3266,16 +3266,16 @@ export default function App() {
       {sleepTiles}
       {isNum(d.sleepMin) && !stagesOf(d.date).length ? (
         <div style={{ ...card, ...st(12) }}>
-          <span style={capLbl(12)}>Fasi della notte</span>
+          <span style={capLbl(12)}>Sleep stages</span>
           {segBar([{ label: "d", value: d.deepMin ?? 0, color: K.violet }, { label: "r", value: d.remMin ?? 0, color: K.teal }, { label: "l", value: light(d) ?? 0, color: K.sleep }], 14)}
-          {legend([{ label: "Profondo", color: K.violet, text: hm(d.deepMin) }, { label: "REM", color: K.teal, text: hm(d.remMin) }, { label: "Leggero", color: K.sleep, text: hm(light(d)) }])}
+          {legend([{ label: "Deep", color: K.violet, text: hm(d.deepMin) }, { label: "REM", color: K.teal, text: hm(d.remMin) }, { label: "Light", color: K.sleep, text: hm(light(d)) }])}
         </div>
       ) : null}
-      {weekTitle("Sonno · 7 giorni")}
+      {weekTitle("Sleep · 7 days")}
       <div style={card}>{weekBars(days.map((x: Day) => sonnoOf(x)), 100, () => K.sleep, (v) => `${Math.round(v)}`)}</div>
-      {weekTitle("Ore dormite vs bisogno · 7 giorni")}
+      {weekTitle("Hours slept vs need · 7 days")}
       {needChart}
-      {weekTitle("Orari: letto e sveglia")}
+      {weekTitle("Times: bed and wake")}
       <div style={{ ...card, ...st(10) }}>
         {days.map((x: Day) => { const b0 = bedRel(x.bedtime), w0 = toMin(x.wakeTime), s0 = 1320, span = 840, wR = w0 === null ? null : w0 + 1440; return (
           <button key={x.date} onClick={() => go(x.date)} style={{ ...btn, ...row, gap: 8 }}>
@@ -3286,17 +3286,17 @@ export default function App() {
             <span style={{ ...lbl, width: 84, textAlign: "right", flex: "0 0 auto" }}>{x.bedtime ?? "—"}→{x.wakeTime ?? "—"}</span>
           </button>
         ); })}
-        <span style={lbl}>{usualBed !== null && usualWake !== null ? `Scala 22:00 → 12:00 · di solito a letto alle ${clock(usualBed)}, sveglia alle ${clock(usualWake)}` : `Scala 22:00 → 12:00 · a letto in media alle ${clock(bedAvg)}`}</span>
+        <span style={lbl}>{usualBed !== null && usualWake !== null ? `Scale 22:00 → 12:00 · usually in bed at ${clock(usualBed)}, wake up at ${clock(usualWake)}` : `Scale 22:00 → 12:00 · in bed on average at ${clock(bedAvg)}`}</span>
       </div>
       {sleepScatter}
       {sleepDays.length ? (
         <>
-          {weekTitle("Notte per notte")}
+          {weekTitle("Night by night")}
           <div style={{ ...card, ...st(12) }}>
-            {legend([{ label: "Profondo", color: K.violet }, { label: "REM", color: K.teal }, { label: "Leggero", color: K.sleep }])}
+            {legend([{ label: "Deep", color: K.violet }, { label: "REM", color: K.teal }, { label: "Light", color: K.sleep }])}
             {[...sleepDays].reverse().map((x: Day) => (
               <button key={x.date} onClick={() => go(x.date)} style={{ ...btn, ...st(4) }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span style={{ fontSize: 14, color: K.t1, fontWeight: x.date === d.date ? 700 : 400 }}>{shortDay(x.date)} · {hm(x.sleepMin)}</span><span style={lbl}>prof. {hm(x.deepMin)} · REM {hm(x.remMin)}</span></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span style={{ fontSize: 14, color: K.t1, fontWeight: x.date === d.date ? 700 : 400 }}>{shortDay(x.date)} · {hm(x.sleepMin)}</span><span style={lbl}>deep {hm(x.deepMin)} · REM {hm(x.remMin)}</span></div>
                 <div style={{ width: `${clamp(((x.sleepMin ?? 0) / 540) * 100, 4, 100)}%` }}>{segBar([{ label: "d", value: x.deepMin ?? 0, color: K.violet }, { label: "r", value: x.remMin ?? 0, color: K.teal }, { label: "l", value: light(x) ?? 0, color: K.sleep }], 8)}</div>
               </button>
             ))}
@@ -3308,21 +3308,21 @@ export default function App() {
 
   // ---- RECUPERO ----
   const recInsight = dRec === null
-    ? "Recupero non ancora disponibile: mancano HRV, FC a riposo o sonno di questo giorno."
+    ? "Recovery not available yet: HRV, resting HR or sleep for this day are missing."
     : (() => {
-      const w = (v: number | null | undefined, b: { lo: number; hi: number } | null) => (!isNum(v) || !b ? null : v < b.lo ? "sotto la tua norma" : v > b.hi ? "sopra la tua norma" : "nella tua norma");
+      const w = (v: number | null | undefined, b: { lo: number; hi: number } | null) => (!isNum(v) || !b ? null : v < b.lo ? "below your normal" : v > b.hi ? "above your normal" : "within your normal");
       const h = w(d.hrvMs, bandOf(d, (y: Day) => y.hrvMs)), r = w(d.rhr, bandOf(d, (y: Day) => y.rhr));
-      const a = h && r ? (h === r ? `HRV e FC a riposo ${h}` : `HRV ${h}, FC a riposo ${r}`) : h ? `HRV ${h}` : r ? `FC a riposo ${r}` : "";
-      const sl = dSn !== null && dSn < 34 ? ", frenato dalla notte corta" : "";
+      const a = h && r ? (h === r ? `HRV and resting HR ${h}` : `HRV ${h}, resting HR ${r}`) : h ? `HRV ${h}` : r ? `Resting HR ${r}` : "";
+      const sl = dSn !== null && dSn < 34 ? ", held back by the short night" : "";
       const tw = d.date === DATA.today && d.workouts.some((w: Workout) => w.status === "fatto");
-      return `${a ? `${a}: ` : ""}recupero ${dRec >= 67 ? "alto" : dRec >= 34 ? "medio" : "basso"}${sl}.${tw ? " È il recupero di stanotte: lo sforzo di oggi peserà su quello di domani." : ""}`;
+      return `${a ? `${a}: ` : ""}recovery ${dRec >= 67 ? "high" : dRec >= 34 ? "medium" : "low"}${sl}.${tw ? " This is last night's recovery: today's effort will weigh on tomorrow's." : ""}`;
     })();
-  // 30 giorni fino al giorno scelto, con la fascia della tua norma (media ± la variazione tipica)
+  // 30 days up to the chosen day, with your normal band (average ± typical variation)
   const normChart = (name: string, f: (y: Day) => number | null | undefined, color: string, u: string, hb: boolean) => {
     const win = H30.filter((y: Day) => y.date <= d.date && y.date >= addDays(d.date, -29));
     const vs = win.map(f), v = nums(vs);
     if (v.length < 4) return null;
-    // la stessa fascia usata ovunque (testo, consigli, pill): i 30 giorni prima del giorno scelto
+    // the same band used everywhere (text, tips, pill): the 30 days before the chosen day
     const m = v.reduce((a, b) => a + b, 0) / v.length, s = sdev(v) ?? 0, bd = bandOf(d, f), bLo = bd ? bd.lo : m - s, bHi = bd ? bd.hi : m + s;
     const W = 340, H = 140, pl = 26, pr = 8, pt = 10, pb = 20;
     const lo = Math.min(...v, bLo) - 2, hi = Math.max(...v, bHi) + 2;
@@ -3330,8 +3330,8 @@ export default function App() {
     const pts = vs.map((x, i) => (isNum(x) ? [X(i), Y(x)] as [number, number] : null)).filter((p): p is [number, number] => p !== null);
     const cur = f(d), ok = inNorm(cur, { lo: bLo, hi: bHi }), hiSide = isNum(cur) && cur > bHi, good = ok === null ? null : ok || hiSide === hb;
     return (
-      <div aria-label={`${name} 30 giorni`} style={{ ...card, ...st(8) }}>
-        <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>{name}</span><span style={{ ...lbl, color: good === null ? K.t3 : good ? K.up : K.warn }}>{`${shortDay(d.date).toLowerCase()} ${fmt(cur, u)}${ok === null ? "" : ok ? " · nella norma" : hiSide ? " · sopra la norma" : " · sotto la norma"}`}</span></div>
+      <div aria-label={`${name} 30 days`} style={{ ...card, ...st(8) }}>
+        <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>{name}</span><span style={{ ...lbl, color: good === null ? K.t3 : good ? K.up : K.warn }}>{`${shortDay(d.date).toLowerCase()} ${fmt(cur, u)}${ok === null ? "" : ok ? " · in range" : hiSide ? " · above range" : " · below range"}`}</span></div>
         <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block" }}>
           <rect x={pl} y={Y(bHi)} width={W - pl - pr} height={Math.max(2, Y(bLo) - Y(bHi))} fill={color} opacity={0.14} rx={4} />
           <text x={pl - 4} y={Y(bHi) + 4} fontSize={10} textAnchor="end" fill={K.t3}>{Math.round(bHi)}</text>
@@ -3341,7 +3341,7 @@ export default function App() {
           {isNum(cur) ? <circle cx={X(win.length - 1)} cy={Y(cur)} r={5} fill={K.bg} stroke={K.t1} strokeWidth={2.5} /> : null}
           {win.map((y: Day, i: number) => (i % 7 === (win.length - 1) % 7 ? <text key={y.date} x={X(i)} y={H - 5} fontSize={10} textAnchor={i === win.length - 1 ? "end" : "middle"} fill={i === win.length - 1 ? K.t1 : K.t3}>{`${parts(y.date).dd}/${parts(y.date).m}`}</text> : null))}
         </svg>
-        <span style={lbl}>{`Fascia: la tua norma degli ultimi 30 giorni, ${Math.round(bLo)}–${Math.round(bHi)}${u}`}</span>
+        <span style={lbl}>{`Band: your normal over the last 30 days, ${Math.round(bLo)}–${Math.round(bHi)}${u}`}</span>
       </div>
     );
   };
@@ -3351,8 +3351,8 @@ export default function App() {
     const st21 = days.map((x: Day) => strainScore(x));
     const sp2 = st21.map((v, i) => (isNum(v) ? [cx(i), y((v / 21) * 100)] as [number, number] : null)).filter((p): p is [number, number] => p !== null);
     return (
-      <div aria-label="Recupero e sforzo" style={{ ...card, ...st(8) }}>
-        {legend([{ label: "Recupero, colore per livello", color: K.t2 }, { label: "Sforzo su 21", color: K.strain }])}
+      <div aria-label="Recovery and effort" style={{ ...card, ...st(8) }}>
+        {legend([{ label: "Recovery, colour by level", color: K.t2 }, { label: "Effort out of 21", color: K.strain }])}
         <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block" }}>
           {days.map((x: Day, i: number) => {
             const v = recScore(x), on = x.date === d.date, p = parts(x.date);
@@ -3368,7 +3368,7 @@ export default function App() {
           {sp2.length > 1 ? <path d={smooth(sp2)} fill="none" stroke={K.strain} strokeWidth={2.5} strokeLinecap="round" /> : null}
           {st21.map((v, i) => (isNum(v) ? <g key={i}><circle cx={cx(i)} cy={y((v / 21) * 100)} r={3.5} fill={K.bg} stroke={K.strain} strokeWidth={2} /><text x={cx(i)} y={y((v / 21) * 100) - 8} fontSize={10} textAnchor="middle" fill={K.strain} fontWeight={700} fontFamily={NUM}>{fmt(v)}</text></g> : null))}
         </svg>
-        <span style={txt}>{(() => { const pairs = days.map((x: Day) => ({ r: recScore(x), s: strainScore(x) })).filter((q) => isNum(q.r) && isNum(q.s)) as { r: number; s: number }[]; const over = pairs.filter((q) => (q.r < 34 && q.s >= 10) || (q.r < 67 && q.s >= 14)).length; return !pairs.length ? "Servono più giorni con recupero e sforzo." : over === 0 ? "Questa settimana lo sforzo è rimasto in linea con il recupero." : `${over} ${over === 1 ? "giorno" : "giorni"} con più sforzo di quanto il recupero suggeriva: dopo quei giorni dà spazio al sonno.`; })()}</span>
+        <span style={txt}>{(() => { const pairs = days.map((x: Day) => ({ r: recScore(x), s: strainScore(x) })).filter((q) => isNum(q.r) && isNum(q.s)) as { r: number; s: number }[]; const over = pairs.filter((q) => (q.r < 34 && q.s >= 10) || (q.r < 67 && q.s >= 14)).length; return !pairs.length ? "More days with recovery and effort are needed." : over === 0 ? "This week effort stayed in line with recovery." : `${over} ${over === 1 ? "day" : "days"} with more effort than recovery suggested: after those days, make room for sleep.`; })()}</span>
       </div>
     );
   })();
@@ -3376,22 +3376,22 @@ export default function App() {
     <div style={st(14)}>
       {detailTop("recupero", withBack)}
       {contribCard([
-        { icon: "heart", label: "Variabilità cardiaca", value: fmt(d.hrvMs), trend: trendOf(d.hrvMs, bHrv, true) },
-        { icon: "pulse", label: "FC a riposo", value: fmt(d.rhr), trend: trendOf(d.rhr, bRhr, false) },
-        { icon: "moon", label: "Sonno", value: dSn === null ? "—" : String(dSn), trend: trendOf(dSn, bSlScore, true) },
-        { icon: "bolt", label: "Respirazione", value: fmt(d.breathing), trend: trendOf(d.breathing, bBr, null) },
+        { icon: "heart", label: "Heart rate variability", value: fmt(d.hrvMs), trend: trendOf(d.hrvMs, bHrv, true) },
+        { icon: "pulse", label: "Resting HR", value: fmt(d.rhr), trend: trendOf(d.rhr, bRhr, false) },
+        { icon: "moon", label: "Sleep", value: dSn === null ? "—" : String(dSn), trend: trendOf(dSn, bSlScore, true) },
+        { icon: "bolt", label: "Breathing", value: fmt(d.breathing), trend: trendOf(d.breathing, bBr, null) },
       ])}
       {insight(recInsight)}
       {monitorLine}
       {d.date === DATA.today ? hrNowCard : null}
-      {weekTitle("Recupero e sforzo · 7 giorni")}
+      {weekTitle("Recovery and effort · 7 days")}
       {recEffort}
-      {weekTitle("HRV · 30 giorni · più alta è meglio")}
+      {weekTitle("HRV · 30 days · higher is better")}
       {normChart("HRV", (y: Day) => y.hrvMs, K.violet, " ms", true)}
-      {weekTitle("FC a riposo · 30 giorni · più bassa è meglio")}
-      {normChart("FC a riposo", (y: Day) => y.rhr, K.recLo, " bpm", false)}
-      <div aria-label="Consigli recupero" style={{ ...card, ...st(10) }}>
-        <span style={capLbl(12)}>Consigli</span>
+      {weekTitle("Resting HR · 30 days · lower is better")}
+      {normChart("Resting HR", (y: Day) => y.rhr, K.recLo, " bpm", false)}
+      <div aria-label="Recovery tips" style={{ ...card, ...st(10) }}>
+        <span style={capLbl(12)}>Tips</span>
         {recTips.slice(0, 4).map((k, i) => <div key={i} style={{ ...row, alignItems: "flex-start", gap: 10 }}>{ic(k.icon, K.t2, 18)}<span style={{ ...txt, flex: 1 }}>{k.t}</span></div>)}
       </div>
     </div>
@@ -3413,19 +3413,19 @@ export default function App() {
     return zt > 0 ? (
       <div style={{ ...card, ...st(10) }}>
         <span style={capLbl(12)}>{title} · {zt} min</span>
-        {([["Brucia grassi", z.fat, K.sleep], ["Cardio", z.cardio, K.strain], ["Picco", z.peak, K.recLo]] as [string, number, string][]).map(([n, v, c]) => (
+        {([["Fat burn", z.fat, K.sleep], ["Cardio", z.cardio, K.strain], ["Peak", z.peak, K.recLo]] as [string, number, string][]).map(([n, v, c]) => (
           <div key={n} style={{ ...row, gap: 10 }}><span style={{ ...lbl, width: 92, flex: "0 0 auto", color: K.t2 }}>{n}</span><div style={{ flex: 1 }}>{hbar(v / zt, c, 8)}</div><span style={{ ...numStyle(15), width: 78, textAlign: "right", flex: "0 0 auto" }}>{v} min · {Math.round((v * 100) / zt)}%</span></div>
         ))}
       </div>
     ) : null;
   };
-  const strInsight = dStr === null ? "Sforzo non disponibile: mancano le calorie attive." : `${dStr >= 18 ? "Carico molto alto: oggi il corpo ha lavorato tantissimo." : dStr >= 14 ? "Carico impegnativo per il sistema cardiovascolare." : dStr >= 10 ? "Carico moderato." : "Carico leggero."}${strainRange ? (dStr < strainRange[0] ? (live ? " Sotto la fascia di oggi: c'è ancora spazio per muoverti." : " Sotto la fascia del giorno.") : dStr > strainRange[1] ? " Sopra la fascia del giorno: domani più leggero." : " Dentro la fascia del giorno.") : ""}${live ? " Giornata in corso." : ""}`;
+  const strInsight = dStr === null ? "Effort not available: active calories missing." : `${dStr >= 18 ? "Very high load: your body worked really hard today." : dStr >= 14 ? "A demanding load for the cardiovascular system." : dStr >= 10 ? "Moderate load." : "Light load."}${strainRange ? (dStr < strainRange[0] ? (live ? " Below today's band: there is still room to move." : " Below the day's band.") : dStr > strainRange[1] ? " Above the day's band: go lighter tomorrow." : " Within the day's band.") : ""}${live ? " Day in progress." : ""}`;
   const byKind: Record<string, { n: number; kcal: number; min: number }> = {};
   doneW.forEach((e) => { const k = kindOf(e.w); const o = byKind[k] ?? { n: 0, kcal: 0, min: 0 }; o.n += 1; o.kcal += e.w.kcal ?? 0; o.min += e.w.durationMin ?? 0; byKind[k] = o; });
   const kinds = Object.entries(byKind).sort((a, z) => z[1].min - a[1].min);
   const maxKindMin = Math.max(1, ...kinds.map(([, o]) => o.min));
   const maxHrs = nums(doneW.map((e) => e.w.maxHr));
-  // zone personali (riserva cardiaca tra FC a riposo e FC massima), dai battiti minuto per minuto
+  // personal zones (heart rate reserve between resting HR and max HR), from minute-by-minute heart rate
   const ZD = DATA.zones ?? null;
   const ZC = [K.sleep, K.up, K.recMid, K.warn, K.recLo];
   const zEdges = ZD ? [0.5, 0.6, 0.7, 0.8, 0.9].map((f) => Math.round(ZD.rhr + f * (ZD.max - ZD.rhr))) : [];
@@ -3442,12 +3442,12 @@ export default function App() {
   const zoneCard = (zs: number[], title: string, ref: number[] | null, refText: string) => {
     const mx = Math.max(1, ...zs, ...(ref ?? []));
     return (
-      <div aria-label="Zone personali" style={{ ...card, ...st(10) }}>
+      <div aria-label="Personal zones" style={{ ...card, ...st(10) }}>
         <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>{title}</span><span style={lbl}>{`${sum(zs)} min`}</span></div>
         {zs.map((v, i) => (
           <div key={i} style={st(4)}>
             <div style={{ ...row, justifyContent: "space-between", gap: 8 }}>
-              <span style={{ ...row, gap: 8 }}><span style={{ width: 8, height: 8, borderRadius: 2, background: ZC[i], flex: "0 0 auto" }} /><span style={{ ...caps, fontSize: 12, lineHeight: "16px", color: K.t1 }}>{`Zona ${i + 1}`}</span><span style={lbl}>{i < 4 ? `${zEdges[i]}–${zEdges[i + 1] - 1} bpm` : `${zEdges[4]}+ bpm`}</span></span>
+              <span style={{ ...row, gap: 8 }}><span style={{ width: 8, height: 8, borderRadius: 2, background: ZC[i], flex: "0 0 auto" }} /><span style={{ ...caps, fontSize: 12, lineHeight: "16px", color: K.t1 }}>{`Zone ${i + 1}`}</span><span style={lbl}>{i < 4 ? `${zEdges[i]}–${zEdges[i + 1] - 1} bpm` : `${zEdges[4]}+ bpm`}</span></span>
               <span style={numStyle(16)}>{`${v} min`}</span>
             </div>
             <div style={{ position: "relative" }}>{hbar(v / mx, ZC[i], 8)}{ref ? <div style={{ position: "absolute", top: -2, bottom: -2, left: `calc(${(clamp(ref[i] / mx, 0, 1) * 100).toFixed(1)}% - 1px)`, width: 2, background: K.t1, opacity: 0.7, borderRadius: 1 }} /> : null}</div>
@@ -3468,65 +3468,65 @@ export default function App() {
         {(() => {
           const dn = doneOfDay(d), kc = sum(dn.map((e) => e.w.kcal)), rows = workoutRows(d, true);
           return (
-            <div aria-label="Allenamenti del giorno" style={{ ...card, padding: "14px 16px 4px" }}>
-              <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>{live ? "Oggi" : "Allenamenti"}</span><span style={lbl}>{dn.length ? `${dn.length} ${dn.length === 1 ? "sessione" : "sessioni"}${kc ? ` · ${kcalTxt(kc)} kcal` : ""}` : ""}</span></div>
-              {rows ?? <span style={{ ...txt, display: "block", padding: "10px 0 12px" }}>{live ? "Ancora nessun allenamento oggi." : "Nessun allenamento in questo giorno."}</span>}
+            <div aria-label="Workouts of the day" style={{ ...card, padding: "14px 16px 4px" }}>
+              <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>{live ? "Today" : "Workouts"}</span><span style={lbl}>{dn.length ? `${dn.length} ${dn.length === 1 ? "session" : "sessions"}${kc ? ` · ${kcalTxt(kc)} kcal` : ""}` : ""}</span></div>
+              {rows ?? <span style={{ ...txt, display: "block", padding: "10px 0 12px" }}>{live ? "No workout yet today." : "No workout on this day."}</span>}
             </div>
           );
         })()}
         {contribCard(zd ? [
-          { icon: "heart", label: "Zone 1–3", value: hm(z13(d)), trend: trendOf(z13(d), norm(d, z13, true), true) },
-          { icon: "pulse", label: "Zone 4–5", value: hm(z45(d)), trend: trendOf(z45(d), norm(d, z45, true), true) },
-          { icon: "dumbbell", label: "Forza", value: hm(forzaMin(d)), trend: trendOf(forzaMin(d), fNorm, true) },
-          { icon: "steps", label: "Passi", value: fmt(d.steps), trend: trendOf(d.steps, bSteps, true) },
+          { icon: "heart", label: "Zones 1–3", value: hm(z13(d)), trend: trendOf(z13(d), norm(d, z13, true), true) },
+          { icon: "pulse", label: "Zones 4–5", value: hm(z45(d)), trend: trendOf(z45(d), norm(d, z45, true), true) },
+          { icon: "dumbbell", label: "Strength", value: hm(forzaMin(d)), trend: trendOf(forzaMin(d), fNorm, true) },
+          { icon: "steps", label: "Steps", value: fmt(d.steps), trend: trendOf(d.steps, bSteps, true) },
         ] : [
-          { icon: "pulse", label: "Minuti a FC ≥ 120", value: `${cardioMin(d)}`, trend: trendOf(cardioMin(d), bCardio, true) },
-          { icon: "dumbbell", label: "Forza", value: hm(forzaMin(d)), trend: trendOf(forzaMin(d), fNorm, true) },
-          { icon: "steps", label: "Passi", value: fmt(d.steps), trend: trendOf(d.steps, bSteps, true) },
-        ], "vs ultimi 30 giorni · forza vs settimana")}
+          { icon: "pulse", label: "Minutes at HR ≥ 120", value: `${cardioMin(d)}`, trend: trendOf(cardioMin(d), bCardio, true) },
+          { icon: "dumbbell", label: "Strength", value: hm(forzaMin(d)), trend: trendOf(forzaMin(d), fNorm, true) },
+          { icon: "steps", label: "Steps", value: fmt(d.steps), trend: trendOf(d.steps, bSteps, true) },
+        ], "vs last 30 days · strength vs week")}
         {insight(strInsight)}
         {effortCard}
-        {zd ? zoneCard(zd, "Zone personali", zRef, `Riga bianca: la tua media al giorno negli ultimi 30 giorni. Zone dalla tua FC a riposo (${ZD?.rhr}) alla massima (${ZD?.max}).`) : z ? zoneBars(z, "Zone di frequenza cardiaca") : null}
+        {zd ? zoneCard(zd, "Personal zones", zRef, `White line: your daily average over the last 30 days. Zones from your resting HR (${ZD?.rhr}) to max (${ZD?.max}).`) : z ? zoneBars(z, "Heart rate zones") : null}
         {gymCard}
-        {weekTitle("Sforzo · 7 giorni")}
+        {weekTitle("Effort · 7 days")}
         <div style={card}>{weekBars(days.map((x: Day) => strainScore(x)), 21, () => K.strain, (v) => fmt(v))}</div>
-        {weekTitle("Passi · linea = 10.000")}
-        <div style={card}>{weekBars(days.map((x: Day) => x.steps), 10000, (v) => (v >= 10000 ? K.strain : `${K.strain}AA`), (v) => `${r1(v / 1000).toLocaleString("it-IT")}k`, 10000)}</div>
+        {weekTitle("Steps · line = 10,000")}
+        <div style={card}>{weekBars(days.map((x: Day) => x.steps), 10000, (v) => (v >= 10000 ? K.strain : `${K.strain}AA`), (v) => `${r1(v / 1000).toLocaleString("en-US")}k`, 10000)}</div>
         {kinds.length ? (
           <div style={{ ...card, ...st(12) }}>
-            <span style={capLbl(12)}>Settimana per tipo</span>
+            <span style={capLbl(12)}>Week by type</span>
             {kinds.map(([k, o]) => (
               <div key={k} style={st(6)}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span style={{ ...row, gap: 8, fontSize: 14, color: K.t1 }}>{ic(kindIcon(k), K.t2, 18)}{KIND_NAME[k] ?? k} ×{o.n}</span><span style={lbl}>{o.min ? `${o.min} min` : "durata n.d."}{o.kcal ? ` · ${String(Math.round(o.kcal)).replace(/\B(?=(\d{3})+(?!\d))/g, ".")} kcal` : ""}</span></div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span style={{ ...row, gap: 8, fontSize: 14, color: K.t1 }}>{ic(kindIcon(k), K.t2, 18)}{KIND_NAME[k] ?? k} ×{o.n}</span><span style={lbl}>{o.min ? `${o.min} min` : "duration n/a"}{o.kcal ? ` · ${String(Math.round(o.kcal)).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} kcal` : ""}</span></div>
                 {hbar(o.min / maxKindMin, K.strain)}
               </div>
             ))}
             <div style={three}>
-              {stat("Sessioni", String(doneW.length), "fatte")}
-              {stat("Minuti", String(sum(doneW.map((e) => e.w.durationMin))), "registrati")}
-              {stat("FC max", maxHrs.length ? String(Math.max(...maxHrs)) : "—", "bpm")}
+              {stat("Sessions", String(doneW.length), "done")}
+              {stat("Minutes", String(sum(doneW.map((e) => e.w.durationMin))), "logged")}
+              {stat("Max HR", maxHrs.length ? String(Math.max(...maxHrs)) : "—", "bpm")}
             </div>
           </div>
         ) : null}
-        {chronoW.some((e) => e.date !== d.date) ? listCard("Altre sessioni", <span style={lbl}>{chronoW.filter((e) => e.date !== d.date).length}</span>, [...days].reverse().filter((x: Day) => x.date !== d.date).flatMap((x: Day) => (x.workouts.length ? actRows(x, true) : []))) : null}
+        {chronoW.some((e) => e.date !== d.date) ? listCard("Other sessions", <span style={lbl}>{chronoW.filter((e) => e.date !== d.date).length}</span>, [...days].reverse().filter((x: Day) => x.date !== d.date).flatMap((x: Day) => (x.workouts.length ? actRows(x, true) : []))) : null}
         {upcomingCard}
       </div>
     );
   };
 
-  // =================== DETTAGLIO ATTIVITÀ ===================
+  // =================== ACTIVITY DETAIL ===================
   const backBar = (title: string) => (
     <div style={frostIn}>
       <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 40px", alignItems: "center" }}>
-        <button onClick={closeScreen} aria-label="Indietro" style={{ ...btn, width: 40, height: 40, display: "flex", alignItems: "center" }}>{ic("back", K.t1, 24, 2.2)}</button>
+        <button onClick={closeScreen} aria-label="Back" style={{ ...btn, width: 40, height: 40, display: "flex", alignItems: "center" }}>{ic("back", K.t1, 24, 2.2)}</button>
         <span style={{ ...caps, ...ell, fontSize: 13, textAlign: "center", color: K.t1 }}>{title}</span><span />
       </div>
     </div>
   );
-  const delta = (a: number | null | undefined, b: number | null | undefined, u: string) => (isNum(a) && isNum(b) ? `${a - b > 0 ? "+" : a - b < 0 ? "−" : "±"}${r1(Math.abs(a - b)).toLocaleString("it-IT")}${u}` : null);
+  const delta = (a: number | null | undefined, b: number | null | undefined, u: string) => (isNum(a) && isNum(b) ? `${a - b > 0 ? "+" : a - b < 0 ? "−" : "±"}${r1(Math.abs(a - b)).toLocaleString("en-US")}${u}` : null);
   const actScreen = (key: string) => {
     const idx = chronoW.findIndex((e) => e.key === key);
-    if (idx < 0) return backBar("Attività");
+    if (idx < 0) return backBar("Activities");
     const { w, date } = chronoW[idx];
     const k = kindOf(w), s = actStrain(w);
     const prev = [...chronoW.slice(0, idx)].reverse().find((e) => kindOf(e.w) === k && e.w.status === "fatto");
@@ -3534,30 +3534,30 @@ export default function App() {
     const z = w.zoneMin ?? null;
     const above = isNum(w.pctAbove140) ? `${w.pctAbove140}%${isNum(w.minAbove140) ? ` · ${w.minAbove140} min` : ""}` : isNum(w.minAbove140) ? `${w.minAbove140} min` : "—";
     const cmp: [string, string | null, number | null | undefined, number | null | undefined][] = prev ? ([
-      ["Sforzo", delta(s, ps, ""), s, ps], ["FC media", delta(w.avgHr, prev.w.avgHr, " bpm"), w.avgHr, prev.w.avgHr], ["FC max", delta(w.maxHr, prev.w.maxHr, " bpm"), w.maxHr, prev.w.maxHr],
-      ["Durata", delta(w.durationMin, prev.w.durationMin, " min"), w.durationMin, prev.w.durationMin], ["Calorie", delta(w.kcal, prev.w.kcal, " kcal"), w.kcal, prev.w.kcal], ["% sopra 140", delta(w.pctAbove140, prev.w.pctAbove140, " pt"), w.pctAbove140, prev.w.pctAbove140],
+      ["Effort", delta(s, ps, ""), s, ps], ["Avg HR", delta(w.avgHr, prev.w.avgHr, " bpm"), w.avgHr, prev.w.avgHr], ["Max HR", delta(w.maxHr, prev.w.maxHr, " bpm"), w.maxHr, prev.w.maxHr],
+      ["Duration", delta(w.durationMin, prev.w.durationMin, " min"), w.durationMin, prev.w.durationMin], ["Calories", delta(w.kcal, prev.w.kcal, " kcal"), w.kcal, prev.w.kcal], ["% above 140", delta(w.pctAbove140, prev.w.pctAbove140, " pt"), w.pctAbove140, prev.w.pctAbove140],
     ] as [string, string | null, number | null | undefined, number | null | undefined][]).filter(([, v]) => v !== null) : [];
     return (
       <div style={st(14)}>
-        {backBar(KIND_NAME[k] ?? "Attività")}
+        {backBar(KIND_NAME[k] ?? "Activities")}
         <div style={{ ...st(4), alignItems: "center", textAlign: "center" }}>
           <span style={{ fontSize: 20, lineHeight: "26px", fontWeight: 600, color: K.t1 }}>{w.name}</span>
-          <span style={lbl}>{dayTitle(date)} · {w.time}{w.partners ? ` · ${w.partners}` : ""}{w.status === "pianificato" ? " · pianificato" : ""}</span>
+          <span style={lbl}>{dayTitle(date)} · {w.time}{w.partners ? ` · ${w.partners}` : ""}{w.status === "pianificato" ? " · planned" : ""}</span>
         </div>
         <div style={{ display: "flex", justifyContent: "center", padding: "6px 0" }}>
-          {ring((s ?? 0) / 21, K.strain, 200, 12, <><span style={numStyle(60, s === null ? K.t3 : K.t1)}>{s === null ? "—" : s.toLocaleString("it-IT")}</span><span style={{ ...caps, fontSize: 12, color: K.t1, marginTop: 4 }}>Sforzo attività</span></>, true)}
+          {ring((s ?? 0) / 21, K.strain, 200, 12, <><span style={numStyle(60, s === null ? K.t3 : K.t1)}>{s === null ? "—" : s.toLocaleString("en-US")}</span><span style={{ ...caps, fontSize: 12, color: K.t1, marginTop: 4 }}>Activity effort</span></>, true)}
         </div>
         {contribCard([
-          { icon: "clock", label: "Durata", value: fmt(w.durationMin, " min"), trend: prev ? trendOf(w.durationMin, prev.w.durationMin, true) : null },
-          { icon: "pulse", label: "FC media", value: fmt(w.avgHr, " bpm"), trend: prev ? trendOf(w.avgHr, prev.w.avgHr, null) : null },
-          { icon: "heart", label: "FC max", value: fmt(w.maxHr, " bpm"), trend: prev ? trendOf(w.maxHr, prev.w.maxHr, null) : null },
-          { icon: "flame", label: "Calorie", value: fmt(w.kcal, " kcal"), trend: prev ? trendOf(w.kcal, prev.w.kcal, true) : null },
-          { icon: "bolt", label: "Sopra 140 bpm", value: above, trend: null },
-        ], prev ? `vs ${KIND_NAME[k] ?? k} di ${shortDay(prev.date)}` : "primo di questo tipo in 7 giorni")}
+          { icon: "clock", label: "Duration", value: fmt(w.durationMin, " min"), trend: prev ? trendOf(w.durationMin, prev.w.durationMin, true) : null },
+          { icon: "pulse", label: "Avg HR", value: fmt(w.avgHr, " bpm"), trend: prev ? trendOf(w.avgHr, prev.w.avgHr, null) : null },
+          { icon: "heart", label: "Max HR", value: fmt(w.maxHr, " bpm"), trend: prev ? trendOf(w.maxHr, prev.w.maxHr, null) : null },
+          { icon: "flame", label: "Calories", value: fmt(w.kcal, " kcal"), trend: prev ? trendOf(w.kcal, prev.w.kcal, true) : null },
+          { icon: "bolt", label: "Above 140 bpm", value: above, trend: null },
+        ], prev ? `vs ${KIND_NAME[k] ?? k} on ${shortDay(prev.date)}` : "first of this kind in 7 days")}
         {(() => {
           const key = (e: { date: string; w: Workout }) => `${e.date} ${e.w.time.slice(0, 5)}`;
           const ser = ZD?.sessions?.[key({ date, w })];
-          if (!ser || !zEdges.length) return z ? zoneBars({ fat: z.fatBurn ?? 0, cardio: z.cardio ?? 0, peak: z.peak ?? 0 }, "Zone di frequenza cardiaca") : null;
+          if (!ser || !zEdges.length) return z ? zoneBars({ fat: z.fatBurn ?? 0, cardio: z.cardio ?? 0, peak: z.peak ?? 0 }, "Heart rate zones") : null;
           const hr = ser.split(" ").map(Number), ok = hr.filter((v) => v > 0);
           if (ok.length < 3) return null;
           const zm = [0, 1, 2, 3, 4].map((i) => hr.filter((v) => v > 0 && zoneIdx(v) === i).length);
@@ -3568,8 +3568,8 @@ export default function App() {
           const X = (i: number) => pl + (i * (W - pl - pr)) / Math.max(hr.length - 1, 1), Y = (v: number) => pt + (1 - (v - lo) / (hi - lo || 1)) * (H - pt - pb);
           return (
             <>
-              <div aria-label="Frequenza cardiaca sessione" style={{ ...card, ...st(8) }}>
-                <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Frequenza cardiaca</span><span style={lbl}>{`media ${Math.round(avg(ok) as number)} · max ${Math.max(...ok)} bpm`}</span></div>
+              <div aria-label="Session heart rate" style={{ ...card, ...st(8) }}>
+                <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Heart rate</span><span style={lbl}>{`average ${Math.round(avg(ok) as number)} · max ${Math.max(...ok)} bpm`}</span></div>
                 <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block" }}>
                   {zEdges.filter((e) => e > lo && e < hi).map((e) => <g key={e}><line x1={pl} x2={W - pr} y1={Y(e)} y2={Y(e)} stroke={K.t3} strokeOpacity={0.5} strokeDasharray="2 4" /><text x={pl - 4} y={Y(e) + 3} fontSize={9} textAnchor="end" fill={K.t3}>{e}</text></g>)}
                   {hr.map((v, i) => (i > 0 && v > 0 && hr[i - 1] > 0 ? <line key={i} x1={X(i - 1)} y1={Y(hr[i - 1])} x2={X(i)} y2={Y(v)} stroke={zoneIdx(v) >= 0 ? ZC[zoneIdx(v)] : K.t3} strokeWidth={2.5} strokeLinecap="round" /> : null))}
@@ -3578,29 +3578,29 @@ export default function App() {
                 </svg>
                 {legend([0, 1, 2, 3, 4].map((i) => ({ label: `Z${i + 1}`, color: ZC[i] })))}
               </div>
-              {zoneCard(zm, "Zone in questa sessione", ref, past.length === 1 ? `Riga bianca: la sessione di ${(KIND_NAME[k] ?? k).toLowerCase()} precedente.` : `Riga bianca: media delle ${past.length} sessioni di ${(KIND_NAME[k] ?? k).toLowerCase()} precedenti.`)}
+              {zoneCard(zm, "Zones in this session", ref, past.length === 1 ? `White line: the previous ${(KIND_NAME[k] ?? k).toLowerCase()} session.` : `White line: average of the previous ${past.length} ${(KIND_NAME[k] ?? k).toLowerCase()} sessions.`)}
             </>
           );
         })()}
         {isNum(w.pctAbove140) ? (
           <div style={{ ...card, ...st(10) }}>
-            <span style={capLbl(12)}>Intensità</span>
+            <span style={capLbl(12)}>Intensity</span>
             {segBar([{ label: "a", value: 100 - w.pctAbove140, color: K.sleep }, { label: "b", value: w.pctAbove140, color: K.strain }], 12)}
-            {legend([{ label: "Sotto 140 bpm", color: K.sleep, text: `${100 - w.pctAbove140}%` }, { label: "Sopra 140 bpm", color: K.strain, text: `${w.pctAbove140}%` }])}
+            {legend([{ label: "Below 140 bpm", color: K.sleep, text: `${100 - w.pctAbove140}%` }, { label: "Above 140 bpm", color: K.strain, text: `${w.pctAbove140}%` }])}
           </div>
         ) : null}
         {prev ? (
           <div style={{ ...card, ...st(10) }}>
-            <span style={capLbl(12)}>Confronto con la precedente</span>
-            <span style={lbl}>{KIND_NAME[k] ?? k} di {dayTitle(prev.date)} · {prev.w.time}</span>
+            <span style={capLbl(12)}>Compared with the previous one</span>
+            <span style={lbl}>{KIND_NAME[k] ?? k} on {dayTitle(prev.date)} · {prev.w.time}</span>
             {cmp.length ? cmp.map(([n, v, a, b]) => (
               <div key={n} style={{ ...row, justifyContent: "space-between" }}><span style={txt}>{n}</span><span style={{ ...row, gap: 8 }}><span style={lbl}>{fmt(b)} → {fmt(a)}</span><span style={numStyle(16)}>{v}</span></span></div>
-            )) : <span style={txt}>Nessun dato numerico in comune da confrontare.</span>}
+            )) : <span style={txt}>No shared numbers to compare.</span>}
           </div>
         ) : null}
         {w.exercises && w.exercises.length ? (
           <div style={{ ...card, ...st(8) }}>
-            <span style={capLbl(12)}>Esercizi</span>
+            <span style={capLbl(12)}>Exercises</span>
             {w.exercises.map((e, i) => <div key={i} style={{ ...row, gap: 10 }}>{ic("dumbbell", K.t3, 16)}<span style={txt}>{e}</span></div>)}
           </div>
         ) : null}
@@ -3609,7 +3609,7 @@ export default function App() {
     );
   };
 
-  // =================== DETTAGLIO PASTO ===================
+  // =================== MEAL DETAIL ===================
   const donut = (segs: { label: string; value: number; color: string }[], size: number, stroke: number, center: ReactNode) => {
     const r = (size - stroke) / 2, C = 2 * Math.PI * r, tot = segs.reduce((a, x) => a + x.value, 0);
     let off = 0;
@@ -3626,18 +3626,18 @@ export default function App() {
   const MC = { p: K.violet, c: K.strain, f: K.recMid };
   const macroLegend = (p: number, c: number, f: number) => {
     const tot = p * 4 + c * 4 + f * 9 || 1;
-    return legend([{ label: "Proteine", color: MC.p, text: `${fmt(p, " g")} · ${Math.round((p * 400) / tot)}%` }, { label: "Carboidrati", color: MC.c, text: `${fmt(c, " g")} · ${Math.round((c * 400) / tot)}%` }, { label: "Grassi", color: MC.f, text: `${fmt(f, " g")} · ${Math.round((f * 900) / tot)}%` }]);
+    return legend([{ label: "Protein", color: MC.p, text: `${fmt(p, " g")} · ${Math.round((p * 400) / tot)}%` }, { label: "Carbs", color: MC.c, text: `${fmt(c, " g")} · ${Math.round((c * 400) / tot)}%` }, { label: "Fat", color: MC.f, text: `${fmt(f, " g")} · ${Math.round((f * 900) / tot)}%` }]);
   };
   const mealScreen = (key: string) => {
     const e = allMeals.find((x) => x.key === key);
-    if (!e) return backBar("Pasto");
+    if (!e) return backBar("Meal");
     const m = e.m, day = days.find((x: Day) => x.date === e.date) ?? d;
     const ok = isNum(m.protein) && isNum(m.carbs) && isNum(m.fat);
-    const share = (v: number | null | undefined, t: number | null | undefined) => (isNum(v) && isNum(t) && t > 0 ? `${Math.round((v / t) * 100)}% del giorno` : "");
+    const share = (v: number | null | undefined, t: number | null | undefined) => (isNum(v) && isNum(t) && t > 0 ? `${Math.round((v / t) * 100)}% of the day` : "");
     const rows: [string, string, number | null | undefined, string, number | null | undefined][] = [
-      ["flame", "Calorie", m.kcal, " kcal", day.eatenKcal], ["food", "Proteine", m.protein, " g", day.proteinG],
-      ["food", "Carboidrati", m.carbs, " g", dayMacro(day, "carbs").v], ["food", "Grassi", m.fat, " g", dayMacro(day, "fat").v],
-      ["food", "Zuccheri", m.sugar, " g", dayMacro(day, "sugar").v], ["food", "Fibre", m.fibre, " g", dayMacro(day, "fibre").v], ["food", "Sale", m.salt, " g", dayMacro(day, "salt").v],
+      ["flame", "Calories", m.kcal, " kcal", day.eatenKcal], ["food", "Protein", m.protein, " g", day.proteinG],
+      ["food", "Carbs", m.carbs, " g", dayMacro(day, "carbs").v], ["food", "Fat", m.fat, " g", dayMacro(day, "fat").v],
+      ["food", "Sugar", m.sugar, " g", dayMacro(day, "sugar").v], ["food", "Fibre", m.fibre, " g", dayMacro(day, "fibre").v], ["food", "Salt", m.salt, " g", dayMacro(day, "salt").v],
     ];
     return (
       <div style={st(14)}>
@@ -3649,7 +3649,7 @@ export default function App() {
         <div style={{ display: "flex", justifyContent: "center", padding: "6px 0" }}>
           {donut(ok ? [{ label: "p", value: (m.protein as number) * 4, color: MC.p }, { label: "c", value: (m.carbs as number) * 4, color: MC.c }, { label: "f", value: (m.fat as number) * 9, color: MC.f }] : [], 200, 14, <><span style={numStyle(54)}>{fmt(m.kcal)}</span><span style={{ ...caps, fontSize: 12, color: K.t1 }}>kcal</span></>)}
         </div>
-        {ok ? <div style={{ display: "flex", justifyContent: "center" }}>{macroLegend(m.protein as number, m.carbs as number, m.fat as number)}</div> : <span style={{ ...lbl, textAlign: "center" }}>Macro incompleti per questo pasto.</span>}
+        {ok ? <div style={{ display: "flex", justifyContent: "center" }}>{macroLegend(m.protein as number, m.carbs as number, m.fat as number)}</div> : <span style={{ ...lbl, textAlign: "center" }}>Incomplete macros for this meal.</span>}
         <div style={{ ...card, padding: "4px 16px" }}>
           {rows.map(([icon, label, v, u, tot], i) => (
             <div key={label} style={{ ...row, padding: "13px 0", borderBottom: i < rows.length - 1 ? `1px solid ${K.line}` : "none" }}>
@@ -3667,7 +3667,7 @@ export default function App() {
   // =================== COACH ===================
   const coachScreen = (
     <div style={st(14)}>
-      {backBar("Prospettiva del giorno")}
+      {backBar("Outlook for the day")}
       {insight(`${outlookTitle}. ${outlookFull}`)}
       <div style={{ ...card, padding: "4px 16px" }}>
         {coachTips.map((k, i) => (
@@ -3678,33 +3678,33 @@ export default function App() {
     </div>
   );
 
-  // =================== ETÀ BIOLOGICA ===================
+  // =================== BIOLOGICAL AGE ===================
   const bioScreen = (
     <div style={st(14)}>
-      {backBar("Longevità")}
-      {bio?.updatedAt ? <span style={{ ...lbl, textAlign: "center" }}>Input aggiornati il {longDate(bio.updatedAt)}</span> : null}
+      {backBar("Longevity")}
+      {bio?.updatedAt ? <span style={{ ...lbl, textAlign: "center" }}>Inputs updated {longDate(bio.updatedAt)}</span> : null}
       <div style={{ display: "flex", justifyContent: "center", padding: "6px 0 10px" }}>{orb(300)}</div>
       <div style={{ ...card, ...st(8) }}>
-        <span style={capLbl(12)}>Somma dei contributi</span>
+        <span style={capLbl(12)}>Sum of contributions</span>
         <svg width="100%" viewBox="0 0 340 40" style={{ display: "block" }}>
           {Array.from({ length: 49 }).map((_, i) => <line key={i} x1={10 + i * 6.67} x2={10 + i * 6.67} y1={i % 8 === 0 ? 8 : 14} y2={28} stroke={K.track} strokeWidth={2} />)}
           <line x1={170} x2={170} y1={4} y2={34} stroke={K.t3} strokeWidth={2} />
           <line x1={clamp(170 + bioDelta * 30, 12, 328)} x2={clamp(170 + bioDelta * 30, 12, 328)} y1={2} y2={36} stroke={K.t1} strokeWidth={3} />
         </svg>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={lbl}>più giovane</span><span style={numStyle(16)}>{yrs(bioDelta)}</span><span style={lbl}>più vecchio</span></div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={lbl}>younger</span><span style={numStyle(16)}>{yrs(bioDelta)}</span><span style={lbl}>older</span></div>
       </div>
-      {insight(drivers.length ? `Pesano di più: ${drivers.slice(0, 3).map((f) => `${f.name.toLowerCase()} (${yrs(f.years ?? 0)})`).join(", ")}.` : "Nessun fattore pesa in modo particolare.")}
+      {insight(drivers.length ? `Weighing most: ${drivers.slice(0, 3).map((f) => `${f.name.toLowerCase()} (${yrs(f.years ?? 0)})`).join(", ")}.` : "No factor stands out.")}
       <div style={{ ...card, padding: "4px 16px" }}>
         {factors.map((f, i) => (
           <div key={f.name} style={{ ...st(4), padding: "13px 0", borderBottom: i < factors.length - 1 ? `1px solid ${K.line}` : "none" }}>
-            <div style={{ ...row, justifyContent: "space-between" }}><span style={{ ...caps, fontSize: 12, color: K.t1 }}>{f.name}</span><span style={numStyle(16, f.years === null ? K.t3 : f.years > 0 ? K.warn : f.years < 0 ? K.up : K.t2)}>{f.years === null ? (f.value === "da misurare" ? "da misurare" : "—") : yrs(f.years)}</span></div>
+            <div style={{ ...row, justifyContent: "space-between" }}><span style={{ ...caps, fontSize: 12, color: K.t1 }}>{f.name}</span><span style={numStyle(16, f.years === null ? K.t3 : f.years > 0 ? K.warn : f.years < 0 ? K.up : K.t2)}>{f.years === null ? (f.value === "to measure" ? "to measure" : "—") : yrs(f.years)}</span></div>
             <span style={lbl}>{f.value}</span>
             <span style={txt}>{f.why}</span>
           </div>
         ))}
       </div>
       <div style={{ ...card, ...st(6) }}>
-        <span style={capLbl(12)}>Dati mancanti</span>
+        <span style={capLbl(12)}>Missing data</span>
         {missing.map((m) => <span key={m} style={txt}>• {m}</span>)}
       </div>
     </div>
@@ -3758,19 +3758,19 @@ export default function App() {
       <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 0" }}>
         {ring(isNum(d.eatenKcal) && isNum(d.burnedKcal) && d.burnedKcal > 0 ? d.eatenKcal / d.burnedKcal : 0, K.violet, 220, 14, (
           <>
-            <span style={numStyle(60, isNum(d.eatenKcal) ? K.t1 : K.t3)}>{isNum(d.eatenKcal) ? Math.round(d.eatenKcal).toLocaleString("it-IT") : "—"}</span>
-            <span style={{ ...caps, fontSize: 12, color: K.t1, marginTop: 4 }}>kcal mangiate</span>
+            <span style={numStyle(60, isNum(d.eatenKcal) ? K.t1 : K.t3)}>{isNum(d.eatenKcal) ? Math.round(d.eatenKcal).toLocaleString("en-US") : "—"}</span>
+            <span style={{ ...caps, fontSize: 12, color: K.t1, marginTop: 4 }}>kcal eaten</span>
           </>
         ), true)}
       </div>
       {(() => {
         const bl = bal(d), dn = doneOfDay(d);
         return (
-          <div aria-label="Bilancio calorie" style={{ ...card, ...st(12) }}>
-            <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Energia</span>{live ? <span style={lbl}>finora</span> : null}</div>
+          <div aria-label="Calories balance" style={{ ...card, ...st(12) }}>
+            <div style={{ ...row, justifyContent: "space-between" }}><span style={capLbl(12)}>Energy</span>{live ? <span style={lbl}>so far</span> : null}</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 8 }}>
-              {miniTile("Bruciate", isNum(d.burnedKcal) ? kcalTxt(d.burnedKcal) : "—", "kcal")}
-              {miniTile("Bilancio", signed(bl), bl === null ? undefined : "kcal", bl === null ? K.t3 : K.t1)}
+              {miniTile("Burned", isNum(d.burnedKcal) ? kcalTxt(d.burnedKcal) : "—", "kcal")}
+              {miniTile("Balance", signed(bl), bl === null ? undefined : "kcal", bl === null ? K.t3 : K.t1)}
             </div>
             {dn.length ? (
               <div style={st(6)}>
@@ -3787,93 +3787,93 @@ export default function App() {
         );
       })()}
       {nutTips.length ? (
-        <div aria-label="Consigli nutrizione" style={{ ...card, ...st(10) }}>
-          <span style={capLbl(12)}>Consigli</span>
+        <div aria-label="Nutrition tips" style={{ ...card, ...st(10) }}>
+          <span style={capLbl(12)}>Tips</span>
           {nutTips.slice(0, 4).map((k, i) => <div key={i} style={{ ...row, alignItems: "flex-start", gap: 10 }}>{ic(k.icon, K.t2, 18)}<span style={{ ...txt, flex: 1 }}>{k.t}</span></div>)}
         </div>
       ) : null}
       {d.meals.length ? (
         <>
           <div style={{ ...card, ...st(14) }}>
-            <span style={capLbl(12)}>Nutrienti del giorno</span>
+            <span style={capLbl(12)}>Nutrients of the day</span>
             {macroOk ? (
               <div style={{ ...row, gap: 16 }}>
-                {donut([{ label: "p", value: (P as number) * 4, color: MC.p }, { label: "c", value: (cc.v as number) * 4, color: MC.c }, { label: "f", value: (ff.v as number) * 9, color: MC.f }], 112, 12, <><span style={numStyle(22)}>{Math.round(macroTot).toLocaleString("it-IT")}</span><span style={lbl}>kcal macro</span></>)}
+                {donut([{ label: "p", value: (P as number) * 4, color: MC.p }, { label: "c", value: (cc.v as number) * 4, color: MC.c }, { label: "f", value: (ff.v as number) * 9, color: MC.f }], 112, 12, <><span style={numStyle(22)}>{Math.round(macroTot).toLocaleString("en-US")}</span><span style={lbl}>kcal macro</span></>)}
                 <div style={st(8)}>
-                  {([["Proteine", P as number, 4, MC.p], ["Carboidrati", cc.v as number, 4, MC.c], ["Grassi", ff.v as number, 9, MC.f]] as [string, number, number, string][]).map(([n, g, kk, col]) => (
+                  {([["Protein", P as number, 4, MC.p], ["Carbs", cc.v as number, 4, MC.c], ["Fat", ff.v as number, 9, MC.f]] as [string, number, number, string][]).map(([n, g, kk, col]) => (
                     <span key={n} style={{ ...row, gap: 8, ...lbl, color: K.t2 }}><span style={{ width: 10, height: 3, borderRadius: 2, background: col, flex: "0 0 auto" }} />{n} {fmt(g, " g")} · {Math.round((g * kk * 100) / (macroTot || 1))}%</span>
                   ))}
-                  {cc.partial || ff.partial ? <span style={lbl}>* parziale: alcuni pasti senza macro</span> : null}
+                  {cc.partial || ff.partial ? <span style={lbl}>* partial: some meals without macros</span> : null}
                 </div>
               </div>
-            ) : <span style={lbl}>Ripartizione macro non disponibile: mancano carboidrati o grassi.</span>}
+            ) : <span style={lbl}>Macro split not available: carbs or fat missing.</span>}
             <div style={st(6)}>
-              <div style={{ ...row, justifyContent: "space-between" }}><span style={{ ...caps, fontSize: 12, color: K.t1 }}>Proteine</span><span style={{ ...row, gap: 6 }}><span style={numStyle(17)}>{fmt(P, " g")}</span><span style={lbl}>/ obiettivo {PT} g</span></span></div>
+              <div style={{ ...row, justifyContent: "space-between" }}><span style={{ ...caps, fontSize: 12, color: K.t1 }}>Protein</span><span style={{ ...row, gap: 6 }}><span style={numStyle(17)}>{fmt(P, " g")}</span><span style={lbl}>/ goal {PT} g</span></span></div>
               {hbar((P ?? 0) / PT, (P ?? 0) >= PT ? K.up : MC.p)}
               {proteinTip}
             </div>
-            {nutRow("Zuccheri", "sugar", 50, "limite")}
+            {nutRow("Sugar", "sugar", 50, "limite")}
             {nutRow("Fibre", "fibre", 30, "obiettivo")}
-            {nutRow("Sale", "salt", 5, "limite")}
+            {nutRow("Salt", "salt", 5, "limite")}
           </div>
-          {listCard("Pasti", <span style={lbl}>tocca per i nutrienti</span>, mealRows(d))}
+          {listCard("Meals", <span style={lbl}>tap for nutrients</span>, mealRows(d))}
         </>
-      ) : <span style={{ ...lbl, textAlign: "center" }}>Nessun pasto registrato per {dayName(d.date)}.</span>}
+      ) : <span style={{ ...lbl, textAlign: "center" }}>No meal logged for {dayName(d.date)}.</span>}
       {mealDays.length ? (
         <>
-          {weekTitle("Calorie mangiate · 7 giorni")}
-          <div style={card}>{weekBars(days.map((x: Day) => x.eatenKcal), 3000, () => K.violet, (v) => `${r1(v / 1000).toLocaleString("it-IT")}k`)}</div>
-          {weekTitle(`Proteine · linea = ${PT} g`)}
+          {weekTitle("Calories eaten · 7 days")}
+          <div style={card}>{weekBars(days.map((x: Day) => x.eatenKcal), 3000, () => K.violet, (v) => `${r1(v / 1000).toLocaleString("en-US")}k`)}</div>
+          {weekTitle(`Protein · line = ${PT} g`)}
           <div style={card}>{weekBars(days.map((x: Day) => x.proteinG), PT, (v) => (v >= PT ? K.up : MC.p), (v) => String(Math.round(v)), PT)}</div>
-          {weekTitle("Macro per giorno (g)")}
+          {weekTitle("Macros per day (g)")}
           <div style={{ ...card, ...st(12) }}>
-            {legend([{ label: "Proteine", color: MC.p }, { label: "Carboidrati", color: MC.c }, { label: "Grassi", color: MC.f }])}
+            {legend([{ label: "Protein", color: MC.p }, { label: "Carbs", color: MC.c }, { label: "Fat", color: MC.f }])}
             {mealDays.map((x: Day) => {
               const c2 = dayMacro(x, "carbs"), f2 = dayMacro(x, "fat"), pp = x.proteinG ?? 0, tot = pp + (c2.v ?? 0) + (f2.v ?? 0);
               return (
                 <button key={x.date} onClick={() => go(x.date)} style={{ ...btn, ...st(4) }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span style={{ fontSize: 14, color: K.t1, fontWeight: x.date === d.date ? 700 : 400 }}>{shortDay(x.date)}{c2.partial || f2.partial ? " *" : ""}</span><span style={lbl}>P {fmt(pp)} · C {fmt(c2.v)} · G {fmt(f2.v)}</span></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span style={{ fontSize: 14, color: K.t1, fontWeight: x.date === d.date ? 700 : 400 }}>{shortDay(x.date)}{c2.partial || f2.partial ? " *" : ""}</span><span style={lbl}>P {fmt(pp)} · C {fmt(c2.v)} · F {fmt(f2.v)}</span></div>
                   <div style={{ width: `${clamp((tot / maxG) * 100, 4, 100)}%` }}>{segBar([{ label: "p", value: pp, color: MC.p }, { label: "c", value: c2.v ?? 0, color: MC.c }, { label: "f", value: f2.v ?? 0, color: MC.f }], 8)}</div>
                 </button>
               );
             })}
           </div>
-          {weekTitle("Zuccheri e fibre (g)")}
-          <div style={card}>{lines([{ name: "Zuccheri", color: MC.f, values: days.map((x: Day) => dayMacro(x, "sugar").v) }, { name: "Fibre", color: K.up, values: days.map((x: Day) => dayMacro(x, "fibre").v) }])}</div>
+          {weekTitle("Sugar and fibre (g)")}
+          <div style={card}>{lines([{ name: "Sugar", color: MC.f, values: days.map((x: Day) => dayMacro(x, "sugar").v) }, { name: "Fibre", color: K.up, values: days.map((x: Day) => dayMacro(x, "fibre").v) }])}</div>
 
-          {sectionTitle("Cibi della settimana", <span style={lbl}>{shown.length} pasti</span>)}
-          <input value={q} onChange={(e: ChangeEvent<HTMLInputElement>) => setQ(e.target.value)} placeholder="Cerca un cibo (es. mozzarella, tramezzino)" style={{ ...card, padding: "11px 14px", fontSize: 14, color: K.t1, fontFamily: FONT, outline: "none" }} />
-          {chips(<>{chip("Tutti", mealDay === "tutti", () => setMealDay("tutti"))}{mealDays.map((x: Day) => chip(shortDay(x.date), mealDay === x.date, () => setMealDay(x.date), x.date))}</>)}
-          {chips(<>{chip("Per ora", sort === "ora", () => setSort("ora"))}{chip("Più kcal", sort === "kcal", () => setSort("kcal"))}{chip("Più proteine", sort === "protein", () => setSort("protein"))}{chip("Elenco", cibiView === "elenco", () => setCibiView("elenco"))}{chip("Analisi", cibiView === "analisi", () => setCibiView("analisi"))}</>)}
-          <span style={lbl}>{String(Math.round(shownKcal)).replace(/\B(?=(\d{3})+(?!\d))/g, ".")} kcal · {fmt(shownProt, " g")} proteine nei pasti mostrati</span>
-          {cibiView === "elenco" ? (shown.length ? listCard("Elenco", null, shown.map((e, i) => listRow(`l${e.key}`, box(isNum(e.m.kcal) ? String(Math.round(e.m.kcal)) : "—", "kcal", K.mealBox), `${e.m.name} · ${shortDay(e.date)} ${e.m.time}`, `${e.m.dish} · ${fmt(e.m.protein)} g prot.`, () => open({ kind: "meal", key: e.key }), i === shown.length - 1))) : <span style={lbl}>Nessun pasto corrisponde alla ricerca.</span>) : (
+          {sectionTitle("Foods of the week", <span style={lbl}>{shown.length} meals</span>)}
+          <input value={q} onChange={(e: ChangeEvent<HTMLInputElement>) => setQ(e.target.value)} placeholder="Search a food (e.g. yogurt, sandwich)" style={{ ...card, padding: "11px 14px", fontSize: 14, color: K.t1, fontFamily: FONT, outline: "none" }} />
+          {chips(<>{chip("All", mealDay === "tutti", () => setMealDay("tutti"))}{mealDays.map((x: Day) => chip(shortDay(x.date), mealDay === x.date, () => setMealDay(x.date), x.date))}</>)}
+          {chips(<>{chip("By time", sort === "ora", () => setSort("ora"))}{chip("Most kcal", sort === "kcal", () => setSort("kcal"))}{chip("Most protein", sort === "protein", () => setSort("protein"))}{chip("List", cibiView === "elenco", () => setCibiView("elenco"))}{chip("Analysis", cibiView === "analisi", () => setCibiView("analisi"))}</>)}
+          <span style={lbl}>{String(Math.round(shownKcal)).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} kcal · {fmt(shownProt, " g")} protein in the meals shown</span>
+          {cibiView === "elenco" ? (shown.length ? listCard("List", null, shown.map((e, i) => listRow(`l${e.key}`, box(isNum(e.m.kcal) ? String(Math.round(e.m.kcal)) : "—", "kcal", K.mealBox), `${e.m.name} · ${shortDay(e.date)} ${e.m.time}`, `${e.m.dish} · ${fmt(e.m.protein)} g prot.`, () => open({ kind: "meal", key: e.key }), i === shown.length - 1))) : <span style={lbl}>No meal matches the search.</span>) : (
             <>
-              {topList("Fonti principali di proteine", "protein", " g", MC.p)}
-              {topList("Fonti principali di calorie", "kcal", " kcal", K.violet)}
+              {topList("Main sources of protein", "protein", " g", MC.p)}
+              {topList("Main sources of calories", "kcal", " kcal", K.violet)}
               {byMeal.length ? (
                 <div style={{ ...card, ...st(12) }}>
-                  <span style={capLbl(12)}>Per pasto · medie</span>
+                  <span style={capLbl(12)}>For meal · averages</span>
                   {byMeal.map((g) => (
                     <div key={g.n} style={st(4)}>
                       <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span style={{ fontSize: 14, fontWeight: 600, color: K.t1 }}>{g.n} ×{g.es.length}</span><span style={lbl}>~{clock(g.t)} · {fmt(g.kcal)} kcal · {fmt(g.prot, " g")} prot.</span></div>
                       {g.prot !== null && g.carbs !== null && g.fat !== null ? segBar([{ label: "p", value: g.prot * 4, color: MC.p }, { label: "c", value: g.carbs * 4, color: MC.c }, { label: "f", value: g.fat * 9, color: MC.f }], 8) : null}
-                      <span style={lbl}>{Math.round((g.totK * 100) / (shownKcal || 1))}% delle kcal mostrate · C {fmt(g.carbs, " g")} · G {fmt(g.fat, " g")}</span>
+                      <span style={lbl}>{Math.round((g.totK * 100) / (shownKcal || 1))}% of the kcal shown · C {fmt(g.carbs, " g")} · F {fmt(g.fat, " g")}</span>
                     </div>
                   ))}
                 </div>
               ) : null}
               {windows.length ? (
                 <div style={{ ...card, ...st(12) }}>
-                  <span style={capLbl(12)}>Orari dei pasti · 6:00–24:00</span>
+                  <span style={capLbl(12)}>Meal times · 6:00–24:00</span>
                   {windows.map((w) => (
                     <div key={w.x.date} style={st(4)}>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 14, color: K.t1 }}>{shortDay(w.x.date)}</span><span style={lbl}>{clock(w.first)} → {clock(w.last)}{w.first !== null && w.last !== null ? ` · finestra ${hm(w.last - w.first)}` : ""}</span></div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 14, color: K.t1 }}>{shortDay(w.x.date)}</span><span style={lbl}>{clock(w.first)} → {clock(w.last)}{w.first !== null && w.last !== null ? ` · window ${hm(w.last - w.first)}` : ""}</span></div>
                       <div style={{ position: "relative", height: 12, borderRadius: 6, background: K.track }}>
                         {w.x.meals.map((m: Meal, i: number) => { const t = toMin(m.time); return t === null ? null : <span key={i} style={{ position: "absolute", left: `calc(${clamp((t - 360) / 1080, 0, 1) * 100}% - 5px)`, top: 1, width: 10, height: 10, borderRadius: 5, background: K.violet }} />; })}
                       </div>
                     </div>
                   ))}
-                  <span style={lbl}>Primo pasto in media {clock(avg(fsW))} · ultimo {clock(avg(lsW))} · {fmt(avg(windows.map((w) => w.n)))} pasti al giorno</span>
+                  <span style={lbl}>First meal on average {clock(avg(fsW))} · last {clock(avg(lsW))} · {fmt(avg(windows.map((w) => w.n)))} meals a day</span>
                 </div>
               ) : null}
             </>
@@ -3886,30 +3886,30 @@ export default function App() {
   // =================== ALTRO ===================
   const altro = (
     <div style={st(14)}>
-      {sectionTitle("Tendenze 7 giorni")}
-      {weekTitle("Recupero e sonno (%)")}
-      <div style={card}>{lines([{ name: "Recupero", color: K.recHi, values: days.map((x: Day) => recScore(x)) }, { name: "Sonno", color: K.sleep, values: days.map((x: Day) => sonnoOf(x)) }])}</div>
-      {weekTitle("Sforzo (0–21)")}
-      <div style={card}>{lines([{ name: "Sforzo", color: K.strain, values: days.map((x: Day) => strainScore(x)) }])}</div>
-      {weekTitle("Mangiate vs bruciate (kcal)")}
-      <div style={card}>{lines([{ name: "Mangiate", color: K.violet, values: days.map((x: Day) => x.eatenKcal) }, { name: "Bruciate", color: K.warn, values: days.map((x: Day) => x.burnedKcal) }])}</div>
-      {weekTitle("FC a riposo e HRV")}
-      <div style={card}>{lines([{ name: "FC riposo", color: K.recLo, values: days.map((x: Day) => x.rhr) }, { name: "HRV", color: K.violet, values: days.map((x: Day) => x.hrvMs) }])}</div>
+      {sectionTitle("7-day trends")}
+      {weekTitle("Recovery and sleep (%)")}
+      <div style={card}>{lines([{ name: "Recovery", color: K.recHi, values: days.map((x: Day) => recScore(x)) }, { name: "Sleep", color: K.sleep, values: days.map((x: Day) => sonnoOf(x)) }])}</div>
+      {weekTitle("Effort (0–21)")}
+      <div style={card}>{lines([{ name: "Effort", color: K.strain, values: days.map((x: Day) => strainScore(x)) }])}</div>
+      {weekTitle("Eaten vs burned (kcal)")}
+      <div style={card}>{lines([{ name: "Eaten", color: K.violet, values: days.map((x: Day) => x.eatenKcal) }, { name: "Burned", color: K.warn, values: days.map((x: Day) => x.burnedKcal) }])}</div>
+      {weekTitle("Resting HR and HRV")}
+      <div style={card}>{lines([{ name: "Resting HR", color: K.recLo, values: days.map((x: Day) => x.rhr) }, { name: "HRV", color: K.violet, values: days.map((x: Day) => x.hrvMs) }])}</div>
       <div style={three}>
-        {stat("Sonno medio", hm(wkSleep), `${nightDays.length} notti`)}
-        {stat("FC riposo", fmt(wkRhr), "media bpm")}
-        {stat("HRV", fmt(wkHrv), "media ms")}
+        {stat("Average sleep", hm(wkSleep), `${nightDays.length} nights`)}
+        {stat("Resting HR", fmt(wkRhr), "avg bpm")}
+        {stat("HRV", fmt(wkHrv), "avg ms")}
       </div>
 
-      {sectionTitle("Giorno per giorno", <span style={lbl}>sonno · recupero · sforzo</span>)}
+      {sectionTitle("Day by day", <span style={lbl}>sleep · recovery · effort</span>)}
       <div style={{ ...card, padding: "4px 16px" }}>
         {[...days].reverse().map((x: Day, i: number) => {
           const rc = recScore(x), sl = sonnoOf(x), sr = strainScore(x);
           return (
             <button key={x.date} onClick={() => { go(x.date); goTab("home"); }} style={{ ...btn, ...row, gap: 8, width: "100%", padding: "12px 0", borderBottom: i < days.length - 1 ? `1px solid ${K.line}` : "none" }}>
               <div style={{ ...st(2), flex: 1 }}>
-                <span style={{ ...ell, fontSize: 15, fontWeight: 600, color: K.t1 }}>{dayTitle(x.date)}{x.incomplete ? " · dati incompleti" : ""}</span>
-                <span style={{ ...ell, ...lbl }}>{fmt(x.steps)} passi · {fmt(x.eatenKcal)}/{fmt(x.burnedKcal)} kcal · bil. {signed(bal(x))}</span>
+                <span style={{ ...ell, fontSize: 15, fontWeight: 600, color: K.t1 }}>{dayTitle(x.date)}{x.incomplete ? " · incomplete data" : ""}</span>
+                <span style={{ ...ell, ...lbl }}>{fmt(x.steps)} steps · {fmt(x.eatenKcal)}/{fmt(x.burnedKcal)} kcal · bal. {signed(bal(x))}</span>
               </div>
               <span style={{ ...numStyle(15, K.sleep), width: 36, textAlign: "right", flex: "0 0 auto" }}>{sl === null ? "—" : String(sl)}</span>
               <span style={{ ...numStyle(15, recColor(rc)), width: 36, textAlign: "right", flex: "0 0 auto" }}>{rc === null ? "—" : `${rc}%`}</span>
@@ -3921,7 +3921,7 @@ export default function App() {
 
       {upcomingCard}
 
-      <span style={{ ...lbl, textAlign: "center" }}>Aggiornato il {DATA.updatedAt.slice(8, 10)}/{DATA.updatedAt.slice(5, 7)} alle {time}</span>
+      <span style={{ ...lbl, textAlign: "center" }}>Updated {DATA.updatedAt.slice(8, 10)}/{DATA.updatedAt.slice(5, 7)} at {time}</span>
     </div>
   );
 
@@ -3943,7 +3943,7 @@ export default function App() {
     return (
       <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block" }}>
         {[lo + 1, (lo + hi) / 2, hi - 1].map((v, i) => (
-          <g key={i}><line x1={pl} x2={W - pr} y1={Y(v)} y2={Y(v)} stroke={K.line} strokeWidth={1} /><text x={pl - 6} y={Y(v) + 4} fontSize={10} textAnchor="end" fill={K.t3}>{r1(v).toLocaleString("it-IT")}</text></g>
+          <g key={i}><line x1={pl} x2={W - pr} y1={Y(v)} y2={Y(v)} stroke={K.line} strokeWidth={1} /><text x={pl - 6} y={Y(v) + 4} fontSize={10} textAnchor="end" fill={K.t3}>{r1(v).toLocaleString("en-US")}</text></g>
         ))}
         <path d={smooth(pts)} fill="none" stroke={K.violet} strokeWidth={2.5} strokeLinecap="round" />
         {WEIGHTS.map((w, i) => {
@@ -3959,7 +3959,8 @@ export default function App() {
       </svg>
     );
   })();
-  // ---------- Medico (dati nella costante MEDICO, fuori dal blocco DATA) ----------
+  // ---------- Medical (data in the MEDICO constant, outside the DATA block) ----------
+  const MED_LABEL: Record<string, string> = { "in corso": "in progress", "in attesa": "waiting", "da fare": "to do", proposto: "proposed", facoltativo: "optional", "da decidere": "to decide" };
   const medCol: Record<MedStatus, string> = { "in corso": K.strain, "in attesa": K.recMid, "da fare": K.warn, "proposto": K.t2, "facoltativo": K.t3, "da decidere": K.violet };
   const medBadge = (s: MedStatus) => {
     const c = medCol[s];
@@ -3984,8 +3985,8 @@ export default function App() {
           </div>
         ) : null}
         <div style={{ ...row, justifyContent: "space-between" }}>
-          <span style={lbl}>{m.long ? m.ref : `Riferimento ${m.ref}`}</span>
-          <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: col, whiteSpace: "nowrap", flex: "0 0 auto" }}>{m.status === "limite" ? "vicino al limite" : "nella norma"}</span>
+          <span style={lbl}>{m.long ? m.ref : `Reference ${m.ref}`}</span>
+          <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: col, whiteSpace: "nowrap", flex: "0 0 auto" }}>{m.status === "limite" ? "near the limit" : "in range"}</span>
         </div>
       </div>
     );
@@ -3993,17 +3994,17 @@ export default function App() {
   const medEmpty = (t: string) => <div style={{ ...card, ...row, gap: 10 }}>{ic("info", K.t3, 16, 1.8)}<span style={{ ...txt, flex: 1 }}>{t}</span></div>;
   const medChecks = [...MEDICO.checks].sort((p: MedCheck, q: MedCheck) => (p.due === q.due ? 0 : p.due === null ? 1 : q.due === null ? -1 : p.due < q.due ? -1 : 1));
   const medNear = MEDICO.groups.reduce((n, g) => n + g.items.filter((m: MedLab) => m.status === "limite").length, 0);
-  // ---------- Medico: schede che aprono una sottopagina (Capelli, Pillole, Controlli, Farmaci e integratori, Storia di famiglia, Visite fatte) ----------
-  // Essenziale: una riga per voce, niente testi lunghi. Solo le primitive di questa pagina (card, listCard/listRow, chip, backBar).
-  // Pillole: una sola scelta al giorno (prese stamattina / stasera / saltate), dal registro MEDICO.pills.log unito ai tocchi del telefono (localStorage).
-  // Foto capelli: HAIR_PHOTOS (solo nella build cifrata; la serie fissata, pinned, è il punto di partenza), altrimenti segnaposto.
+  // ---------- Medical: cards that open a subpage (Photos, Pills, Check-ups, Medicines and supplements, Family history, Past visits) ----------
+  // Essential: one row per item, no long text. Only this page's primitives (card, listCard/listRow, chip, backBar).
+  // Pills: one choice per day (taken this morning / tonight / skipped), from the MEDICO.pills.log record merged with phone taps (localStorage).
+  // Progress photos: HAIR_PHOTOS (only in the encrypted build; the pinned set is the starting point), otherwise placeholders.
   const HAIR = MEDICO.hair ?? null;
   const PILLS = MEDICO.pills ?? null;
   const FAM = MEDICO.familyHistory ?? null;
   const HAIR_KEY = "salute.capelli.aderenza.v1";
-  // Pillole giorno per giorno: il registro del grafo (MEDICO.pills.log) unito ai tocchi di questo telefono (localStorage, stessa chiave di prima).
-  // p = "am" prese la mattina, "pm" prese la sera, "no" saltate; voce senza p = tolta a mano; nessuna voce = nessun dato (mai inventato).
-  // Per lo stesso giorno il tocco del telefono vince sul grafo, così niente si perde offline.
+  // Pills day by day: the graph's record (MEDICO.pills.log) merged with this phone's taps (localStorage, same key as before).
+  // p = "am" taken in the morning, "pm" taken in the evening, "no" skipped; entry without p = cleared by hand; no entry = no data (never invented).
+  // For the same day the phone tap wins over the graph, so nothing is lost offline.
   type PillDay = { p?: "am" | "pm" | "no"; t?: string };
   const pillLoad = (): Record<string, PillDay> => {
     try {
@@ -4011,7 +4012,7 @@ export default function App() {
       const v: unknown = raw ? JSON.parse(raw) : null;
       if (!v || typeof v !== "object") return {};
       const out: Record<string, PillDay> = {};
-      // formato precedente (fin / pa / pp): diventa una sola scelta al giorno
+      // previous format (fin / pa / pp): becomes one choice per day
       Object.entries(v as Record<string, { p?: string; t?: string; fin?: boolean; pa?: boolean; pp?: boolean }>).forEach(([k, x]) => {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !x || typeof x !== "object") return;
         const p: "am" | "pm" | "no" | undefined = x.p === "am" || x.p === "pm" || x.p === "no" ? x.p : x.pa || x.fin ? "am" : x.pp ? "pm" : undefined;
@@ -4021,8 +4022,8 @@ export default function App() {
     } catch { return {}; }
   };
   const [pillLog, setPillLog] = useState<Record<string, PillDay>>(pillLoad());
-  // i vecchi segni restano sotto la stessa chiave, riscritti una volta nel formato nuovo
-  useEffect(() => { try { localStorage.setItem(HAIR_KEY, JSON.stringify(pillLog)); } catch { /* visualizzatore della Page */ } }, []);
+  // old marks stay under the same key, rewritten once in the new format
+  useEffect(() => { try { localStorage.setItem(HAIR_KEY, JSON.stringify(pillLog)); } catch { /* page viewer */ } }, []);
   const PILL_GRAPH: Record<string, PillDay> = {};
   ((PILLS && PILLS.log) || []).forEach((r: PillLogRow) => {
     if (!r || !r.date) return;
@@ -4034,19 +4035,19 @@ export default function App() {
   const [hairGuide, setHairGuide] = useState<boolean>(false);
   const [ckOpen, setCkOpen] = useState<string | null>(null);
   const hToday = now.date;
-  // un secondo tocco sulla stessa scelta la toglie
+  // a second tap on the same choice clears it
   const pillAt = (dt: string): "am" | "pm" | "no" | null => (pillLog[dt] ?? PILL_GRAPH[dt])?.p ?? null;
   const pillDay = pDay > hToday ? hToday : pDay;
   const pillSet = (p: "am" | "pm" | "no") => {
     const t = new Date().toISOString();
     const nx: Record<string, PillDay> = { ...pillLog, [pillDay]: pillAt(pillDay) === p ? { t } : { p, t } };
     setPillLog(nx);
-    try { localStorage.setItem(HAIR_KEY, JSON.stringify(nx)); } catch { /* visualizzatore della Page: niente salvataggio */ }
+    try { localStorage.setItem(HAIR_KEY, JSON.stringify(nx)); } catch { /* page viewer: no saving */ }
   };
   const pNow: "am" | "pm" | "no" | null = pillAt(hToday);
   const pSel = pillAt(pillDay);
   const pTaken = (x: string | null) => x === "am" || x === "pm";
-  // serie: giorni di fila con le pillole prese; oggi ancora da segnare non la interrompe
+  // streak: days in a row with pills taken; today not yet marked does not break it
   const pStreak = (() => {
     if (pNow === "no") return 0;
     let dt = pTaken(pNow) ? hToday : addDays(hToday, -1), n = 0;
@@ -4073,7 +4074,7 @@ export default function App() {
   const hIc = (name: string, color: string = K.t2, size = 18, sw = 1.7) => (
     <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", flex: "0 0 auto" }} fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{name === "clock" || name === "info" ? <circle cx={12} cy={12} r={9} /> : null}<path d={HICONS[name] ?? ICONS[name] ?? ICONS.info} /></svg>
   );
-  // pittogramma della testa con la zona da fotografare evidenziata
+  // head pictogram with the area to photograph highlighted
   const headPic = (key: string, size = 44, color: string = K.t1) => {
     const zone: Record<string, ReactNode> = {
       front: <><circle cx={24} cy={27} r={12} stroke={K.t3} /><path d="M12.5 24C13 15 18 11 24 11s11 4 11.5 13" stroke={color} strokeWidth={3} /><path d="M20 28.5h.01M28 28.5h.01" stroke={K.t3} strokeWidth={2.4} /></>,
@@ -4084,7 +4085,7 @@ export default function App() {
     };
     return <svg width={size} height={size} viewBox="0 0 48 48" fill="none" strokeWidth={1.6} strokeLinecap="round" style={{ display: "block", flex: "0 0 auto" }}>{zone[key] ?? <circle cx={24} cy={24} r={12} stroke={K.t3} />}</svg>;
   };
-  // riga di una lista: testo a sinistra, valore breve a destra, una sola riga
+  // list row: text on the left, short value on the right, a single line
   const line = (key: string, left: ReactNode, right: ReactNode, last: boolean, onClick?: () => void) => {
     const inner = (
       <div style={{ ...row, justifyContent: "space-between", gap: 10, padding: "13px 0", borderBottom: last ? "none" : `1px solid ${K.line}`, width: "100%" }}>
@@ -4095,7 +4096,7 @@ export default function App() {
     return onClick ? <button key={key} onClick={onClick} style={{ ...btn, display: "block", width: "100%" }}>{inner}</button> : <div key={key}>{inner}</div>;
   };
   const plain = (title: string, rows: ReactNode) => <div style={{ ...card, padding: "14px 16px 2px" }}><span style={capLbl(12)}>{title}</span><div style={{ ...st(0), marginTop: 2 }}>{rows}</div></div>;
-  // pulsante della scelta di oggi: card normale, bordo e spunta verdi quando segnato
+  // today's choice button: normal card, green border and tick when marked
   const pillBtn = (p: "am" | "pm", label: string, icon: string) => {
     const on = pSel === p;
     return (
@@ -4106,19 +4107,19 @@ export default function App() {
     );
   };
   const pIsToday = pillDay === hToday;
-  const pillToday = <div style={two}>{pillBtn("am", pIsToday ? "Prese stamattina" : "Prese di mattina", "sun")}{pillBtn("pm", pIsToday ? "Prese stasera" : "Prese di sera", "moon")}</div>;
-  const pDayName = (dt: string) => { const p = parts(dt); return dt === hToday ? "Oggi" : dt === addDays(hToday, -1) ? "Ieri" : `${WD[p.w]} ${p.dd} ${MO[p.m - 1].slice(0, 3)}`; };
+  const pillToday = <div style={two}>{pillBtn("am", pIsToday ? "Taken this morning" : "Taken in the morning", "sun")}{pillBtn("pm", pIsToday ? "Taken this evening" : "Taken in the evening", "moon")}</div>;
+  const pDayName = (dt: string) => { const p = parts(dt); return dt === hToday ? "Today" : dt === addDays(hToday, -1) ? "Yesterday" : `${WD[p.w]} ${p.dd} ${MO[p.m - 1].slice(0, 3)}`; };
   const pMinDay = addDays(hToday, -60);
   const pArrow = (dir: -1 | 1) => {
     const dis = dir < 0 ? pillDay <= pMinDay : pillDay >= hToday;
-    return <button onClick={() => setPDay(addDays(pillDay, dir))} disabled={dis} aria-label={dir < 0 ? "Giorno prima" : "Giorno dopo"} style={{ ...btn, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", opacity: dis ? 0.3 : 1 }}>{ic(dir < 0 ? "left" : "right", K.t1, 18, 2.2)}</button>;
+    return <button onClick={() => setPDay(addDays(pillDay, dir))} disabled={dis} aria-label={dir < 0 ? "Day before" : "Day after"} style={{ ...btn, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", opacity: dis ? 0.3 : 1 }}>{ic(dir < 0 ? "left" : "right", K.t1, 18, 2.2)}</button>;
   };
   const pDot = (x: "am" | "pm" | "no" | null) => (x === "am" || x === "pm" ? K.up : x === "no" ? K.recLo : "transparent");
   const pWeek = Array.from({ length: 7 }, (_, i) => addDays(hToday, i - 6));
   const pillDays = (
     <div style={{ ...card, padding: "12px 14px 14px" }}>
       <div style={{ ...row, justifyContent: "space-between" }}>
-        <span style={{ fontSize: 15, lineHeight: "20px", fontWeight: 600, color: K.t1 }}>{`Serie: ${pStreak} ${pStreak === 1 ? "giorno" : "giorni"} di fila`}</span>
+        <span style={{ fontSize: 15, lineHeight: "20px", fontWeight: 600, color: K.t1 }}>{`Streak: ${pStreak} ${pStreak === 1 ? "day" : "days"} in a row`}</span>
         <div style={{ ...row, gap: 2, background: K.card2, border: `1px solid ${K.line}`, borderRadius: 999, padding: "0 4px", flex: "0 0 auto" }}>
           {pArrow(-1)}
           <button onClick={() => setPDay(hToday)} style={{ ...btn, ...caps, fontSize: 12, padding: "6px 4px", color: K.t1, minWidth: 64, textAlign: "center" }}>{pDayName(pillDay)}</button>
@@ -4129,15 +4130,15 @@ export default function App() {
         {pWeek.map((dt) => {
           const x = pillAt(dt), on = dt === pillDay;
           return (
-            <button key={dt} onClick={() => setPDay(dt)} aria-label={`${pDayName(dt)}: ${pTaken(x) ? "presa" : x === "no" ? "saltata" : "nessun dato"}`} style={{ ...btn, display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "6px 0", borderRadius: 10, background: on ? K.navOn : "transparent" }}>
+            <button key={dt} onClick={() => setPDay(dt)} aria-label={`${pDayName(dt)}: ${pTaken(x) ? "taken" : x === "no" ? "skipped" : "no data"}`} style={{ ...btn, display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "6px 0", borderRadius: 10, background: on ? K.navOn : "transparent" }}>
               <span style={{ width: 14, height: 14, borderRadius: 7, boxSizing: "border-box", background: pDot(x), border: `2px solid ${x ? pDot(x) : K.track}` }} />
-              <span style={{ fontSize: 10, lineHeight: "12px", fontWeight: on ? 700 : 500, color: on ? K.t1 : K.t3 }}>{dt === hToday ? "Oggi" : WD[parts(dt).w]}</span>
+              <span style={{ fontSize: 10, lineHeight: "12px", fontWeight: on ? 700 : 500, color: on ? K.t1 : K.t3 }}>{dt === hToday ? "Today" : WD[parts(dt).w]}</span>
             </button>
           );
         })}
       </div>
       <div style={{ ...row, justifyContent: "center", gap: 14, marginTop: 8 }}>
-        {([["presa", K.up, K.up], ["saltata", K.recLo, K.recLo], ["nessun dato", "transparent", K.track]] as const).map(([l, bg, bd]) => (
+        {([["taken", K.up, K.up], ["skipped", K.recLo, K.recLo], ["no data", "transparent", K.track]] as const).map(([l, bg, bd]) => (
           <span key={l} style={{ ...row, gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: 4, boxSizing: "border-box", background: bg, border: `1.5px solid ${bd}` }} /><span style={lbl}>{l}</span></span>
         ))}
       </div>
@@ -4145,31 +4146,31 @@ export default function App() {
   );
   const pillSkip = (
     <button onClick={() => pillSet("no")} aria-pressed={pSel === "no"} style={{ ...btn, alignSelf: "center", padding: "2px 10px", fontSize: 14, lineHeight: "20px", color: pSel === "no" ? K.recLo : K.t3 }}>
-      {pSel === "no" ? (pIsToday ? "Oggi saltate · tocca per togliere" : "Saltate · tocca per togliere") : pIsToday ? "Oggi non le ho prese" : "Quel giorno non le ho prese"}
+      {pSel === "no" ? (pIsToday ? "Skipped today · tap to undo" : "Skipped · tap to undo") : pIsToday ? "I didn't take them today" : "I didn't take them that day"}
     </button>
   );
-  // scorta di un farmaco (giorni rimasti calcolati da oggi)
+  // medicine supply (days left counted from today)
   const PS = PILLS && PILLS.stock ? PILLS.stock : null;
   const psOut = PS ? addDays(PS.countDate, Math.floor(PS.count / Math.max(1, PS.perDay))) : null;
   const psDays = psOut ? daysBetween(hToday, psOut) : null;
-  const psText = psDays === null ? "" : psDays > 1 ? `finisce tra ${psDays} giorni` : psDays === 1 ? "finisce domani" : psDays === 0 ? "finisce oggi" : "finita";
+  const psText = psDays === null ? "" : psDays > 1 ? `ends in ${psDays} days` : psDays === 1 ? "ends tomorrow" : psDays === 0 ? "ends today" : "ended";
   const pMoments = PILLS ? PILLS.moments : [];
 
-  // Capelli (MEDICO.hair, all names and doses from medico.json; photos only through the build hook life_app.hooks.hair_photos)
-  // =================== CAPELLI ===================
-  // foto per data: una griglia per giorno; confronto = punto di partenza (serie fissata o la più vecchia) contro l'ultima
+  // Photos (MEDICO.hair, all names and doses from medico.json; photos only through the build hook life_app.hooks.hair_photos)
+  // =================== PROGRESS PHOTOS ===================
+  // photos by date: one grid per day; comparison = starting point (pinned set or the oldest) vs the latest
   const hDates = Array.from(new Set(HAIR_PHOTOS.map((x: HairPhoto) => x.date))).sort();
   const hBase = HAIR_PHOTOS.find((x: HairPhoto) => x.pinned)?.date ?? hDates[0] ?? null;
   const hLast = hDates.length ? hDates[hDates.length - 1] : null;
   const hOf = (date: string | null) => (date ? HAIR_PHOTOS.filter((x: HairPhoto) => x.date === date).sort((a: HairPhoto, b: HairPhoto) => (a.n ?? 1) - (b.n ?? 1)) : []);
-  const hName = (date: string, n: number) => { const set = HAIR ? HAIR.photoSets.find((s: HairSet) => s.date === date) : null; return set?.slots[n - 1]?.label ?? HAIR?.photoProtocol.angles[n - 1]?.label ?? `Foto ${n}`; };
+  const hName = (date: string, n: number) => { const set = HAIR ? HAIR.photoSets.find((s: HairSet) => s.date === date) : null; return set?.slots[n - 1]?.label ?? HAIR?.photoProtocol.angles[n - 1]?.label ?? `Photo ${n}`; };
   const thumb = (x: HairPhoto | undefined, date: string | null, big = false) => x ? (
-    <button key={`${x.date}-${x.n ?? 1}`} onClick={() => setHairZoom({ src: x.dataUrl, label: `${hName(x.date, x.n ?? 1)} · ${hYear(x.date)}` })} aria-label={`Foto ${x.n ?? 1}, ${hYear(x.date)}`} style={{ ...btn, display: "block", width: "100%", aspectRatio: big ? "3 / 4" : "1 / 1", borderRadius: 10, overflow: "hidden", border: `1px solid ${K.line}`, background: K.mid }}>
-      <img src={x.dataUrl} alt={`Capelli ${x.date}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+    <button key={`${x.date}-${x.n ?? 1}`} onClick={() => setHairZoom({ src: x.dataUrl, label: `${hName(x.date, x.n ?? 1)} · ${hYear(x.date)}` })} aria-label={`Photo ${x.n ?? 1}, ${hYear(x.date)}`} style={{ ...btn, display: "block", width: "100%", aspectRatio: big ? "3 / 4" : "1 / 1", borderRadius: 10, overflow: "hidden", border: `1px solid ${K.line}`, background: K.mid }}>
+      <img src={x.dataUrl} alt={`Photos ${x.date}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
     </button>
   ) : (
     <div style={{ width: "100%", boxSizing: "border-box", aspectRatio: big ? "3 / 4" : "1 / 1", borderRadius: 10, border: `1px dashed ${K.track}`, background: K.mid, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 8 }}>
-      <span style={lbl}>{date ? `Foto del ${hShort(date)}` : "Nessuna foto"}</span>
+      <span style={lbl}>{date ? `Photo of ${hShort(date)}` : "No photos"}</span>
     </div>
   );
   const hairScreen = HAIR ? (() => {
@@ -4181,20 +4182,20 @@ export default function App() {
     const sI = Math.min(cmpSlot, slots - 1);
     return (
       <div style={st(14)}>
-        {backBar("Capelli")}
-        {plain("Terapia", <>
+        {backBar("Photos")}
+        {plain("Therapy", <>
           {HAIR.therapy.map((t, i) => line(t.key, t.name, (t.when ?? "").toLowerCase(), i === HAIR.therapy.length - 1))}
         </>)}
-        {plain("Prossime cose", <>
-          {PS ? line("ricetta", `Ricetta ${PS.name}`, psOut ? `finisce il ${hShort(psOut)}` : psText, false) : null}
-          {line("foto", "Foto dei capelli", hShort(next), !fol)}
-          {fol && fol.next ? line("fol", `Riordino ${fol.name}`, `verso il ${hShort(fol.next)}`, true) : null}
+        {plain("Coming up", <>
+          {PS ? line("ricetta", `Prescription ${PS.name}`, psOut ? `ends on ${hShort(psOut)}` : psText, false) : null}
+          {line("foto", "Progress photos", hShort(next), !fol)}
+          {fol && fol.next ? line("fol", `Reorder ${fol.name}`, `around ${hShort(fol.next)}`, true) : null}
         </>)}
         <div style={{ ...card, ...st(12) }}>
-          <span style={capLbl(12)}>Confronto</span>
+          <span style={capLbl(12)}>Comparison</span>
           <div style={{ ...two, gap: 10 }}>
-            <div style={st(6)}>{thumb(baseSet[sI], hBase, true)}<span style={{ ...lbl, color: K.t2 }}>Prima · {hBase ? hYear(hBase) : "-"}</span></div>
-            <div style={st(6)}>{thumb(lastSet[sI], lastSet.length ? hLast : next, true)}<span style={{ ...lbl, color: K.t2 }}>Ultima · {lastSet.length && hLast ? hYear(hLast) : `da fare il ${hShort(next)}`}</span></div>
+            <div style={st(6)}>{thumb(baseSet[sI], hBase, true)}<span style={{ ...lbl, color: K.t2 }}>Before · {hBase ? hYear(hBase) : "-"}</span></div>
+            <div style={st(6)}>{thumb(lastSet[sI], lastSet.length ? hLast : next, true)}<span style={{ ...lbl, color: K.t2 }}>Last · {lastSet.length && hLast ? hYear(hLast) : `due on ${hShort(next)}`}</span></div>
           </div>
           {slots > 1 ? chips(Array.from({ length: slots }, (_: unknown, i: number) => chip(String(i + 1), i === sI, () => setCmpSlot(i), `s${i}`))) : null}
         </div>
@@ -4204,31 +4205,31 @@ export default function App() {
             <div style={three}>{hOf(dt).map((x: HairPhoto) => thumb(x, dt))}</div>
           </div>
         ))}
-        {hDates.length ? null : <div style={{ ...card }}><span style={lbl}>Nessuna foto in questa versione dell'app</span></div>}
-        <button onClick={() => setHairGuide(!hairGuide)} aria-expanded={hairGuide} style={{ ...btn, ...caps, fontSize: 12, color: K.link, alignSelf: "flex-start" }}>{hairGuide ? "Chiudi" : "Come fare le foto"}</button>
-        {hairGuide ? plain("Come fare le foto", HAIR.photoProtocol.angles.map((a, i) => line(a.key, `${i + 1}. ${a.label}`, "", i === HAIR.photoProtocol.angles.length - 1))) : null}
+        {hDates.length ? null : <div style={{ ...card }}><span style={lbl}>No photos in this version of the app</span></div>}
+        <button onClick={() => setHairGuide(!hairGuide)} aria-expanded={hairGuide} style={{ ...btn, ...caps, fontSize: 12, color: K.link, alignSelf: "flex-start" }}>{hairGuide ? "Close" : "How to take the photos"}</button>
+        {hairGuide ? plain("How to take the photos", HAIR.photoProtocol.angles.map((a, i) => line(a.key, `${i + 1}. ${a.label}`, "", i === HAIR.photoProtocol.angles.length - 1))) : null}
         {hairZoom ? (
-          <button onClick={() => setHairZoom(null)} aria-label="Chiudi foto" style={{ ...btn, position: "fixed", inset: 0, zIndex: 50, background: `${K.bg}F2`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 16 }}>
+          <button onClick={() => setHairZoom(null)} aria-label="Close photo" style={{ ...btn, position: "fixed", inset: 0, zIndex: 50, background: `${K.bg}F2`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 16 }}>
             <img src={hairZoom.src} alt={hairZoom.label} style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: 12, display: "block" }} />
             <span style={{ ...lbl, color: K.t2 }}>{hairZoom.label}</span>
           </button>
         ) : null}
       </div>
     );
-  })() : backBar("Capelli");
+  })() : backBar("Photos");
 
-  // =================== PILLOLE (con farmaci e integratori: ogni voce una sola volta) ===================
+  // =================== PILLS (with medicines and supplements: each item once) ===================
   // therapies that are not a pill already listed in a moment above (e.g. a lotion): shown once, with their own timing
   const pOther = HAIR ? HAIR.therapy.filter((t) => !pMoments.some((m: PillMoment) => m.items.some((it) => it.link === t.key))) : [];
   const pillsScreen = (
     <div style={st(14)}>
-      {backBar("Pillole")}
+      {backBar("Pills")}
       {pillDays}
       {pillToday}
       {pillSkip}
       {pMoments.map((m: PillMoment) => <div key={m.key}>{plain(m.label, m.items.map((it, i) => line(it.name, it.name, it.dose, i === m.items.length - 1)))}</div>)}
-      {pOther.length ? plain("Sui capelli", pOther.map((t, i) => line(t.key, t.name, (("when" in t ? t.when : "") ?? "").toLowerCase(), i === pOther.length - 1))) : null}
-      {PILLS && PILLS.hold.length ? plain("Da chiedere al medico di base", PILLS.hold.map((h, i) => line(h.name, h.name, "in pausa", i === PILLS.hold.length - 1))) : null}
+      {pOther.length ? plain("About the photos", pOther.map((t, i) => line(t.key, t.name, (("when" in t ? t.when : "") ?? "").toLowerCase(), i === pOther.length - 1))) : null}
+      {PILLS && PILLS.hold.length ? plain("To ask your GP", PILLS.hold.map((h, i) => line(h.name, h.name, "paused", i === PILLS.hold.length - 1))) : null}
     </div>
   );
 
@@ -4237,11 +4238,11 @@ export default function App() {
   const ckNext = ckTodo.find((c: MedCheck) => c.due !== null) ?? null;
   const checksScreen = (
     <div style={st(14)}>
-      {backBar("Controlli e screening")}
+      {backBar("Check-ups and screening")}
       <div style={{ ...card, padding: "4px 16px" }}>
         {medChecks.map((c: MedCheck, i: number) => (
           <div key={c.title}>
-            {line(c.title, c.title, <><span style={{ color: medCol[c.status] }}>{c.status}</span>{c.dueText ? ` · ${c.dueText.replace(/^entro /, "")}` : ""}</>, i === medChecks.length - 1 && ckOpen !== c.title, () => setCkOpen(ckOpen === c.title ? null : c.title))}
+            {line(c.title, c.title, <><span style={{ color: medCol[c.status] }}>{MED_LABEL[c.status] ?? c.status}</span>{c.dueText ? ` · ${c.dueText.replace(/^(entro|by) /, "")}` : ""}</>, i === medChecks.length - 1 && ckOpen !== c.title, () => setCkOpen(ckOpen === c.title ? null : c.title))}
             {ckOpen === c.title ? <div style={{ padding: "0 0 12px", borderBottom: i < medChecks.length - 1 ? `1px solid ${K.line}` : "none" }}><span style={txt}>{c.sub}</span></div> : null}
           </div>
         ))}
@@ -4249,40 +4250,40 @@ export default function App() {
     </div>
   );
 
-  // =================== VISITE FATTE ===================
+  // =================== PAST VISITS ===================
   const visitsSorted = [...MEDICO.visits].sort((a, b) => b.date.localeCompare(a.date));
   const visitsScreen = (
     <div style={st(14)}>
-      {backBar("Visite fatte")}
+      {backBar("Past visits")}
       <div style={{ ...card, padding: "4px 16px" }}>
         {visitsSorted.map((v, i) => line(v.date + v.title, v.title.split(/[:(]/)[0].trim(), hYear(v.date), i === visitsSorted.length - 1))}
       </div>
     </div>
   );
 
-  // =================== STORIA DI FAMIGLIA (MEDICO.familyHistory, da data/health/family-history.md) ===================
+  // =================== FAMILY HISTORY (MEDICO.familyHistory, from data/health/family-history.md) ===================
   const famWith = FAM ? FAM.groups.filter((g: FamGroup) => g.items.length > 0) : [];
   const famScreen = (
     <div style={st(14)}>
-      {backBar("Storia di famiglia")}
-      {FAM ? famWith.map((g: FamGroup) => <div key={g.key}>{plain(g.label, g.items.map((it, i) => line(it.name, it.name, it.age ? `a ${it.age.replace(/ anni$/, "")} anni` : it.year ?? "", i === g.items.length - 1)))}</div>)
+      {backBar("Family history")}
+      {FAM ? famWith.map((g: FamGroup) => <div key={g.key}>{plain(g.label, g.items.map((it, i) => line(it.name, it.name, it.age ? `a ${it.age.replace(/ years$/, "")} years` : it.year ?? "", i === g.items.length - 1)))}</div>)
         : <div style={card}><span style={txt}>{MEDICO.family}</span></div>}
     </div>
   );
 
-  // =================== PRELIEVI (MEDICO.lab, MEDICO.groups, MEDICO.watch; da data/body/labs) ===================
-  // Tutto quello che riguarda gli esami del sangue sta qui: ultimo prelievo in alto, i valori vicino al limite in giallo, poi l'elenco dei prelievi.
+  // =================== BLOOD DRAWS (MEDICO.lab, MEDICO.groups, MEDICO.watch; from data/body/labs) ===================
+  // Everything about blood tests lives here: latest draw at the top, values near the limit in yellow, then the list of draws.
   const labsScreen = (
     <div style={st(14)}>
-      {backBar("Prelievi")}
+      {backBar("Blood draws")}
       <div style={{ ...card, ...row, justifyContent: "space-between", alignItems: "flex-start" }}>
         <div style={{ ...st(2), flex: 1 }}>
           <span style={{ ...caps, fontSize: 12, lineHeight: "16px", color: K.t1 }}>{MEDICO.lab.name}, {MEDICO.lab.site}</span>
-          <span style={lbl}>Referto del {longDate(MEDICO.lab.date)}</span>
+          <span style={lbl}>Report of {longDate(MEDICO.lab.date)}</span>
         </div>
         <div style={{ ...st(2), alignItems: "flex-end", flex: "0 0 auto" }}>
-          <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: MEDICO.lab.outOfRange ? K.warn : K.up }}>{MEDICO.lab.outOfRange ? `${MEDICO.lab.outOfRange} fuori norma` : "0 fuori norma"}</span>
-          {medNear ? <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: K.recMid }}>{medNear} vicino al limite</span> : null}
+          <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: MEDICO.lab.outOfRange ? K.warn : K.up }}>{MEDICO.lab.outOfRange ? `${MEDICO.lab.outOfRange} out of range` : "0 out of range"}</span>
+          {medNear ? <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: K.recMid }}>{medNear} near the limit</span> : null}
         </div>
       </div>
       {insight(MEDICO.watch)}
@@ -4292,30 +4293,30 @@ export default function App() {
           {g.items.map((m: MedLab, i: number) => medRow(m, i === g.items.length - 1))}
         </div>
       ))}
-      {legend([{ label: "Riferimento del laboratorio", color: K.okBand }, { label: "Nella norma", color: K.up }, { label: "Vicino al limite", color: K.recMid }])}
-      {plain("Tutti i prelievi", [
-        line("last", longDate(MEDICO.lab.date), "ultimo", false),
-        line("next", "Prossimo prelievo", `entro il ${longDate(MEDICO.nextLabs)}`, true),
+      {legend([{ label: "Lab reference", color: K.okBand }, { label: "In range", color: K.up }, { label: "Near the limit", color: K.recMid }])}
+      {plain("All blood draws", [
+        line("last", longDate(MEDICO.lab.date), "latest", false),
+        line("next", "Next blood draw", `by ${longDate(MEDICO.nextLabs)}`, true),
       ])}
     </div>
   );
 
-  // =================== SCHEDE DEL MEDICO (in Biologia > Medico) ===================
+  // =================== MEDICAL CARDS (in Biology > Medical) ===================
   const navIco = (node: ReactNode) => <div style={{ width: 54, height: 44, borderRadius: 10, border: `1px solid ${K.line}`, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto" }}>{node}</div>;
   const lastVisit = visitsSorted[0] ?? null;
   const medRows: { key: string; icon: ReactNode; title: string; sub: string; s: Screen; show: boolean }[] = [
-    { key: "hair", icon: headPic("front", 30, K.t2), title: "Capelli", sub: `Foto il ${HAIR ? hShort(HAIR.photoProtocol.next) : "-"}${psOut ? ` · ricetta entro il ${hShort(psOut)}` : ""}`, s: { kind: "hair" }, show: !!HAIR },
-    { key: "pills", icon: hIc("pill", K.t2, 22), title: "Pillole", sub: (pNow === "am" ? "Oggi: prese stamattina" : pNow === "pm" ? "Oggi: prese stasera" : pNow === "no" ? "Oggi: saltate" : "Oggi: da segnare") + (pStreak > 1 ? ` · ${pStreak} giorni di fila` : ""), s: { kind: "pills" }, show: !!PILLS },
-    { key: "labs", icon: ic("pulse", K.t2, 22), title: "Prelievi", sub: `Ultimo: ${hYear(MEDICO.lab.date)} · prossimo ${hShort(MEDICO.nextLabs)}`, s: { kind: "labs" }, show: true },
-    { key: "checks", icon: ic("cal", K.t2, 22), title: "Controlli e screening", sub: ckNext ? `Prossimo: ${ckNext.title}` : `${medChecks.length} controlli`, s: { kind: "checks" }, show: true },
-    { key: "fam", icon: ic("heart", K.t2, 22), title: "Storia di famiglia", sub: famWith.length ? `${famWith.length} parenti` : "Da completare", s: { kind: "fam" }, show: true },
-    { key: "visits", icon: hIc("doc", K.t2, 22), title: "Visite fatte", sub: lastVisit ? `Ultima: ${hYear(lastVisit.date)}` : "Nessuna", s: { kind: "visits" }, show: true },
+    { key: "hair", icon: headPic("front", 30, K.t2), title: "Photos", sub: `Photo on ${HAIR ? hShort(HAIR.photoProtocol.next) : "-"}${psOut ? ` · prescription by ${hShort(psOut)}` : ""}`, s: { kind: "hair" }, show: !!HAIR },
+    { key: "pills", icon: hIc("pill", K.t2, 22), title: "Pills", sub: (pNow === "am" ? "Today: taken this morning" : pNow === "pm" ? "Today: taken this evening" : pNow === "no" ? "Today: skipped" : "Today: to log") + (pStreak > 1 ? ` · ${pStreak} days in a row` : ""), s: { kind: "pills" }, show: !!PILLS },
+    { key: "labs", icon: ic("pulse", K.t2, 22), title: "Blood draws", sub: `Last: ${hYear(MEDICO.lab.date)} · next ${hShort(MEDICO.nextLabs)}`, s: { kind: "labs" }, show: true },
+    { key: "checks", icon: ic("cal", K.t2, 22), title: "Check-ups and screening", sub: ckNext ? `Next: ${ckNext.title}` : `${medChecks.length} check-ups`, s: { kind: "checks" }, show: true },
+    { key: "fam", icon: ic("heart", K.t2, 22), title: "Family history", sub: famWith.length ? `${famWith.length} relatives` : "To complete", s: { kind: "fam" }, show: true },
+    { key: "visits", icon: hIc("doc", K.t2, 22), title: "Past visits", sub: lastVisit ? `Last: ${hYear(lastVisit.date)}` : "None", s: { kind: "visits" }, show: true },
   ];
   const medShown = medRows.filter((r) => r.show);
   const medNav = <div style={{ ...card, padding: "4px 16px" }}>{medShown.map((r, i) => listRow(r.key, navIco(r.icon), r.title, r.sub, () => open(r.s), i === medShown.length - 1))}</div>;
   const medico = (
     <>
-      {sectionTitle("Medico", <span style={lbl}>aggiornato {parts(MEDICO.updated).dd} {MO[parts(MEDICO.updated).m - 1].slice(0, 3)}</span>)}
+      {sectionTitle("Medical", <span style={lbl}>updated {parts(MEDICO.updated).dd} {MO[parts(MEDICO.updated).m - 1].slice(0, 3)}</span>)}
       {medNav}
     </>
   );
@@ -4323,19 +4324,19 @@ export default function App() {
   const biologia = (
     <div style={st(14)}>
       <div style={{ ...st(2), paddingTop: 6 }}>
-        <span style={{ fontSize: 24, lineHeight: "30px", fontWeight: 700, color: K.t1 }}>Biologia</span>
-        <span style={lbl}>Monitor salute, età biologica, corpo, esami del sangue e cuore a riposo</span>
+        <span style={{ fontSize: 24, lineHeight: "30px", fontWeight: 700, color: K.t1 }}>Biology</span>
+        <span style={lbl}>Health monitor, biological age, body, blood tests and resting heart</span>
       </div>
       {monitorFull}
 
       <button onClick={() => open({ kind: "bio" })} style={{ ...btn, ...card, ...st(14), alignItems: "center", padding: "20px 16px" }}>
         {orb(270)}
         <div style={{ ...three, width: "100%" }}>
-          {stat("Biologica", bioAge === null ? "—" : bioAge.toLocaleString("it-IT"), "anni")}
-          {stat("Anagrafica", chrono === null ? "—" : String(chrono), "anni")}
-          {stat("Differenza", bioDiff === null ? "—" : `${bioDiff > 0 ? "+" : bioDiff < 0 ? "−" : ""}${Math.abs(bioDiff).toLocaleString("it-IT")}`, "anni")}
+          {stat("Biological", bioAge === null ? "—" : bioAge.toLocaleString("en-US"), "years")}
+          {stat("Calendar", chrono === null ? "—" : String(chrono), "years")}
+          {stat("Difference", bioDiff === null ? "—" : `${bioDiff > 0 ? "+" : bioDiff < 0 ? "−" : ""}${Math.abs(bioDiff).toLocaleString("en-US")}`, "years")}
         </div>
-        <span style={{ ...lbl, textAlign: "center" }}>Tocca per il dettaglio</span>
+        <span style={{ ...lbl, textAlign: "center" }}>Tap for detail</span>
       </button>
 
       {drivers.length ? (
@@ -4353,66 +4354,66 @@ export default function App() {
       ) : null}
       {missing.length ? (
         <div style={{ ...card, ...st(8) }}>
-          <span style={capLbl(12)}>Dati mancanti</span>
+          <span style={capLbl(12)}>Missing data</span>
           {missing.map((m) => <div key={m} style={{ ...row, gap: 10, alignItems: "flex-start" }}>{ic("info", K.t3, 16, 1.8)}<span style={{ ...txt, flex: 1 }}>{m}</span></div>)}
         </div>
       ) : null}
 
       {medico}
 
-      {sectionTitle("Corpo", lastWeigh ? <span style={lbl}>pesata {parts(lastWeigh).dd} {MO[parts(lastWeigh).m - 1].slice(0, 3)}</span> : null)}
+      {sectionTitle("Body", lastWeigh ? <span style={lbl}>weighed {parts(lastWeigh).dd} {MO[parts(lastWeigh).m - 1].slice(0, 3)}</span> : null)}
       <div style={three}>
-        {stat("Altezza", curH === null ? "—" : String(curH), "cm")}
-        {stat("Peso", fmt(curKg), "kg")}
-        {stat("BMI", bmiNow === null ? "—" : r1(bmiNow).toLocaleString("it-IT"), bmiNow === null ? "" : bmiNow < 25 ? "normopeso" : bmiNow < 30 ? "sovrappeso" : "obesità")}
+        {stat("Height", curH === null ? "—" : String(curH), "cm")}
+        {stat("Weight", fmt(curKg), "kg")}
+        {stat("BMI", bmiNow === null ? "—" : r1(bmiNow).toLocaleString("en-US"), bmiNow === null ? "" : bmiNow < 25 ? "normal weight" : bmiNow < 30 ? "overweight" : "obese")}
       </div>
       {weightChart ? (
         <div style={{ ...card, ...st(8) }}>
-          <span style={capLbl(12)}>Andamento peso</span>
+          <span style={capLbl(12)}>Weight trend</span>
           {weightChart}
-          {wFirst && wLast ? <span style={txt}>{wLast.kg < wFirst.kg ? `−${r1(wFirst.kg - wLast.kg).toLocaleString("it-IT")} kg` : `+${r1(wLast.kg - wFirst.kg).toLocaleString("it-IT")} kg`} in {daysBetween(wFirst.date, wLast.date)} giorni ({WEIGHTS.length} pesate). Ultima pesata il {longDate(wLast.date)}, {daysBetween(wLast.date, DATA.today)} giorni fa.</span> : null}
+          {wFirst && wLast ? <span style={txt}>{wLast.kg < wFirst.kg ? `−${r1(wFirst.kg - wLast.kg).toLocaleString("en-US")} kg` : `+${r1(wLast.kg - wFirst.kg).toLocaleString("en-US")} kg`} in {daysBetween(wFirst.date, wLast.date)} days ({WEIGHTS.length} weigh-ins). Last weigh-in on {longDate(wLast.date)}, {daysBetween(wLast.date, DATA.today)} days ago.</span> : null}
         </div>
       ) : null}
 
       {labs ? (
         <button onClick={() => {
           const s = scroller.current; if (!s) return;
-          const el = Array.from(s.querySelectorAll("span")).find((e) => (e.textContent ?? "").trim() === "Medico");
+          const el = Array.from(s.querySelectorAll("span")).find((e) => (e.textContent ?? "").trim() === "Medical");
           if (el) s.scrollTo({ top: s.scrollTop + el.getBoundingClientRect().top - s.getBoundingClientRect().top - 96, behavior: "smooth" });
         }} style={{ ...btn, ...card, ...row, padding: "14px 16px" }}>
           {ic("pulse", K.t2, 20)}
           <div style={{ ...st(2), flex: 1 }}>
-            <span style={{ fontSize: 15, lineHeight: "20px", fontWeight: 600, color: K.t1 }}>Esami del sangue</span>
-            <span style={{ ...lbl, ...ell }}>{`Valori e riferimenti in Medico${bio?.labsDate ? ` · ${longDate(bio.labsDate)}` : ""}`}</span>
+            <span style={{ fontSize: 15, lineHeight: "20px", fontWeight: 600, color: K.t1 }}>Blood tests</span>
+            <span style={{ ...lbl, ...ell }}>{`Values and references in Medical${bio?.labsDate ? ` · ${longDate(bio.labsDate)}` : ""}`}</span>
           </div>
           {chev(K.t1)}
         </button>
       ) : null}
 
-      {sectionTitle("Cuore a riposo", <span style={lbl}>media {days.length} giorni</span>)}
+      {sectionTitle("Resting heart", <span style={lbl}>average {days.length} days</span>)}
       <div style={two}>
-        {stat("FC a riposo", fmt(wkRhr), rhrs.length ? `bpm · ${Math.min(...rhrs)}–${Math.max(...rhrs)}` : "bpm")}
+        {stat("Resting HR", fmt(wkRhr), rhrs.length ? `bpm · ${Math.min(...rhrs)}–${Math.max(...rhrs)}` : "bpm")}
         {stat("HRV", fmt(wkHrv), hrvs.length ? `ms · ${fmt(Math.min(...hrvs))}–${fmt(Math.max(...hrvs))}` : "ms")}
       </div>
-      {weekTitle("FC a riposo (bpm) · linea = tua media")}
-      <div style={card}>{lines([{ name: "FC riposo", color: K.recLo, values: days.map((x: Day) => x.rhr) }], wkRhr ?? undefined)}</div>
-      {weekTitle("HRV (ms) · linea = tua media")}
+      {weekTitle("Resting HR (bpm) · line = your average")}
+      <div style={card}>{lines([{ name: "Resting HR", color: K.recLo, values: days.map((x: Day) => x.rhr) }], wkRhr ?? undefined)}</div>
+      {weekTitle("HRV (ms) · line = your average")}
       <div style={card}>{lines([{ name: "HRV", color: K.violet, values: days.map((x: Day) => x.hrvMs) }], wkHrv ?? undefined)}</div>
     </div>
   );
 
   // =================== NAVIGAZIONE ===================
-  // barra stile app di recupero: pillola scura opaca con 6 voci uguali; "Allenamento" (manubrio) apre la vista del coach.
-  // Colori pieni e opachi, niente backdrop-filter né alpha: il CSS qui sotto li blinda con !important.
-  const healthTabs: { id: Tab; label: string }[] = [{ id: "sonno", label: "Sonno" }, { id: "recupero", label: "Recupero" }, { id: "sforzo", label: "Sforzo" }];
+  // recovery-app style bar: opaque dark pill with 6 equal items; "Training" (dumbbell) opens the coach's view.
+  // Solid opaque colours, no backdrop-filter or alpha: the CSS below locks them with !important.
+  const healthTabs: { id: Tab; label: string }[] = [{ id: "sonno", label: "Sleep" }, { id: "recupero", label: "Recovery" }, { id: "sforzo", label: "Effort" }];
   const isHealth = tab === "sonno" || tab === "recupero" || tab === "sforzo";
   const tabs: { id: string; label: string; to: Tab; on: boolean }[] = [
     { id: "home", label: "Home", to: "home", on: tab === "home" },
-    { id: "salute", label: "Salute", to: isHealth ? tab : "recupero", on: isHealth },
-    { id: "biologia", label: "Biologia", to: "biologia", on: tab === "biologia" },
-    { id: "nutrizione", label: "Nutrizione", to: "nutrizione", on: tab === "nutrizione" },
-    { id: "allenamento", label: "Allenamento", to: "fitness", on: tab === "fitness" },
-    { id: "altro", label: "Altro", to: "altro", on: tab === "altro" },
+    { id: "salute", label: "Health", to: isHealth ? tab : "recupero", on: isHealth },
+    { id: "biologia", label: "Biology", to: "biologia", on: tab === "biologia" },
+    { id: "nutrizione", label: "Nutrition", to: "nutrizione", on: tab === "nutrizione" },
+    { id: "allenamento", label: "Training", to: "fitness", on: tab === "fitness" },
+    { id: "altro", label: "More", to: "altro", on: tab === "altro" },
   ];
   const navIcon = (id: string, color: string) => (
     <svg className="wb-ico" width={24} height={24} viewBox="0 0 26 26" fill="none" stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", flex: "0 0 auto", stroke: color, fill: "none" }}>
@@ -4446,7 +4447,7 @@ export default function App() {
   const showHeader = !screen && (tab === "home" || tab === "biologia" || tab === "nutrizione" || tab === "altro" || tab === "fitness");
   const col: CSSProperties = { boxSizing: "border-box", width: "100%", maxWidth: 440, margin: "0 auto", paddingLeft: 16, paddingRight: 16 };
 
-  // tema scuro forzato su tutto il documento: nessun tema chiaro dell'host o del sistema può sovrascriverlo
+  // dark theme forced on the whole document: no host or system light theme can override it
   const css = `html,body{background:${K.bg} !important;background-color:${K.bg} !important;color-scheme:dark !important;margin:0}
 :root{color-scheme:dark !important}
 .wb-root{color-scheme:dark !important;background-color:${K.bg} !important}

@@ -1,16 +1,16 @@
 {
  "updated": "2030-01-14",
  "status": "da seguire",
- "line": "Esempio: un obiettivo di apprendimento.",
- "source": "esempio",
+ "line": "Sample: one learning goal.",
+ "source": "sample",
  "sfere": [
   {
    "key": "studio",
-   "name": "Studio",
+   "name": "Study",
    "status": "da seguire",
-   "line": "Esempio: 2 ore a settimana.",
+   "line": "Sample: 2 hours a week.",
    "steps": [
-    "Mezz'ora oggi (esempio)."
+    "Half an hour today (sample)."
    ]
   }
  ]

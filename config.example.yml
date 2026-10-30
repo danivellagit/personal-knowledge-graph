@@ -129,21 +129,21 @@ location:
 life_app:
   enabled: true
   # owner_name: ""                      # shown in the app (initial in the header); default: `owner` above; env LIFE_APP_OWNER
-  # owner_words: [io, me]               # words in the "Chi" column of data/finance/scadenzario.md that mean you (+ your first name)
+  # owner_words: [me, I]               # words in the "Who" (or "Chi") column of data/finance/scadenzario.md that mean you (+ your first name)
   # app_name: "Life"                    # home-screen / lock-screen name; env LIFE_APP_NAME
   # login_username: "life-app"          # hidden username next to the password (what a password manager saves it under)
-  # description: "Life Health: tutte le aree della vita"
-  # lang: "it"                          # the app's own wording is Italian today; this sets the page language tag
+  # description: "Life Health: every area of your life"
+  # lang: "en"                          # the page language tag (the app's wording is English)
   # timezone: "Europe/Rome"             # "today" in the app; env LIFE_APP_TZ
   # labels:
-  #   gym: "Palestra"                   # label of the gym row in Corpo (e.g. "Palestra / <your gym>")
+  #   gym: "Gym"                        # label of the gym row in Body (e.g. "Gym / <your gym>")
   # password_file: "~/.secrets/life-app-password"   # one line, OUTSIDE the repo, never committed; env LIFE_APP_PASSWORD_FILE
   # cache_dir: "~/.cache/life-app"      # off-repo: salt, deploy dir, last published hash; env LIFE_APP_CACHE
   # salt_file: ""                       # default <cache_dir>/salt.txt, made on the first build (keep it: a new salt = re-login)
   # avatar: ""                          # a small JPEG/PNG outside the repo, embedded only inside the ciphertext
   # health_page: ""                     # default tools/life-app/src/health/health-page.tsx; env LIFE_APP_HEALTH_PAGE
   # hooks:
-  #   hair_photos: ""                   # ES module exporting writeHairInit(workDir) -> count (photos for Salute > Capelli,
+  #   hair_photos: ""                   # ES module exporting writeHairInit(workDir) -> count (photos for Health > Photos,
   #                                     # embedded only in the ciphertext); none = the view shows placeholders
   # (relative paths in this block are taken from the repo root. A private instance that commits everything may keep
   #  this same `life_app:` block in a committed tools/life-app/instance.yml instead; config.local.yml wins over it.)
@@ -161,7 +161,7 @@ life_app:
   #   token_file: "~/.secrets/life-log-token"   # fine-grained token, Contents read/write on that repo ONLY
   # areas:                              # ids are fixed; name, agents (role or persona names), weight in the total
   #   lavoro:
-  #     name: "Lavoro"
+  #     name: "Work"
   #     agents: "founder-assistant, linkedin-coach"
   #     weight: 1                       # 0 = shown but not counted in Life Health
   #   vita:

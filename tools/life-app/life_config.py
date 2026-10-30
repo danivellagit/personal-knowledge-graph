@@ -21,14 +21,14 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 import config  # noqa: E402  (tools/config.py: env -> config.local.yml -> default)
 
 AREAS = [
-    # id, default display name (the app UI is Italian), default role(s), data file(s)
-    ("corpo", "Corpo", "fitness-coach", ["corpo.json"]),
-    ("salute", "Salute", "health-advisor, psychologist", ["medico.json", "mente.json"]),
-    ("lavoro", "Lavoro", "founder-assistant, linkedin-coach", ["lavoro.json"]),
-    ("finanze", "Finanze", "accountant", ["finanze.json"]),
-    ("relazioni", "Relazioni", "best-friend", ["relazioni.json"]),
-    ("crescita", "Crescita", "best-friend", ["crescita.json"]),
-    ("vita", "Vita", "best-friend", ["vita.json"]),
+    # id, default display name, default role(s), data file(s)
+    ("corpo", "Body", "fitness-coach", ["corpo.json"]),
+    ("salute", "Health", "health-advisor, psychologist", ["medico.json", "mente.json"]),
+    ("lavoro", "Work", "founder-assistant, linkedin-coach", ["lavoro.json"]),
+    ("finanze", "Finances", "accountant", ["finanze.json"]),
+    ("relazioni", "Relationships", "best-friend", ["relazioni.json"]),
+    ("crescita", "Growth", "best-friend", ["crescita.json"]),
+    ("vita", "Life", "best-friend", ["vita.json"]),
 ]
 
 
@@ -102,17 +102,17 @@ def resolve():
     return {
         "enabled": truthy(g("enabled", "true"), True),
         "app_name": str(g("app_name", "Life", "LIFE_APP_NAME")),
-        "description": str(g("description", "Life Health: tutte le aree della vita")),
-        "lang": str(g("lang", "it")),
+        "description": str(g("description", "Life Health: every area of your life")),
+        "lang": str(g("lang", "en")),
         "owner_name": owner,
         "owner_first": first,
         "owner_initial": first[:1].upper() or "L",
-        # the words that mean "me" in the Chi column of data/finance/scadenzario.md (a row about you, not someone else)
-        "owner_words": [str(w).lower() for w in glist("owner_words", [first, "io", "me"])],
+        # the words that mean "me" in the Who (Chi) column of data/finance/scadenzario.md (a row about you, not someone else)
+        "owner_words": [str(w).lower() for w in glist("owner_words", [first, "me", "I", "io"])],
         # the hidden username next to the password field (password managers key the saved password on it)
         "login_username": str(g("login_username", "life-app")),
         "timezone": str(g("timezone", "Europe/Rome", "LIFE_APP_TZ")),
-        "gym_label": str(g("labels.gym", "Palestra")),
+        "gym_label": str(g("labels.gym", "Gym")),
         "password_file": p(g("password_file", os.path.join(home, ".secrets", "life-app-password"), "LIFE_APP_PASSWORD_FILE")),
         "cache_dir": cache,
         "salt_file": p(g("salt_file", os.path.join(cache, "salt.txt"), "LIFE_APP_SALT_FILE")),

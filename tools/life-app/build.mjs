@@ -3,16 +3,16 @@
 //        [--salt-file FILE] [--data-dir DIR, default <kb>/data/happiness] [--scores-only] [--scores-out FILE, default out/scores.json]
 // Settings: config.local.yml `life_app:` (resolved by life_config.py; flags win over it). See tools/life-app/README.md.
 // Data sources (all real, nothing typed into the app code); the single source of truth is <kb>/data/happiness/:
-//   Corpo + Salute/Medico -> the health page (src/health/health-page.tsx), included as salute-full.tsx in embedded mode;
+//   Body + Health/Medical -> the health page (src/health/health-page.tsx), included as salute-full.tsx in embedded mode;
 //     the publisher passes a copy with DATA = data/happiness/corpo.json and MEDICO = medico.json (tools/happiness.py inject)
-//   Mente, Lavoro, Finanze, Relazioni, Crescita, Vita -> data/happiness/<area>.json (one file per area/agent)
-//   Corpo rolling history -> data/happiness/corpo-history.json (refreshed here)
+//   Mind, Work, Finances, Relationships, Growth, Life -> data/happiness/<area>.json (one file per area/agent)
+//   Body rolling history -> data/happiness/corpo-history.json (refreshed here)
 //   Life Health history -> data/happiness/life-health-history.json (today's row refreshed here, closed days frozen)
 //   --scores-only: stop after the history and write the numbers the app shows (out/scores.json, for the MD recaps); no password needed
-//   Optional: Scadenze <- <kb>/data/finance/scadenzario.md · Compleanni <- <kb>/data/people/*.md (birthday:) ·
+//   Optional: Deadlines <- <kb>/data/finance/scadenzario.md · Compleanni <- <kb>/data/people/*.md (birthday:) ·
 //   Eventi <- <kb>/data/events/*.md (date:) · body days <- <kb>/data/body/body-YYYY-MM-DD.md · workouts <- data/training/*.md
 //   Medical archive <- data/health/records.md + vaccinations.md + data/body/labs/ (archive.mjs)
-//   Misure (blood pressure, waist) <- data/health/blood-pressure.md + data/body/waist.md (misure.mjs)
+//   Measurements (blood pressure, waist) <- data/health/blood-pressure.md + data/body/waist.md (misure.mjs)
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, rmSync, existsSync, readdirSync, cpSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -45,12 +45,12 @@ if (!saluteSrc || !existsSync(saluteSrc)) { console.error("missing health page s
 
 // 1. health Page: the WHOLE health page source (src/health/health-page.tsx), included at build time.
 // It is never edited on disk: build-time patches below only add an "embedded" mode (props) used by the Life App
-// Corpo and Salute pages. Without props the component behaves as a standalone health page.
+// Body and Health pages. Without props the component behaves as a standalone health page.
 // Every patch must match exactly; if the health Page changes a patched line the build fails loudly (fix the anchor here).
 // pages that predate the config globals (e.g. an instance's own copy of the page kept elsewhere) get the three
 // declarations the build-time fragments use; the page in src/health/ declares them itself
 const s0 = readFileSync(saluteSrc, "utf8");
-const shim = [["TZ", "__LIFE_TZ__", "Europe/Rome"], ["COACH", "__LIFE_COACH__", "il coach"], ["GYM", "__LIFE_GYM__", "Palestra"]]
+const shim = [["TZ", "__LIFE_TZ__", "Europe/Rome"], ["COACH", "__LIFE_COACH__", "the coach"], ["GYM", "__LIFE_GYM__", "Gym"]]
   .filter(([n]) => !new RegExp(`^const ${n}\\b`, "m").test(s0))
   .map(([n, g, d]) => `const ${n}: string = (typeof globalThis !== "undefined" ? (globalThis as unknown as { ${g}?: string }).${g} : undefined) ?? ${JSON.stringify(d)};`);
 const s = shim.length ? s0.replace(/^((?:import [^\n]*\n)+)/m, (m) => m + shim.join("\n") + "\n") : s0;
@@ -78,21 +78,21 @@ patch("scroller", 'style={{ flex: 1, minHeight: 0, overflowY: "auto"', 'style={p
 patch("bottom padding", 'paddingBottom: screen ? 28 :', 'paddingBottom: screen || props.embed ? 28 :');
 patch("nav", "{!screen ? (", "{!screen && !props.embed ? (");
 // biological age: in the Life App no numeric per-factor contribution (never show how it is calculated): qualitative label only
-patch("bio years label", "  const yrs = (v: number) => ", '  const yrs = (v: number) => props.embed ? (v > 0 ? "da migliorare" : v < 0 ? "bene" : "nella norma") : ');
-patch("bio sum card open", "      <div style={{ ...card, ...st(8) }}>\n        <span style={capLbl(12)}>Somma dei contributi</span>", "      {props.embed ? null : <div style={{ ...card, ...st(8) }}>\n        <span style={capLbl(12)}>Somma dei contributi</span>");
+patch("bio years label", "  const yrs = (v: number) => ", '  const yrs = (v: number) => props.embed ? (v > 0 ? "to improve" : v < 0 ? "good" : "in range") : ');
+patch("bio sum card open", "      <div style={{ ...card, ...st(8) }}>\n        <span style={capLbl(12)}>Sum of contributions</span>", "      {props.embed ? null : <div style={{ ...card, ...st(8) }}>\n        <span style={capLbl(12)}>Sum of contributions</span>");
 patch("bio sum card close", "      </div>\n      {insight(drivers.length", "      </div>}\n      {insight(drivers.length");
 // day bar: no second avatar under the Life header (streak, date picker and update time stay)
 patch("day bar avatar", "        <div style={{ ...row, gap: 8 }}>\n          {AVATAR ? (", "        <div style={{ ...row, gap: 8 }}>\n          {props.embed ? null : AVATAR ? (");
-// ---- Corpo as ONE Life page (2026-10-23, the owner: sleep / recovery / strain separate, no sub-app glued under Life) ----
+// ---- Body as ONE Life page (sleep / recovery / strain separate, no sub-app glued under Life) ----
 // selected day controlled by the Life header day picker
 patch("controlled day", "const [sel, setSel] = useState<string>(DATA.today);",
   "const [selS, setSelS] = useState<string>(props.sel ?? DATA.today);\n  const sel: string = props.sel ?? selS;\n  const setSel = (x: string) => { setSelS(x); if (props.onSel) props.onSel(x); };");
 patch("embed props type", "export type EmbedProps = { embed?: boolean;", "export type EmbedProps = { onEve?: (e: { bedBy: number; bedBy85: number; wake: number; need: number } | null) => void; sforzoScore?: number | null; sonnoScore?: number | null; sel?: string; onSel?: (d: string) => void; slots?: { hero?: ReactNode; ring?: ReactNode; tip?: string | null; sections?: ReactNode; sonnoMid?: ReactNode; bioPace?: ReactNode; windowed?: boolean; trends?: ReactNode } | null; embed?: boolean;");
-// the three big rings open their own chip (Sonno / Recupero / Sforzo) instead of a detail screen
-patch("dial tap", '<button key={id} onClick={() => open({ kind: "dial", id })}', '<button key={id} aria-label={props.embed ? `Sezione ${dialMeta[id].name}` : undefined} onClick={() => (props.embed ? goTab(id) : open({ kind: "dial", id }))}');
-// no Sonno/Recupero/Sforzo switch nor second date pill inside the chips (the Life chips and day picker cover it)
+// the three big rings open their own chip (Sleep / Recovery / Effort) instead of a detail screen
+patch("dial tap", '<button key={id} onClick={() => open({ kind: "dial", id })}', '<button key={id} aria-label={props.embed ? `Section ${dialMeta[id].name}` : undefined} onClick={() => (props.embed ? goTab(id) : open({ kind: "dial", id }))}');
+// no Sleep/Recovery/Effort switch nor second date pill inside the chips (the Life chips and day picker cover it)
 patch("health switch", "const healthSwitch = (", "const healthSwitch = props.embed ? null : (");
-// embedded Corpo hub (slots.windowed = Settimana / Lungo periodo view: only selector, ring and section cards): Corpo ring, one guidance card, the Life section cards (each opens a sub-page), then the rest of the day once
+// embedded Body hub (slots.windowed = Week / Long term view: only selector, ring and section cards): Body ring, one guidance card, the Life section cards (each opens a sub-page), then the rest of the day once
 patch("life home", "\n  const home = (\n", `
   const lifeHome = (
     <div style={st(14)}>
@@ -100,13 +100,13 @@ patch("life home", "\n  const home = (\n", `
       {props.slots?.ring ?? null}
       {props.slots?.windowed ? null : <>
       {todayHero}
-      <button onClick={() => open({ kind: "coach" })} aria-label="Cosa fare oggi" style={{ ...btn, ...card, ...st(6) }}>
-        <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: K.warn }}>{live ? "Cosa fare oggi" : dayTitle(d.date)}</span>
+      <button onClick={() => open({ kind: "coach" })} aria-label="What to do today" style={{ ...btn, ...card, ...st(6) }}>
+        <span style={{ ...caps, fontSize: 11, lineHeight: "14px", color: K.warn }}>{live ? "What to do today" : dayTitle(d.date)}</span>
         {guideLead}
         {live && props.slots?.tip ? <span style={{ fontSize: 15, lineHeight: "21px", color: K.t1 }}>{props.slots.tip}</span> : null}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: live && props.slots?.tip ? 4 : 0 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: recColor(dRec) }}>{outlookTitle}</span>
-          <span style={{ ...row, gap: 4 }}><span style={{ ...lbl, fontWeight: 700 }}>{coachTips.length} {coachTips.length === 1 ? "consiglio" : "consigli"}</span>{chev(K.t3)}</span>
+          <span style={{ ...row, gap: 4 }}><span style={{ ...lbl, fontWeight: 700 }}>{coachTips.length} {coachTips.length === 1 ? "tip" : "tips"}</span>{chev(K.t3)}</span>
         </div>
         <span style={txt}>{outlookAfter}</span>
       </button>
@@ -118,13 +118,13 @@ patch("life home", "\n  const home = (\n", `
   );
   const home = (
 `);
-// Tendenze in the Corpo Settimana / Lungo periodo views: the Life trend block (week days or 90 days) replaces the fixed 7-day page
+// Trends in the Body Week / Long term views: the Life trend block (week days or 90 days) replaces the fixed 7-day page
 patch("trends slot", "  const altro = (\n", "  const altro = props.slots?.trends ? <div style={st(14)}>{props.slots.trends}</div> : (\n");
 patch("home content", 'content = tab === "home" ? home :', 'content = tab === "home" ? (props.embed && props.slots ? lifeHome : home) :');
 // section and page headings in the Life section-title style (small capitals, like "SEZIONI")
 patch("section title style", '    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 12 }}>\n      <span style={{ fontSize: 20, lineHeight: "26px", fontWeight: 600, color: K.t1 }}>{t}</span>{right}',
   '    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: props.embed ? 0 : 12, padding: props.embed ? "10px 2px 0" : 0 }}>\n      <span style={props.embed ? { ...caps, fontSize: 13, lineHeight: "18px", color: K.t1 } : { fontSize: 20, lineHeight: "26px", fontWeight: 600, color: K.t1 }}>{t}</span>{right}');
-patch("page title block", /\n      <div style=\{\{ \.\.\.st\(2\), paddingTop: 6 \}\}>\n        <span style=\{\{ fontSize: 24, lineHeight: "30px", fontWeight: 700, color: K\.t1 \}\}>(Fitness|Biologia)<\/span>\n        <span style=\{lbl\}>([^<\n]*)<\/span>\n      <\/div>\n/, '\n      {props.embed ? null : <div style={{ ...st(2), paddingTop: 6 }}>\n        <span style={{ fontSize: 24, lineHeight: "30px", fontWeight: 700, color: K.t1 }}>$1</span>\n        <span style={lbl}>$2</span>\n      </div>}\n', 2);
+patch("page title block", /\n      <div style=\{\{ \.\.\.st\(2\), paddingTop: 6 \}\}>\n        <span style=\{\{ fontSize: 24, lineHeight: "30px", fontWeight: 700, color: K\.t1 \}\}>(Fitness|Biology)<\/span>\n        <span style=\{lbl\}>([^<\n]*)<\/span>\n      <\/div>\n/, '\n      {props.embed ? null : <div style={{ ...st(2), paddingTop: 6 }}>\n        <span style={{ fontSize: 24, lineHeight: "30px", fontWeight: 700, color: K.t1 }}>$1</span>\n        <span style={lbl}>$2</span>\n      </div>}\n', 2);
 // detail screens inside the Life App: the Life header hides (onScreen), this back bar is the only header, Life title style
 patch("back bar title", '<span style={{ ...caps, ...ell, fontSize: 13, textAlign: "center", color: K.t1 }}>{title}</span><span />',
   '<span style={{ ...caps, ...ell, fontSize: props.embed ? 16 : 13, lineHeight: props.embed ? "21px" : undefined, textAlign: props.embed ? "left" : "center", color: K.t1 }}>{title}</span><span />');
@@ -133,84 +133,84 @@ patch("bio factor label", '<span style={numStyle(16, f.years === null ? K.t3 : f
   '<span style={props.embed ? { ...caps, fontSize: 11, lineHeight: "16px", whiteSpace: "nowrap", color: f.years === null ? K.t3 : f.years > 0 ? K.warn : f.years < 0 ? K.up : K.t2 } : numStyle(16, f.years === null ? K.t3 : f.years > 0 ? K.warn : f.years < 0 ? K.up : K.t2)}>');
 patch("bio driver label", '<span style={{ ...numStyle(16, (f.years ?? 0) > 0 ? K.warn : K.up), flex: "0 0 auto" }}>',
   '<span style={{ ...(props.embed ? { ...caps, fontSize: 11, lineHeight: "16px", whiteSpace: "nowrap", color: (f.years ?? 0) > 0 ? K.warn : K.up } : numStyle(16, (f.years ?? 0) > 0 ? K.warn : K.up)), flex: "0 0 auto" }}>');
-// moved blocks: tonight card under the Sonno ring (replacing the shorter in-page "Stanotte"), morning card under Recupero,
-// match card on top of Allenamento (its own session list already has the day's activities), health monitor on top of Biologia; meals / protein gap / key stats / note /
-// upcoming are already in Nutrizione, Sforzo, Recupero, Allenamento, so the hub just drops them
-// Sonno: the in-page planner (Stanotte) is the one tonight card, same as the health app
+// moved blocks: tonight card under the Sleep ring (replacing the shorter in-page "Tonight"), morning card under Recovery,
+// match card on top of Training (its own session list already has the day's activities), health monitor on top of Biology; meals / protein gap / key stats / note /
+// upcoming are already in Nutrition, Effort, Recovery, Training, so the hub just drops them
+// Sleep: the in-page planner (Tonight) is the one tonight card, same as the health app
 patch("recupero morning", '{detailTop("recupero", withBack)}', '{detailTop("recupero", withBack)}\n      {props.embed && live ? morningCard : null}');
 patch("tonight/morning tap", '<button onClick={() => open({ kind: "dial", id: "sonno" })} style={{ ...btn,', '<button onClick={() => (props.embed ? undefined : open({ kind: "dial", id: "sonno" }))} style={{ ...btn,', 2);
 patch("allenamento top", ': tab === "fitness" ? fitness : tab === "medico"', ': tab === "fitness" ? (props.embed ? <div style={st(14)}>{live ? matchCard : null}{fitness}</div> : fitness) : tab === "medico"');
-// Sforzo opens with the picked day's sessions (effort, kcal, zones), same as the health app; the week follows
+// Effort opens with the picked day's sessions (effort, kcal, zones), same as the health app; the week follows
 patch("biologia top", ': tab === "biologia" ? biologia :', ': tab === "biologia" ? (props.embed ? <div style={st(14)}>{biologia}</div> : biologia) :');
 // no dead tap affordances inside the Life sub-pages: the tonight/morning cards do nothing there, so no arrow
 patch("tonight chev", ': chev(K.t1)}\n        </div>\n        <div style={{ ...row, justifyContent: "space-between", alignItems: "flex-end" }}>', ': props.embed ? null : chev(K.t1)}\n        </div>\n        <div style={{ ...row, justifyContent: "space-between", alignItems: "flex-end" }}>');
-patch("morning chev", '"Stasera si riparte, con calma."}</span>\n      </div>\n      {chev(K.t1)}', '"Stasera si riparte, con calma."}</span>\n      </div>\n      {props.embed ? null : chev(K.t1)}');
+patch("morning chev", '"Tonight you start again, calmly."}</span>\n      </div>\n      {chev(K.t1)}', '"Tonight you start again, calmly."}</span>\n      </div>\n      {props.embed ? null : chev(K.t1)}');
 patch("tonight/morning cursor", '<button onClick={() => (props.embed ? undefined : open({ kind: "dial", id: "sonno" }))} style={{ ...btn,', '<button onClick={() => (props.embed ? undefined : open({ kind: "dial", id: "sonno" }))} style={{ ...btn, cursor: props.embed ? "default" : "pointer",', 2);
-// "Esami del sangue" scrolls to Medico, which in the Life App lives in Salute: hidden in Biologia (embedded)
+// "Blood tests" scrolls to Medical, which in the Life App lives in Health: hidden in Biology (embedded)
 patch("bio labs link", '{labs ? (\n        <button onClick={() => {\n          const s = scroller.current;', '{labs && !props.embed ? (\n        <button onClick={() => {\n          const s = scroller.current;');
-// Peso: own Corpo sub-page (embedded); weight, chart and body data move out of Biologia
-patch("bio corpo block", '      {sectionTitle("Corpo", lastWeigh ?', '      {props.embed ? null : <>{sectionTitle("Corpo", lastWeigh ?');
+// Weight: own Body sub-page (embedded); weight, chart and body data move out of Biology
+patch("bio corpo block", '      {sectionTitle("Body", lastWeigh ?', '      {props.embed ? null : <>{sectionTitle("Body", lastWeigh ?');
 patch("bio corpo block end", ') : null}\n\n      {labs && !props.embed ? (', ') : null}</>}\n\n      {labs && !props.embed ? (');
 patch("peso page", "\n  const biologia = (\n", `
   const wDelta = (i: number) => (i > 0 ? WEIGHTS[i].kg - WEIGHTS[i - 1].kg : null);
   const pesoPage = (
     <div style={st(14)}>
       <div style={three}>
-        {stat("Peso", fmt(curKg), "kg")}
-        {stat("Altezza", curH === null ? "—" : String(curH), "cm")}
-        {stat("BMI", bmiNow === null ? "—" : r1(bmiNow).toLocaleString("it-IT"), bmiNow === null ? "" : bmiNow < 25 ? "normopeso" : bmiNow < 30 ? "sovrappeso" : "obesità")}
+        {stat("Weight", fmt(curKg), "kg")}
+        {stat("Height", curH === null ? "—" : String(curH), "cm")}
+        {stat("BMI", bmiNow === null ? "—" : r1(bmiNow).toLocaleString("en-US"), bmiNow === null ? "" : bmiNow < 25 ? "normal weight" : bmiNow < 30 ? "overweight" : "obese")}
       </div>
       {weightChart ? (
         <div style={{ ...card, ...st(8) }}>
-          <span style={capLbl(12)}>Andamento peso</span>
+          <span style={capLbl(12)}>Weight trend</span>
           {weightChart}
-          {wFirst && wLast ? <span style={txt}>{wLast.kg < wFirst.kg ? \`−\${r1(wFirst.kg - wLast.kg).toLocaleString("it-IT")} kg\` : \`+\${r1(wLast.kg - wFirst.kg).toLocaleString("it-IT")} kg\`} in {daysBetween(wFirst.date, wLast.date)} giorni ({WEIGHTS.length} pesate).</span> : null}
+          {wFirst && wLast ? <span style={txt}>{wLast.kg < wFirst.kg ? \`−\${r1(wFirst.kg - wLast.kg).toLocaleString("en-US")} kg\` : \`+\${r1(wLast.kg - wFirst.kg).toLocaleString("en-US")} kg\`} in {daysBetween(wFirst.date, wLast.date)} days ({WEIGHTS.length} weigh-ins).</span> : null}
         </div>
       ) : null}
-      {sectionTitle("Pesate")}
+      {sectionTitle("Weigh-ins")}
       <div style={{ ...card, padding: "4px 16px" }}>
         {WEIGHTS.map((w, i) => ({ w, i })).reverse().map(({ w, i }, j, arr) => {
           const dl = wDelta(i);
           return (
             <div key={w.date} style={{ ...row, justifyContent: "space-between", padding: "12px 0", borderBottom: j < arr.length - 1 ? \`1px solid \${K.line}\` : "none" }}>
               <span style={{ fontSize: 14, lineHeight: "20px", fontWeight: 600, color: K.t1 }}>{longDate(w.date)}</span>
-              <span style={{ ...row, gap: 10 }}>{dl !== null && dl !== 0 ? <span style={{ ...lbl, color: dl < 0 ? K.up : K.warn }}>{\`\${dl < 0 ? "−" : "+"}\${r1(Math.abs(dl)).toLocaleString("it-IT")} kg\`}</span> : null}<span style={numStyle(18)}>{fmt(w.kg)} kg</span></span>
+              <span style={{ ...row, gap: 10 }}>{dl !== null && dl !== 0 ? <span style={{ ...lbl, color: dl < 0 ? K.up : K.warn }}>{\`\${dl < 0 ? "−" : "+"}\${r1(Math.abs(dl)).toLocaleString("en-US")} kg\`}</span> : null}<span style={numStyle(18)}>{fmt(w.kg)} kg</span></span>
             </div>
           );
         })}
       </div>
-      {sectionTitle("Composizione corporea")}
+      {sectionTitle("Body composition")}
       <div style={three}>
-        {stat("Grasso", isNum(bio?.bodyFatPct) ? r1(bio?.bodyFatPct as number).toLocaleString("it-IT") : "—", isNum(bio?.bodyFatPct) ? "%" : "da misurare")}
-        {stat("Magra", isNum(bio?.bodyFatPct) && curKg !== null ? r1(curKg * (1 - (bio?.bodyFatPct as number) / 100)).toLocaleString("it-IT") : "—", isNum(bio?.bodyFatPct) && curKg !== null ? "kg" : "da misurare")}
-        {stat("VO2 max", isNum(bio?.vo2max) ? fmt(bio?.vo2max) : "—", isNum(bio?.vo2max) ? "ml/kg/min" : "da misurare")}
+        {stat("Fat", isNum(bio?.bodyFatPct) ? r1(bio?.bodyFatPct as number).toLocaleString("en-US") : "—", isNum(bio?.bodyFatPct) ? "%" : "to measure")}
+        {stat("Lean", isNum(bio?.bodyFatPct) && curKg !== null ? r1(curKg * (1 - (bio?.bodyFatPct as number) / 100)).toLocaleString("en-US") : "—", isNum(bio?.bodyFatPct) && curKg !== null ? "kg" : "to measure")}
+        {stat("VO2 max", isNum(bio?.vo2max) ? fmt(bio?.vo2max) : "—", isNum(bio?.vo2max) ? "ml/kg/min" : "to measure")}
       </div>
     </div>
   );
   const biologia = (
 `);
-// one place for upcoming sessions in the Life App (Allenamento); the Tendenze page title is the header
+// one place for upcoming sessions in the Life App (Training); the Trends page title is the header
 patch("sforzo upcoming", "\n        {upcomingCard}\n", "\n        {props.embed ? null : upcomingCard}\n");
-patch("tendenze upcoming", "      </div>\n\n      {upcomingCard}\n\n      <span style={{ ...lbl, textAlign: \"center\" }}>Aggiornato il", "      </div>\n\n      {props.embed ? null : upcomingCard}\n\n      <span style={{ ...lbl, textAlign: \"center\" }}>Aggiornato il");
-patch("tendenze title", '{sectionTitle("Tendenze 7 giorni")}', '{props.embed ? null : sectionTitle("Tendenze 7 giorni")}');
+patch("tendenze upcoming", "      </div>\n\n      {upcomingCard}\n\n      <span style={{ ...lbl, textAlign: \"center\" }}>Updated", "      </div>\n\n      {props.embed ? null : upcomingCard}\n\n      <span style={{ ...lbl, textAlign: \"center\" }}>Updated");
+patch("tendenze title", '{sectionTitle("7-day trends")}', '{props.embed ? null : sectionTitle("7-day trends")}');
 // results only: no correlation coefficient under the bedtime chart
-patch("sonno correlation", '{r !== null ? ` · correlazione ${r.toFixed(2).replace(".", ",")}` : ""}', '{r !== null && !props.embed ? ` · correlazione ${r.toFixed(2).replace(".", ",")}` : ""}');
-// Sforzo/Sonno sub-pages: ONE number, the same 0-100 score as the hub card; the Sforzo ring shows the day effort on 0-21 with the target band
-// (the hero ring is now the same in both apps: Sforzo shows the strain 0–21 with its target band, Sonno the Sonno score)
-// Biologia: heart charts live only in Recupero; one short line pointing there
-patch("bio heart", '      {sectionTitle("Cuore a riposo", <span style={lbl}>media {days.length} giorni</span>)}', '      {props.embed ? (\n        <button onClick={() => goTab("recupero")} aria-label="Cuore a riposo" style={{ ...btn, ...card, ...row, padding: "14px 16px" }}>\n          <div style={{ ...st(2), flex: 1 }}><span style={{ ...caps, fontSize: 12, lineHeight: "16px", color: K.t1 }}>Cuore a riposo</span><span style={lbl}>{(() => { const tD = dayOf(DATA.today) ?? days[days.length - 1], bR = bandOf(tD, (y: Day) => y.rhr), bH = bandOf(tD, (y: Day) => y.hrvMs); return bR && bH ? `La tua norma, ultimi 30 giorni: FC a riposo ${Math.round(bR.lo)}–${Math.round(bR.hi)} bpm · HRV ${Math.round(bH.lo)}–${Math.round(bH.hi)} ms · andamento in Recupero` : `FC ${fmt(wkRhr)} bpm · HRV ${fmt(wkHrv)} ms, media ${days.length} giorni · andamento in Recupero`; })()}</span></div>{chev(K.t3)}\n        </button>\n      ) : <>\n      {sectionTitle("Cuore a riposo", <span style={lbl}>media {days.length} giorni</span>)}');
+patch("sonno correlation", '{r !== null ? ` · correlation ${r.toFixed(2)}` : ""}', '{r !== null && !props.embed ? ` · correlation ${r.toFixed(2)}` : ""}');
+// Effort/Sleep sub-pages: ONE number, the same 0-100 score as the hub card; the Effort ring shows the day effort on 0-21 with the target band
+// (the hero ring is now the same in both apps: Effort shows the strain 0–21 with its target band, Sleep the Sleep score)
+// Biology: heart charts live only in Recovery; one short line pointing there
+patch("bio heart", '      {sectionTitle("Resting heart", <span style={lbl}>average {days.length} days</span>)}', '      {props.embed ? (\n        <button onClick={() => goTab("recupero")} aria-label="Resting heart" style={{ ...btn, ...card, ...row, padding: "14px 16px" }}>\n          <div style={{ ...st(2), flex: 1 }}><span style={{ ...caps, fontSize: 12, lineHeight: "16px", color: K.t1 }}>Resting heart</span><span style={lbl}>{(() => { const tD = dayOf(DATA.today) ?? days[days.length - 1], bR = bandOf(tD, (y: Day) => y.rhr), bH = bandOf(tD, (y: Day) => y.hrvMs); return bR && bH ? `Your normal, last 30 days: resting HR ${Math.round(bR.lo)}–${Math.round(bR.hi)} bpm · HRV ${Math.round(bH.lo)}–${Math.round(bH.hi)} ms · trend in Recovery` : `FC ${fmt(wkRhr)} bpm · HRV ${fmt(wkHrv)} ms, average ${days.length} days · trend in Recovery`; })()}</span></div>{chev(K.t3)}\n        </button>\n      ) : <>\n      {sectionTitle("Resting heart", <span style={lbl}>average {days.length} days</span>)}');
 patch("bio heart end", '      <div style={card}>{lines([{ name: "HRV", color: K.violet, values: days.map((x: Day) => x.hrvMs) }], wkHrv ?? undefined)}</div>\n    </div>\n  );', '      <div style={card}>{lines([{ name: "HRV", color: K.violet, values: days.map((x: Day) => x.hrvMs) }], wkHrv ?? undefined)}</div>\n      </>}\n    </div>\n  );');
 // tonight's bedtime goes up to the Life sleep-debt card, so both give the same time
 patch("eve to life", "\n  const stanotteCard = eve ? (", "\n  const tnLife = eve ?? planFor(addDays(DATA.today, 1));\n  useEffect(() => { if (props.embed && props.onEve) props.onEve({ bedBy: tnLife.bedBy, bedBy85: tnLife.bedBy85, wake: tnLife.wake, need: tnLife.need }); }, [tnLife.bedBy, tnLife.wake, tnLife.need]);\n  const stanotteCard = eve ? (");
-// Life sleep-debt card in the middle of Sonno, after the night summary and stages
-patch("sonno mid slot", '{weekTitle("Sonno · 7 giorni")}', '{props.embed ? props.slots?.sonnoMid ?? null : null}\n      {weekTitle("Sonno · 7 giorni")}');
-// Life only: pace of aging (from the long Corpo history) right under the bio age card
-patch("bio pace slot", '        <span style={{ ...lbl, textAlign: "center" }}>Tocca per il dettaglio</span>\n      </button>\n', '        <span style={{ ...lbl, textAlign: "center" }}>Tocca per il dettaglio</span>\n      </button>\n      {props.embed ? props.slots?.bioPace ?? null : null}\n');
+// Life sleep-debt card in the middle of Sleep, after the night summary and stages
+patch("sonno mid slot", '{weekTitle("Sleep · 7 days")}', '{props.embed ? props.slots?.sonnoMid ?? null : null}\n      {weekTitle("Sleep · 7 days")}');
+// Life only: pace of aging (from the long Body history) right under the bio age card
+patch("bio pace slot", '        <span style={{ ...lbl, textAlign: "center" }}>Tap for detail</span>\n      </button>\n', '        <span style={{ ...lbl, textAlign: "center" }}>Tap for detail</span>\n      </button>\n      {props.embed ? props.slots?.bioPace ?? null : null}\n');
 patch("peso tab", ': tab === "biologia" ? (props.embed ?', ': tab === "peso" ? pesoPage : tab === "biologia" ? (props.embed ?');
-// Biologia (Life): own orb for the bio age
+// Biology (Life): own orb for the bio age
 patch("bio orb open", "  const orb = (size: number) => (\n    <AgeBlob size={size} tone={blobTone}>", "  // Life: the bio age sits in a Life-style orb (soft colour fields, like Happiness), not the health blob\n  const orbTone = bioDiff === null || Math.abs(bioDiff) < 1 ? [\"lavoro\", \"vita\", \"lavoro\"] : bioDiff < 0 ? [\"corpo\", \"vita\", \"corpo\"] : bioDiff < 2.5 ? [\"lavoro\", \"finanze\", \"vita\"] : [\"finanze\", \"relazioni\", \"finanze\"];\n  const orbWrap = (size: number, ch: ReactNode) => (props.embed ? <div style={{ width: size + 24, maxWidth: \"100%\", height: size + 24, margin: -12, overflow: \"hidden\", display: \"flex\", alignItems: \"center\", justifyContent: \"center\", flex: \"0 0 auto\" }}><HappyOrb size={size} value={bioDiff === null ? 40 : clamp(45 - bioDiff * 10, 15, 80)} areas={orbTone.map((id) => ({ id, score: 80 }))}>{ch}</HappyOrb></div> : <AgeBlob size={size} tone={blobTone}>{ch}</AgeBlob>);\n  const orb = (size: number) => orbWrap(size, <>");
-patch("bio orb close", "    </AgeBlob>\n  );\n\n  // ---------- liste: attività e pasti ----------", "    </>);\n\n  // ---------- liste: attività e pasti ----------");
-// back without a "micro crash" (2026-10-25, the owner: "quando torno indietro ... fa un micro crash"): going back from a sub-page
+patch("bio orb close", "    </AgeBlob>\n  );\n\n  // ---------- lists: activities and meals ----------", "    </>);\n\n  // ---------- lists: activities and meals ----------");
+// back without a "micro crash" (a visible glitch when going back): going back from a sub-page
 // remounted the whole view (key change) and replayed the entry animations (view slide 280 ms, rings refill and glows fade
 // 900 ms); the Life header and the scroll position arrived 2-5 frames later (useEffect + setTimeout). Now: the view that a
 // back returns to is marked quiet (no entry animations), and onScreen fires in a layout effect so the Life App can put its
@@ -218,8 +218,8 @@ patch("bio orb close", "    </AgeBlob>\n  );\n\n  // ---------- liste: attività
 // the in-app back button waited for the async popstate of history.back() (1-3 frames with the sub-page still on screen,
 // then the half-updated page); the system swipe-back hid this behind the iOS snapshot. Embedded: close at once (same
 // state change as the swipe path), and still pop the entry pushed on open so the history stays in step.
-patch("instant in-app back", "const closeScreen = () => { if (pushed.current) { pushed.current = false; try { window.history.back(); return; } catch { /* niente cronologia */ } } shut(); };",
-  "const skipPop = useRef<boolean>(false), pushLater = useRef<boolean>(false);\n  const closeScreen = () => { pushLater.current = false; if (pushed.current) { pushed.current = false; try { skipPop.current = !!props.embed; window.history.back(); if (!props.embed) return; } catch { skipPop.current = false; /* niente cronologia */ } } shut(); };");
+patch("instant in-app back", "const closeScreen = () => { if (pushed.current) { pushed.current = false; try { window.history.back(); return; } catch { /* no history */ } } shut(); };",
+  "const skipPop = useRef<boolean>(false), pushLater = useRef<boolean>(false);\n  const closeScreen = () => { pushLater.current = false; if (pushed.current) { pushed.current = false; try { skipPop.current = !!props.embed; window.history.back(); if (!props.embed) return; } catch { skipPop.current = false; /* no history */ } } shut(); };");
 patch("deferred push", 'try { window.history.pushState({ wbScreen: true }, ""); pushed.current = true; } catch { pushed.current = false; }',
   'if (skipPop.current) { pushLater.current = true; } else { try { window.history.pushState({ wbScreen: true }, ""); pushed.current = true; } catch { pushed.current = false; } }');
 // ...that one popstate is ignored, and a sub-page opened before it arrives pushes its entry only then, so the history
@@ -237,16 +237,16 @@ patch("quiet view class", '<div key={screen ? JSON.stringify(screen) : tab} clas
 patch("quiet view css", "@media (prefers-reduced-motion: reduce){.wb-view,.wb-fill,.wb-glow{animation:none !important;transition:none !important}}",
   "@media (prefers-reduced-motion: reduce){.wb-view,.wb-fill,.wb-glow{animation:none !important;transition:none !important}}\n.wb-quiet,.wb-quiet .wb-fill,.wb-quiet .wb-glow{animation:none !important}");
 full = 'import { useLayoutEffect as useLayoutEffectX } from "grok/canvas";\n' + full;
-// Corpo workouts (Oggi / Allenamento / gym session page) from data/training/*.md: tools/life-app/training-patches.mjs
+// Body workouts (Today / Training / gym session page) from data/training/*.md: tools/life-app/training-patches.mjs
 trainingPatches(patch, HERE, training.lifts);
-// Corpo steps card + Passi page (goal = corpo.json stepsGoal, history = STEPS_HIST): tools/life-app/steps-patches.mjs
+// Body steps card + Steps page (goal = corpo.json stepsGoal, history = STEPS_HIST): tools/life-app/steps-patches.mjs
 stepsPatches(patch, HERE);
 full = 'import { STEPS_HIST } from "./gen";\n' + full;
-// Salute > Medico > Archivio (visits, reports, surgeries, lab draws, vaccines) from data/health/records.md,
+// Health > Medical > Archive (visits, reports, surgeries, lab draws, vaccines) from data/health/records.md,
 // vaccinations.md and data/body/labs/ (archive.mjs): tools/life-app/archive-patches.mjs + archive.fragments.txt
 archivePatches(patch, HERE);
 full = 'import { ARCHIVE } from "./archive-data";\n' + full;
-// Salute > Medico > Misure (home blood pressure, waist circumference) from data/health/blood-pressure.md and
+// Health > Medical > Measurements (home blood pressure, waist circumference) from data/health/blood-pressure.md and
 // data/body/waist.md (misure.mjs): tools/life-app/misure-patches.mjs + misure.fragments.txt (after the archive patches)
 misurePatches(patch, HERE);
 full = 'import { MISURE } from "./misure-data";\n' + full;
@@ -281,16 +281,17 @@ for (const f of (existsSync(join(kb, "data/events")) ? readdirSync(join(kb, "dat
   events.push({ date, end: end && /^\d{4}-\d{2}-\d{2}$/.test(end) ? end : null, name: field(front, "name") || f.replace(/\.md$/, "") });
 }
 const scadenze = [];
-// deadlines table (optional): data/finance/scadenzario.md, columns Cosa | Entità | Scadenza (DD/MM/YYYY) | Importo | Chi | Stato
+// deadlines table (optional): data/finance/scadenzario.md, columns What | Entity | Due (DD/MM/YYYY) | Amount | Who | Status
+// (the original Italian headers Cosa | Entità | Scadenza | Importo | Chi | Stato are accepted too)
 const SCAD_FILE = join(kb, "data/finance/scadenzario.md");
 if (existsSync(SCAD_FILE)) {
   const t = readFileSync(SCAD_FILE, "utf8").split("\n").filter((l) => l.startsWith("|"));
   const head = t[0].split("|").slice(1, -1).map((x) => x.trim().toLowerCase());
-  const ix = (n) => head.findIndex((h) => h.startsWith(n));
+  const ix = (...ns) => head.findIndex((h) => ns.some((n) => h.startsWith(n)));
   if (t.length > 2) for (const l of t.slice(2)) {
     const c = l.split("|").slice(1, -1).map((x) => x.trim());
     if (c.length < head.length) continue;
-    scadenze.push({ cosa: c[ix("cosa")], entita: c[ix("entit")], scadenza: c[ix("scadenza")], importo: c[ix("importo")], chi: c[ix("chi")], stato: c[ix("stato")] });
+    scadenze.push({ cosa: c[ix("cosa", "what")], entita: c[ix("entit")], scadenza: c[ix("scadenza", "due")], importo: c[ix("importo", "amount")], chi: c[ix("chi", "who")], stato: c[ix("stato", "status")] });
   }
 }
 const sUpd = existsSync(SCAD_FILE) ? (/^updated:\s*(\S+)/m.exec(readFileSync(SCAD_FILE, "utf8")) || [])[1] || null : null;
@@ -313,7 +314,7 @@ export const STEPS_HIST: { date: string; steps: number }[] = ${JSON.stringify(st
 export const LIFE_HEALTH_HISTORY: { date: string; total: number | null; areas?: Record<string, number | null>; source: string }[] = ${JSON.stringify(lhOld.map((r) => ({ date: r.date, total: r.total, areas: r.areas, source: r.source })))};
 export const CORPO_HISTORY: { date: string; source: string; sonno: number | null; recupero: number | null; sforzo: number | null; nutrizione: number | null; allenamento: number | null; oggi: number | null; n: number; gym?: number | null; sport?: number | null }[] = ${JSON.stringify(h)};\n`;
 
-// 2b. body days (data/body/body-YYYY-MM-DD.md, written by the 30-minute routine) -> Day objects for the Corpo history backfill
+// 2b. body days (data/body/body-YYYY-MM-DD.md, written by the 30-minute routine) -> Day objects for the Body history backfill
 const bodyDays = [];
 {
   const dir = join(kb, "data/body");
@@ -340,7 +341,7 @@ const bodyDays = [];
   }
 }
 
-// 2b'. daily steps (Passi page): data/body/steps-history.md (Google Health daily totals, tools/steps_history.py) + the body
+// 2b'. daily steps (Steps page): data/body/steps-history.md (Google Health daily totals, tools/steps_history.py) + the body
 // day files; a day keeps its highest total (a day's count only grows). The app adds corpo.json history/days on top.
 const stepsHist = (() => {
   const m = new Map();
@@ -392,7 +393,7 @@ writeFileSync(join(work, "misure-data.ts"), `// generated by build.mjs from data
 console.log(`misure: ${misure.bp.rows.length} blood pressure readings, ${misure.waist.rows.length} waist measurements`);
 writeFileSync(join(work, "training-data.ts"), `// generated by build.mjs from data/training/*.md (training.mjs), do not edit\nexport const TRAINING: { logs: unknown[]; sessions: unknown[]; plans: unknown[] } = ${JSON.stringify({ logs: training.logs, sessions: training.sessions, plans: training.plans })};\n`);
 writeFileSync(join(work, "gen.ts"), genWith(histOld));
-// 3a. Corpo rolling history: score the DATA days (as the app does) + the older body days, merge into data/happiness/corpo-history.json.
+// 3a. Body rolling history: score the DATA days (as the app does) + the older body days, merge into data/happiness/corpo-history.json.
 // The current day is always refreshed; a past day is replaced only when the new row has at least as many section scores.
 {
   const hr = await esbuild.build({ entryPoints: [join(work, "history.ts")], bundle: true, format: "esm", platform: "node", write: false,
@@ -439,11 +440,11 @@ writeFileSync(join(work, "gen.ts"), genWith(histOld));
 // timezone, coach name and gym label for the health page (globals read by src/health/health-page.tsx)
 const AV = CFG.avatar;
 const avMime = AV && /\.png$/i.test(AV) ? "image/png" : "image/jpeg";
-const coach = (CFG.areas.find((a) => a.id === "corpo")?.agents || "").split(",")[0].trim() || "il coach";
+const coach = (CFG.areas.find((a) => a.id === "corpo")?.agents || "").split(",")[0].trim() || "the coach";
 writeFileSync(join(work, "avatar-init.js"), (AV && existsSync(AV)
   ? `globalThis.__SALUTE_AVATAR__ = "data:${avMime};base64,${readFileSync(AV).toString("base64")}";\n` : "globalThis.__SALUTE_AVATAR__ = null;\n")
   + `globalThis.__LIFE_TZ__ = ${JSON.stringify(CFG.timezone)};\nglobalThis.__LIFE_COACH__ = ${JSON.stringify(coach)};\nglobalThis.__LIFE_GYM__ = ${JSON.stringify(CFG.gym_label)};\n`);
-// photos for the Capelli view (optional hook, life_app.hooks.hair_photos): an ES module OUTSIDE the data that exports
+// photos for the Photos view (optional hook, life_app.hooks.hair_photos): an ES module OUTSIDE the data that exports
 // writeHairInit(workDir) -> count and writes <workDir>/hair-init.js (globalThis.__SALUTE_HAIR_PHOTOS__ = [...]), embedded only
 // inside the encrypted bundle. No hook: an empty list (the view shows placeholders).
 let hairN = 0;

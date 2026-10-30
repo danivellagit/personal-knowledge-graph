@@ -4,7 +4,7 @@
     python3 tools/life-app/make_sample_data.py --out tools/life-app/sample-data          # the committed copy
     python3 tools/life-app/make_sample_data.py --out data/happiness --today 2030-01-14   # your local starting point
 
-Dates are relative to --today (default: today), so the app opens on a live-looking week. Every name is "Esempio ...";
+Dates are relative to --today (default: today), so the app opens on a live-looking week. Every name says "sample";
 nothing here describes a real person. Deterministic: the same --today gives the same files.
 """
 import argparse
@@ -31,17 +31,17 @@ def corpo(today, R):
         sleep = R.randint(380, 500)
         bed = 23 * 60 + R.randint(-50, 70)
         meals = [] if live else [
-            {"time": "08:00", "name": "Colazione", "dish": "Yogurt e frutta (esempio)", "kcal": 350, "protein": 20.0, "carbs": 45.0, "fat": 8.0, "sugar": 25.0, "fibre": 4.0, "salt": 0.3},
-            {"time": "13:00", "name": "Pranzo", "dish": "Pasta al pomodoro (esempio)", "kcal": 650, "protein": 25.0, "carbs": 95.0, "fat": 15.0, "sugar": 9.0, "fibre": 7.0, "salt": 1.8},
-            {"time": "20:00", "name": "Cena", "dish": "Pollo e verdure (esempio)", "kcal": 600, "protein": 45.0, "carbs": 40.0, "fat": 22.0, "sugar": 8.0, "fibre": 9.0, "salt": 1.5},
+            {"time": "08:00", "name": "Breakfast", "dish": "Yogurt and fruit (sample)", "kcal": 350, "protein": 20.0, "carbs": 45.0, "fat": 8.0, "sugar": 25.0, "fibre": 4.0, "salt": 0.3},
+            {"time": "13:00", "name": "Lunch", "dish": "Pasta with tomato sauce (sample)", "kcal": 650, "protein": 25.0, "carbs": 95.0, "fat": 15.0, "sugar": 9.0, "fibre": 7.0, "salt": 1.8},
+            {"time": "20:00", "name": "Dinner", "dish": "Chicken and vegetables (sample)", "kcal": 600, "protein": 45.0, "carbs": 40.0, "fat": 22.0, "sugar": 8.0, "fibre": 9.0, "salt": 1.5},
         ]
         workouts = []
         if i in (5, 2):
-            workouts.append({"time": "18:30", "name": "Palestra (esempio)", "status": "fatto", "detail": "Allenamento di esempio", "kind": "palestra", "kcal": 320, "durationMin": 55, "avgHr": 118})
+            workouts.append({"time": "18:30", "name": "Gym (sample)", "status": "fatto", "detail": "Sample workout", "kind": "palestra", "kcal": 320, "durationMin": 55, "avgHr": 118})
         if i == 3:
-            workouts.append({"time": "19:00", "name": "Tennis (esempio)", "status": "fatto", "detail": "Partita di esempio", "kind": "tennis", "kcal": 480, "durationMin": 75, "avgHr": 132})
+            workouts.append({"time": "19:00", "name": "Tennis (sample)", "status": "fatto", "detail": "Sample match", "kind": "tennis", "kcal": 480, "durationMin": 75, "avgHr": 132})
         if live:
-            workouts.append({"time": "19:00", "name": "Palestra (esempio)", "status": "pianificato", "detail": "In programma", "kind": "palestra"})
+            workouts.append({"time": "19:00", "name": "Gym (sample)", "status": "pianificato", "detail": "Scheduled", "kind": "palestra"})
         prot = sum(m["protein"] for m in meals) or None
         days.append({
             "date": iso(d), "eatenKcal": sum(m["kcal"] for m in meals) or None, "proteinG": prot,
@@ -65,32 +65,32 @@ def corpo(today, R):
     return {
         "updatedAt": iso(today) + "T08:00", "today": iso(today), "proteinTarget": 120, "stepsGoal": 8000,
         "days": days,
-        "upcoming": [{"date": iso(today + dt.timedelta(days=2)), "time": "19:00", "name": "Tennis (esempio)", "kind": "tennis", "detail": "Partita di esempio"}],
+        "upcoming": [{"date": iso(today + dt.timedelta(days=2)), "time": "19:00", "name": "Tennis (sample)", "kind": "tennis", "detail": "Sample match"}],
         "gymWeeklyGoal": 2, "sportWeeklyGoal": {"count": 1, "kinds": ["tennis"]},
-        "tomorrowFirst": {"date": iso(today + dt.timedelta(days=1)), "time": "09:00", "title": "Impegno di esempio"},
+        "tomorrowFirst": {"date": iso(today + dt.timedelta(days=1)), "time": "09:00", "title": "Sample appointment"},
         "history": hist, "stages": stages, "zones": zones,
         "bioAge": {"updatedAt": iso(today), "birthDate": "1990-01-01", "heightCm": 175, "weightKg": 75, "weightDate": iso(today - dt.timedelta(days=3)),
                    "vo2max": None, "bodyFatPct": None, "labsDate": iso(today - dt.timedelta(days=120)),
                    "labs": {"totalChol": 180, "ldl": 100, "hdl": 55, "tg": 110, "glucose": 88, "hba1c": 5.2, "uricAcid": 5.5, "kidneyOk": True, "liverOk": True}},
-        "coach": {"updatedAt": iso(today) + "T08:00", "headline": "Settimana di esempio", "verdict": "Dati finti: sostituiscili con i tuoi.",
-                  "actions": ["Stasera a letto entro le 23:00 (esempio).", "Un pasto proteico in più oggi (esempio)."]},
+        "coach": {"updatedAt": iso(today) + "T08:00", "headline": "Sample week", "verdict": "Fake data: replace it with yours.",
+                  "actions": ["In bed by 23:00 tonight (sample).", "One more protein meal today (sample)."]},
     }
 
 
 def medico(today):
     lab = iso(today - dt.timedelta(days=120))
-    item = lambda n, v, u, ref, lo, hi, mn, mx: {"name": n, "value": str(v).replace(".", ","), "unit": u, "ref": ref, "status": "ok",
+    item = lambda n, v, u, ref, lo, hi, mn, mx: {"name": n, "value": str(v), "unit": u, "ref": ref, "status": "ok",
                                                   "bar": {"v": v, "lo": lo, "hi": hi, "min": mn, "max": mx}}
     return {
-        "updated": iso(today), "lab": {"name": "Laboratorio di esempio", "site": "Sede di esempio", "date": lab, "reports": 1, "outOfRange": 0},
+        "updated": iso(today), "lab": {"name": "Sample lab", "site": "Sample site", "date": lab, "reports": 1, "outOfRange": 0},
         "nextLabs": iso(today + dt.timedelta(days=245)),
-        "groups": [{"title": "Metabolismo", "items": [item("Glucosio", 88, "mg/dL", "70-100", 70, 100, 50, 130)]},
-                   {"title": "Lipidi", "items": [item("Colesterolo totale", 180, "mg/dL", "≤ 190", None, 190, 100, 260),
-                                                 item("Colesterolo HDL", 55, "mg/dL", "≥ 40", 40, None, 20, 90)]}],
-        "watch": "Valori di esempio: sostituiscili con il tuo ultimo referto.",
-        "checks": [{"title": "Controllo di esempio", "sub": "Una riga per ogni controllo da fare", "due": iso(today + dt.timedelta(days=30)), "dueText": "entro un mese", "status": "da fare"},
-                   {"title": "Dentista (esempio)", "sub": "Una volta l'anno", "due": None, "dueText": "ogni anno", "status": "proposto"}],
-        "meds": [], "visits": [], "family": "Esempio: nessuna storia familiare inserita.",
+        "groups": [{"title": "Metabolism", "items": [item("Glucose", 88, "mg/dL", "70-100", 70, 100, 50, 130)]},
+                   {"title": "Lipids", "items": [item("Total cholesterol", 180, "mg/dL", "≤ 190", None, 190, 100, 260),
+                                                 item("HDL cholesterol", 55, "mg/dL", "≥ 40", 40, None, 20, 90)]}],
+        "watch": "Sample values: replace them with your latest report.",
+        "checks": [{"title": "Sample check-up", "sub": "One line for each check-up to do", "due": iso(today + dt.timedelta(days=30)), "dueText": "within a month", "status": "da fare"},
+                   {"title": "Dentist (sample)", "sub": "Once a year", "due": None, "dueText": "every year", "status": "proposto"}],
+        "meds": [], "visits": [], "family": "Sample: no family history entered.",
     }
 
 
@@ -110,31 +110,31 @@ def main():
     files = {
         "corpo": corpo(today, R),
         "medico": medico(today),
-        "mente": {"updated": d0, "status": "bene", "line": "Esempio: una riga su come stai, solo quello che decidi tu.", "tip": None},
-        "lavoro": {"updated": d0, "priorita": {"status": "da seguire", "line": "Esempio: tre priorità chiare per la settimana.", "steps": ["Scegli la priorità numero uno (esempio)."], "source": "esempio"},
-                   "tip": "Blocca due ore per la priorità numero uno (esempio).", "source": "esempio",
-                   "priorities": [{"rank": 1, "titolo": "Progetto di esempio", "status": "da seguire", "line": "In corso", "q4": None, "next": "Prossimo passo di esempio", "quando": iso(today + dt.timedelta(days=4)), "source": "esempio"}],
-                   "sfere": [sfera("clienti", "Clienti", "bene", "Esempio: rapporti buoni.", "Una chiamata di esempio."),
-                             sfera("team", "Team", "da seguire", "Esempio: allineamento da migliorare.", "Un 1:1 di esempio.")],
-                   "wins": [{"titolo": "Risultato di esempio", "data": iso(today - dt.timedelta(days=2)), "source": "esempio"}],
-                   "soddisfazione": None, "linkedin": None, "openLoops": ["Cosa aperta di esempio"],
-                   "events": [{"date": iso(today + dt.timedelta(days=3)), "time": "10:00", "name": "Riunione di esempio"}]},
+        "mente": {"updated": d0, "status": "bene", "line": "Sample: one line on how you are, only what you choose to share.", "tip": None},
+        "lavoro": {"updated": d0, "priorita": {"status": "da seguire", "line": "Sample: three clear priorities for the week.", "steps": ["Pick priority number one (sample)."], "source": "sample"},
+                   "tip": "Block two hours for priority number one (sample).", "source": "sample",
+                   "priorities": [{"rank": 1, "titolo": "Sample project", "status": "da seguire", "line": "In progress", "q4": None, "next": "Sample next step", "quando": iso(today + dt.timedelta(days=4)), "source": "sample"}],
+                   "sfere": [sfera("clienti", "Clients", "bene", "Sample: good relationships.", "A sample call."),
+                             sfera("team", "Team", "da seguire", "Sample: alignment to improve.", "A sample 1:1.")],
+                   "wins": [{"titolo": "Sample win", "data": iso(today - dt.timedelta(days=2)), "source": "sample"}],
+                   "soddisfazione": None, "linkedin": None, "openLoops": ["Sample open item"],
+                   "events": [{"date": iso(today + dt.timedelta(days=3)), "time": "10:00", "name": "Sample meeting"}]},
         "finanze": {"updated": d0, "spese": None, "margine": None,
-                    "verdict": {"status": "bene", "line": "Esempio: nessuna scadenza urgente.", "steps": ["Controlla le scadenze del mese (esempio)."]}},
-        "relazioni": {"updated": d0, "source": "esempio",
-                      "sfere": [sfera("famiglia", "Famiglia", "bene", "Esempio: sentiti questa settimana.", "Una telefonata di esempio."),
-                                sfera("amici", "Amici", "da seguire", "Esempio: poco tempo insieme.", "Proponi una cena (esempio).")]},
-        "crescita": {"updated": d0, "status": "da seguire", "line": "Esempio: un obiettivo di apprendimento.", "source": "esempio",
-                     "sfere": [sfera("studio", "Studio", "da seguire", "Esempio: 2 ore a settimana.", "Mezz'ora oggi (esempio).")]},
-        "vita": {"updated": d0, "status": "bene", "line": "Esempio: tempo per te.", "source": "esempio",
-                 "sfere": [sfera("hobby", "Hobby", "bene", "Esempio: un hobby attivo.", "Pianifica il weekend (esempio).")],
-                 "todo": [{"titolo": "Cosa da fare di esempio", "quando": "questa settimana", "data": iso(today + dt.timedelta(days=5)), "priorita": "media", "fonte": "personal-tasks"}]},
+                    "verdict": {"status": "bene", "line": "Sample: no urgent deadlines.", "steps": ["Check this month's deadlines (sample)."]}},
+        "relazioni": {"updated": d0, "source": "sample",
+                      "sfere": [sfera("famiglia", "Family", "bene", "Sample: talked this week.", "A sample phone call."),
+                                sfera("amici", "Friends", "da seguire", "Sample: little time together.", "Suggest a dinner (sample).")]},
+        "crescita": {"updated": d0, "status": "da seguire", "line": "Sample: one learning goal.", "source": "sample",
+                     "sfere": [sfera("studio", "Study", "da seguire", "Sample: 2 hours a week.", "Half an hour today (sample).")]},
+        "vita": {"updated": d0, "status": "bene", "line": "Sample: time for yourself.", "source": "sample",
+                 "sfere": [sfera("hobby", "Hobbies", "bene", "Sample: one active hobby.", "Plan the weekend (sample).")],
+                 "todo": [{"titolo": "Sample to-do", "quando": "this week", "data": iso(today + dt.timedelta(days=5)), "priorita": "media", "fonte": "personal-tasks"}]},
         "corpo-history": [],
         "life-health-history": [],
         "weekly-summary": {"week": today.strftime("%G-W%V"), "from": iso(today - dt.timedelta(days=today.weekday() + 7)),
                            "to": iso(today - dt.timedelta(days=today.weekday() + 1)), "generatedAt": d0 + "T08:00",
-                           "conclusion": ["Settimana di esempio: questi testi sono finti.", "Il tuo agente li riscrive ogni lunedì."],
-                           "good": ["Esempio: sonno regolare."], "bad": ["Esempio: poco movimento."], "improve": ["Esempio: due allenamenti."]},
+                           "conclusion": ["Sample week: these texts are fake.", "Your agent rewrites them every Monday."],
+                           "good": ["Sample: regular sleep."], "bad": ["Sample: little movement."], "improve": ["Sample: two workouts."]},
     }
     os.makedirs(a.out, exist_ok=True)
     wrote = 0

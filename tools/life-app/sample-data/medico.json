@@ -1,8 +1,8 @@
 {
  "updated": "2030-01-14",
  "lab": {
-  "name": "Laboratorio di esempio",
-  "site": "Sede di esempio",
+  "name": "Sample lab",
+  "site": "Sample site",
   "date": "2029-09-16",
   "reports": 1,
   "outOfRange": 0
@@ -10,10 +10,10 @@
  "nextLabs": "2030-09-16",
  "groups": [
   {
-   "title": "Metabolismo",
+   "title": "Metabolism",
    "items": [
     {
-     "name": "Glucosio",
+     "name": "Glucose",
      "value": "88",
      "unit": "mg/dL",
      "ref": "70-100",
@@ -29,10 +29,10 @@
    ]
   },
   {
-   "title": "Lipidi",
+   "title": "Lipids",
    "items": [
     {
-     "name": "Colesterolo totale",
+     "name": "Total cholesterol",
      "value": "180",
      "unit": "mg/dL",
      "ref": "≤ 190",
@@ -46,7 +46,7 @@
      }
     },
     {
-     "name": "Colesterolo HDL",
+     "name": "HDL cholesterol",
      "value": "55",
      "unit": "mg/dL",
      "ref": "≥ 40",
@@ -62,24 +62,24 @@
    ]
   }
  ],
- "watch": "Valori di esempio: sostituiscili con il tuo ultimo referto.",
+ "watch": "Sample values: replace them with your latest report.",
  "checks": [
   {
-   "title": "Controllo di esempio",
-   "sub": "Una riga per ogni controllo da fare",
+   "title": "Sample check-up",
+   "sub": "One line for each check-up to do",
    "due": "2030-02-13",
-   "dueText": "entro un mese",
+   "dueText": "within a month",
    "status": "da fare"
   },
   {
-   "title": "Dentista (esempio)",
-   "sub": "Una volta l'anno",
+   "title": "Dentist (sample)",
+   "sub": "Once a year",
    "due": null,
-   "dueText": "ogni anno",
+   "dueText": "every year",
    "status": "proposto"
   }
  ],
  "meds": [],
  "visits": [],
- "family": "Esempio: nessuna storia familiare inserita."
+ "family": "Sample: no family history entered."
 }

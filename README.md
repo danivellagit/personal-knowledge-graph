@@ -3,15 +3,15 @@
 **Personal Agents OS is a personal knowledge graph you run with an AI agent.** It holds the people in your world and everything that connects them, kept current from your own stream (WhatsApp, meetings, email) as plain markdown you can browse as a graph. You can add a team of agents with a memory and a phone app that puts your whole life on one screen.
 
 <p align="center">
-  <img src="docs/images/life-app-phone-home.png" width="200" alt="Life App, Home: the Life Health ring over seven areas (sample data)">
+  <img src="tools/life-app/assets/screenshots/life-app-phone-home.png" width="200" alt="Life App, Home: the Life Health ring over seven areas (sample data)">
   &nbsp;
-  <img src="docs/images/life-app-phone-corpo.png" width="200" alt="Life App, Corpo: daily body score, calories, training, steps (sample data)">
+  <img src="tools/life-app/assets/screenshots/life-app-phone-body.png" width="200" alt="Life App, Body: daily body score, calories, training, steps (sample data)">
   &nbsp;
-  <img src="docs/images/life-app-phone-salute.png" width="200" alt="Life App, Salute: check-ups, biological age, mind (sample data)">
+  <img src="tools/life-app/assets/screenshots/life-app-phone-health.png" width="200" alt="Life App, Health: check-ups, biological age, mind (sample data)">
   &nbsp;
-  <img src="docs/images/life-app-phone-relazioni.png" width="200" alt="Life App, Relazioni: family and friends (sample data)">
+  <img src="tools/life-app/assets/screenshots/life-app-phone-relationships.png" width="200" alt="Life App, Relationships: family and friends (sample data)">
 </p>
-<p align="center"><sub>The optional <a href="#the-life-app">Life App</a>, built from the template's bundled <b>fake</b> sample data (every value says "esempio").</sub></p>
+<p align="center"><sub>The optional <a href="#the-life-app">Life App</a>, built from the template's bundled <b>fake</b> sample data (every value says "sample").</sub></p>
 
 The value isn't storage. It's retrieval and connection: who you know in a city, who climbs, who introduced whom, where you take people, and what you left open with someone before you walk into the next meeting.
 
@@ -154,7 +154,7 @@ personal-knowledge-graph/
     <role>/AGENT.md              # spec: persona, lane and handoffs, memory, routines, flows
     <role>/memory-skeleton/      # empty memory files (headings only, no facts)
     <role>/routines/<slug>.md    # suggested routine specs (schedule, intent, when silent)
-  docs/images/                   # README screenshots (sample data only)
+  tools/life-app/assets/screenshots/                   # README screenshots (sample data only)
   .claude/hooks/git-sync.sh      # optional: pull on session start, commit + push on stop
   .githooks/pre-commit           # optional guard (git config core.hooksPath .githooks)
   data/                          # PRIVATE, gitignored by default: your graph + your stream
@@ -243,35 +243,37 @@ Each role comes with:
 | area (tab) | data file in `data/happiness/` | default owner |
 | --- | --- | --- |
 | Home: the Life Health ring and the weekly picture | `weekly-summary.json`, `life-health-history.json` | whoever writes the Monday recap |
-| Corpo (body): calories, steps, sleep, training, trends | `corpo.json` (+ `corpo-history.json`) | fitness-coach |
-| Salute (health): labs, check-ups, pills, mind | `medico.json`, `mente.json` | health-advisor, psychologist |
-| Lavoro (work) | `lavoro.json` | founder-assistant, linkedin-coach |
-| Finanze (money) | `finanze.json` | accountant |
-| Altro: Relazioni, Crescita, Vita | `relazioni.json`, `crescita.json`, `vita.json` | best-friend |
+| Body: calories, steps, sleep, training, trends | `corpo.json` (+ `corpo-history.json`) | fitness-coach |
+| Health: labs, check-ups, pills, mind | `medico.json`, `mente.json` | health-advisor, psychologist |
+| Work | `lavoro.json` | founder-assistant, linkedin-coach |
+| Finances | `finanze.json` | accountant |
+| More: Relationships, Growth, Life | `relazioni.json`, `crescita.json`, `vita.json` | best-friend |
+
+The UI is English. The data file names and ids (`corpo`, `salute`, `lavoro` ...) and a few status values inside the JSON (`bene`, `da seguire`, `critico` ...) are stable keys from the first version; the app shows English labels for them.
 
 On a wide screen (1024 px and up by default), the app switches to a **desktop layout** with a left sidebar and multi-column pages:
 
 <p align="center">
-  <img src="docs/images/life-app-desktop-home.png" width="860" alt="Life App desktop layout: sidebar with the seven areas, Life Health ring, weekly picture and area cards (sample data)">
+  <img src="tools/life-app/assets/screenshots/life-app-desktop-home.png" width="860" alt="Life App desktop layout: sidebar with the seven areas, Life Health ring, weekly picture and area cards (sample data)">
 </p>
 
 <details>
 <summary><b>More screenshots</b> (all sample data)</summary>
 <br>
 <p align="center">
-  <img src="docs/images/life-app-desktop-corpo.png" width="860" alt="Life App desktop, Corpo: daily score, calories, steps, sleep, recovery, effort">
+  <img src="tools/life-app/assets/screenshots/life-app-desktop-body.png" width="860" alt="Life App desktop, Body: daily score, calories, steps, sleep, recovery, effort">
 </p>
 <p align="center">
-  <img src="docs/images/life-app-desktop-salute.png" width="860" alt="Life App desktop, Salute: medical, biology and mind sections">
+  <img src="tools/life-app/assets/screenshots/life-app-desktop-health.png" width="860" alt="Life App desktop, Health: medical, biology and mind sections">
 </p>
 <p align="center">
-  <img src="docs/images/life-app-phone-lock.png" width="180" alt="Lock screen: the password decrypts the app in the browser">
+  <img src="tools/life-app/assets/screenshots/life-app-phone-lock.png" width="180" alt="Lock screen: the password decrypts the app in the browser">
   &nbsp;
-  <img src="docs/images/life-app-phone-corpo-settimana.png" width="180" alt="Corpo, weekly view: sleep, recovery, effort averages">
+  <img src="tools/life-app/assets/screenshots/life-app-phone-body-week.png" width="180" alt="Body, weekly view: sleep, recovery, effort averages">
   &nbsp;
-  <img src="docs/images/life-app-phone-lavoro.png" width="180" alt="Lavoro: priorities and this week's meetings">
+  <img src="tools/life-app/assets/screenshots/life-app-phone-work.png" width="180" alt="Work: priorities and this week's meetings">
   &nbsp;
-  <img src="docs/images/life-app-phone-finanze.png" width="180" alt="Finanze: taxes and deadlines, spending, margin">
+  <img src="tools/life-app/assets/screenshots/life-app-phone-finances.png" width="180" alt="Finances: taxes and deadlines, spending, margin">
 </p>
 </details>
 
@@ -279,8 +281,8 @@ On a wide screen (1024 px and up by default), the app switches to a **desktop la
 
 - **One file per area, one owner per file.** An agent writes only its own JSON, only with facts it has a source for. It then runs `python3 tools/happiness.py validate` and `bash tools/life-app/publish.sh`.
 - **The publish step** validates the data, builds and encrypts it into `tools/life-app/out/site/`, regenerates the markdown recaps next to the JSON, and pushes only if the build changed. The push goes to a **separate** public Pages repo, as a single commit that replaces the previous one.
-- **Runs on a fresh clone.** It ships with obviously fake sample data (`tools/life-app/sample-data/`, every value marked "esempio"). `setup.sh` copies it into `data/happiness/` so there's something to show until your agents write real values.
-- **Can be configured** under `life_app:` in `config.local.yml`: owner name, app name, language, timezone, area names, the agents shown for each area, each area's weight in Life Health, and whether Relazioni, Crescita or Vita is shown at all. The UI text is Italian today. `python3 tools/life-app/life_config.py` prints the resolved settings.
+- **Runs on a fresh clone.** It ships with obviously fake sample data (`tools/life-app/sample-data/`, every value marked "sample"). `setup.sh` copies it into `data/happiness/` so there's something to show until your agents write real values.
+- **Can be configured** under `life_app:` in `config.local.yml`: owner name, app name, language, timezone, area names, the agents shown for each area, each area's weight in Life Health, and whether Relationships, Growth or Life is shown at all. The UI text is English by default. `python3 tools/life-app/life_config.py` prints the resolved settings.
 - **Optional write-back** (off by default): some taps (a pill taken, a weigh-in) can be saved as small event files in a **private** repo of yours. An agent then folds them into `data/`.
 - **Headless check:** `node tools/life-app/verify.mjs` serves the build at phone size. It checks that a wrong password is refused, then opens every tab and area.
 

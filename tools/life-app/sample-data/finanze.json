@@ -4,9 +4,9 @@
  "margine": null,
  "verdict": {
   "status": "bene",
-  "line": "Esempio: nessuna scadenza urgente.",
+  "line": "Sample: no urgent deadlines.",
   "steps": [
-   "Controlla le scadenze del mese (esempio)."
+   "Check this month's deadlines (sample)."
   ]
  }
 }

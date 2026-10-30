@@ -1,8 +1,8 @@
 {
   "name": "Life",
   "short_name": "Life",
-  "description": "Life Health: tutte le aree della vita",
-  "lang": "it",
+  "description": "Life Health: every area of your life",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
