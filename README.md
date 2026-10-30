@@ -92,10 +92,11 @@ it, and each optional tool says "not configured" instead of failing.
 
 **Optional modules**, opt-in, each documented in [`anatomy.md`](anatomy.md):
 
-- **Agents** (`agents/<role>/AGENT.md`, launched by `skills/<role>/SKILL.md`): twelve ready-made
+- **Agents** (`agents/<role>/AGENT.md`, launched by `skills/<role>/SKILL.md`): thirteen ready-made
   roles with a memory that work on top of the graph and talk to you: `fitness-coach`,
   `psychologist`, `founder-assistant`, `linkedin-coach`, `web-builder`, `brand-designer`,
-  `accountant`, `health-advisor`, `best-friend`, `tech-maintainer`, `english-teacher`, `recruiter`.
+  `accountant`, `health-advisor`, `best-friend`, `tech-maintainer`, `english-teacher`, `recruiter`,
+  `legal`.
   Each one ships with its lane and handoffs, what it must remember and where (a memory skeleton in
   `agents/<role>/memory-skeleton/`), and the routines it typically runs (`agents/<role>/routines/`).
   The names are not shipped: they are generated when you create the agent,

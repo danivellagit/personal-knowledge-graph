@@ -200,6 +200,8 @@ spec in the same turn (rule 9). Times are in the owner's timezone.
 - [Weekly priorities](routines/weekly-priorities.md) - `30 8 * * 1` - Three priorities for the week from open loops, calendar and last week's log
 - [Weekly team update draft](routines/weekly-team-update-draft.md) - `15 12 * * 1` - Draft the weekly update for the owner's team channel from last week's closed loops
 - [Life App: work area](routines/life-app-work-area.md) - `30 19 * * 1-5` - Update `data/happiness/lavoro.json` from the day's facts, validate, publish
+- [Promises from yesterday's meetings](routines/meeting-promises.md) - `30 8 * * 1-5` - The owner's commitments from yesterday's transcripts, checked against mail and calendar, a hold for each open one
+- [Domain renewals and payments watch](routines/domain-renewals-watch.md) - `0 9 * * 1-5` - Registrar mail: failed payments, renewals, required actions; silent when all is fine
 
 ## Where it lives
 

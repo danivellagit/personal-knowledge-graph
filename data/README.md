@@ -27,6 +27,8 @@ data/
   cities/ places/ passions/    light entities, born here from the stream on recurrence
   terms/ groups/ events/
   bonds/ roles/ media/
+  possessions/<slug>.md        one per physical thing the owner owns (vehicle, electronics, home, sport...)
+  possessions/README.md        the register: one row per object, estimated value, status, the known total
   _followups/YYYY-MM-DD.md     the work digest per sweep (no personal content, ever)
   _gaps/                       the gap register: what the memory knows it does not know
       register.jsonl             machine-owned, one line per gap

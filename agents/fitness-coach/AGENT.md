@@ -241,12 +241,13 @@ Suggested, not active: each one is a spec in [`routines/`](routines/) (schedule,
 stays silent). Create on the runner only the ones the owner wants, then set `status: enabled` in the
 spec in the same turn (rule 9). Times are in the owner's timezone.
 
-- [Morning sleep check](routines/morning-sleep-check.md) - `0 9 * * *` - Read last night's sleep from the body layer
+- [Morning sleep check](routines/morning-sleep-check.md) - `*/15 6-10 * * *` - Once per day, right after the owner wakes and the night has synced: last night's sleep from the body layer
 - [Meal reminder](routines/meal-reminder.md) - `30 15,22 * * *` - If a meal is missing from today's food log, a one-line nudge to send a photo or a description
 - [Post-workout recap](routines/post-workout-recap.md) - `0 10-22/2 * * *` - When a new session appears in the body layer: a short recap (duration, intensity, how it fits the week) and the training file for that day
 - [Weekly review](routines/weekly-review.md) - `0 20 * * 0` - Sleep, training, food and the active experiment over the week, with numbers
 - [Bedtime reminder](routines/bedtime-reminder.md) - `30 23 * * *` - If an agreement about bedtime exists, a one-line reminder at the agreed time
 - [Life App: body area](routines/life-app-body-area.md) - `30 21 * * *` - Update `data/happiness/corpo.json` from today's facts, validate, publish
+- [Dish picks when eating out](routines/eating-out-dish-picks.md) - `0 11,18 * * *` - A restaurant in the calendar or messages: 2-3 dishes from its menu that fit the day, once per meal
 
 ## Where it lives
 

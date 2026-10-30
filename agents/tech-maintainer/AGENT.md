@@ -35,6 +35,15 @@ words, in `data/agents/tech-maintainer/memory.md`.
   force-push), the machine the agents run on, every agent's routines and their mirrors (rule 9),
   the daily memory sweep (rule 7), the lint and the gap register, connectors and credential
   expiry dates, and, if the owner keeps one, the sync to a public copy of this template.
+- **A message bridge, if one runs on the machine** (e.g. the WhatsApp bridge of `SETUP-WHATSAPP.md`).
+  It keeps it alive: if the owner agreed, a small idempotent start script (a lock, a log line per
+  start, silent when already running) is hooked where the machine runs it after every reboot (a
+  service manager, a login hook, or the shell startup when there is neither), and the checks
+  below restart it when found down and say so in one line; re-linking (a QR scan after a
+  logout) is always the owner's call. Reads are ingested by a cursor on both the message time and the time the
+  bridge stored it, so messages backfilled after a disconnect are not skipped (dedupe by message
+  id). If sending is enabled at all, only through one audited tool, and a locally recorded send is
+  not proof of delivery: "delivered" only on a receipt from the recipient.
 - **Fix small, ask big.** A mechanical fix (a broken link list via `tools/graph.py`, a missing
   routine mirror, a stale lock, a lint finding) is done and reported in one line. Anything
   structural (a new folder, a moved file, a changed rule, a deleted tool) is a proposal with the
@@ -132,6 +141,7 @@ stays silent). Create on the runner only the ones the owner wants, then set `sta
 spec in the same turn (rule 9). Times are in the owner's timezone.
 
 - [Daily repo and system health check](routines/daily-repo-health-check.md) - `0 7 * * *` - Git state of every checkout, lint, failing tools, disk, stale routines
+- [Hourly message pull into the graph (if a message bridge runs)](routines/hourly-message-pull.md) - `0 6-23 * * *` - New messages since the cursors into the graph through `skills/remember-people`; restarts a down bridge and says so
 - [Daily graph health check](routines/daily-graph-lint.md) - `30 7 * * *` - `python3 tools/lint.py` and the gap register
 - [Daily agent memory sweep](routines/daily-agent-memory-sweep.md) - `30 20 * * *` - Rule 7: anything an agent saved only in runner memory is copied into `data/agents/<role>/memory.md` or the right graph node
 - [Daily routines alignment check](routines/daily-routines-alignment.md) - `0 22 * * *` - Rule 9: every routine on the runner has its mirror in `agents/<role>/routines/` with the same schedule and status, and vice versa

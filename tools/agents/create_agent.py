@@ -47,7 +47,7 @@ FIRST = ("Rowan Ines Teo Mara Elio Noa Jonah Lena Arlo Vera Milo Iris Ezra Talia
          "Yara Emil Saskia").split()
 LAST = ("Hale Marlow Lindqvist Quill Brandt Okafor Varga Castell Ashby Morrow Sato Novak Ferrand Holloway Strand "
         "Vance Kowal Arden Abara Thorne Ilves Calder Wexley Rasku Penrose Dunmore Halvorsen Akers Lowell Sorel").split()
-AGE_RANGE = {"psychologist": (42, 58), "accountant": (45, 60), "health-advisor": (38, 55), "best-friend": None}
+AGE_RANGE = {"psychologist": (42, 58), "accountant": (45, 60), "health-advisor": (38, 55), "legal": (42, 58), "best-friend": None}
 DEFAULT_AGE = (30, 52)
 ONBOARDING = ("At the start of every conversation: pull this repo, read agents/README.md (\"New agent onboarding\") "
               "and agents/{role}/AGENT.md, then data/agents/{role}/memory.md. Save every memory in "

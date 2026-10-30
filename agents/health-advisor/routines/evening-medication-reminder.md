@@ -14,7 +14,10 @@ runner_id:            # the routine's id or folder on the runner, filled when cr
 
 **Intent.** If the owner takes a medication in the evening and has not confirmed it today: one line.
 
-**When it stays silent.** Silent once confirmed, or if there is no evening medication.
+**Plus an active measurement series.** If `plan.md` holds a temporary series with an evening reading (until
+its end date) and today's reading is missing, the same line asks for it; answers go to their files.
+
+**When it stays silent.** Silent when neither is needed: medication confirmed (or none in the evening) and no evening reading due.
 
 **Repo.** If it writes to the repo it pulls first and commits + pushes only its own paths at the end
 (agents/README.md, rule 7); anything it learns goes to `data/agents/health-advisor/memory.md` or the right graph node.

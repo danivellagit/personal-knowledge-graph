@@ -93,6 +93,7 @@ agents:
   #   tech-maintainer: ""
   #   english-teacher: ""
   #   recruiter: ""
+  #   legal: ""
 
 # The body layer: a wearable read through its vendor's CLI / API (tools/body-pull.sh, body.py,
 # calories.py, food.py). Raw data and the store stay OFF-repo. Uncomment what you use; an unset

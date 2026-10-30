@@ -37,6 +37,7 @@ Two anchor types plus the entity graph. Light entities are born from the stream.
 | role | `data/roles/<slug>.md` | B: job title, born in repo ON RECURRENCE (two or more people share it: co-founder, software-engineer, product-manager). A unique one-off title stays as a plain `role:` string attribute, not a node. |
 | event | `data/events/<slug>.md` | B: born in repo (trips, offsites, birthdays, conferences) |
 | media | `data/media/<slug>.md` | B: born in repo (podcasts, videos, interviews, articles) ABOUT graph people. A one-way source the owner *consumed*, not a two-way exchange. One node per artifact, reusable across every person it features. |
+| possession | `data/possessions/<slug>.md` | B: born in repo when the owner mentions owning something (a vehicle, a laptop, a racket). Frontmatter `type: possession`, `category`, `owned_since`, `purchase_price`, `purchase_date`, `estimated_value`, `valued_on`, `valuation_source` (a URL or the method), `status` (owned / sold / broken); unknown values written as "to estimate", never guessed; no serial or ID numbers. `data/possessions/README.md` is the register (one row per object, the total of known values), updated with every node. |
 | interaction | `data/interactions/<slug>/YYYY-MM-DD.md` (recent) or `YYYY-MM.md` (old rollup) | the raw episodic stream |
 | owner | `data/_me.md` | the point of view; see "Manual capture" |
 
@@ -200,8 +201,9 @@ admin; never files or pays, not a licensed professional), `health-advisor` (labs
 medications; never changes a medication, not a doctor), `best-friend` (plain company and
 daily-life errands; never handles payment details or passwords), `tech-maintainer` (the repo,
 its tools, git, routines and the daily memory sweep), `english-teacher` (language practice,
-corrections logged, CEFR evidence) and `recruiter` (CVs, interviews, the pipeline; only skills and
-experience count). The persona name is generated when the owner creates the agent
+corrections logged, CEFR evidence), `recruiter` (CVs, interviews, the pipeline; only skills and
+experience count) and `legal` (legal documents, open matters and deadlines, drafts; a source for every
+law, not binding advice). The persona name is generated when the owner creates the agent
 (`python3 tools/agents/create_agent.py <role>`); see `agents/README.md`.
 
 Rules every agent inherits: `CLAUDE.md` applies in full (the wall, quotes vs reads, never

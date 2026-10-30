@@ -14,6 +14,12 @@ runner_id:            # the routine's id or folder on the runner, filled when cr
 
 **Intent.** If there is an active treatment or a symptom being watched: one short question; plus anything of the prevention plan due in the next 7 days.
 
+**Daily confirmations, recorded at once.** If the owner wants it, the check-in also asks whether today's
+medications were taken and for a daily self-measurement (e.g. morning weight); answers go to their files
+(the medication log, the measurement log) and the Life App is republished. A temporary measurement series a
+doctor asked for (e.g. a week of blood-pressure readings) is asked for until its end date in `plan.md`, then
+summarised (e.g. the average) for the doctor.
+
 **When it stays silent.** Silent when there is nothing active and nothing due.
 
 **Repo.** If it writes to the repo it pulls first and commits + pushes only its own paths at the end

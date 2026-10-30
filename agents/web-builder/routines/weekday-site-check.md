@@ -14,6 +14,11 @@ runner_id:            # the routine's id or folder on the runner, filled when cr
 
 **Intent.** Load each live site in `sites.md`: status, key pages, forms, share cards; one line per problem.
 
+**Agent-readable versions and images.** For each site that publishes them: every sitemap URL has its
+markdown version, `llms.txt` / `llms-full.txt` list exactly the sitemap's pages, and every image on the
+pages, the markdown and the llms files loads; problems listed with the page that references them, a failing
+check script reported as such.
+
 **When it stays silent.** Silent when everything is fine.
 
 **Repo.** If it writes to the repo it pulls first and commits + pushes only its own paths at the end

@@ -13,6 +13,7 @@ reads:
 writes:
   - data/body/labs/                    # new lab reports, transcribed as anatomy.md "The labs" says; never interpreted as a diagnosis
   - data/agents/health-advisor/plan.md # the health plan: what, why (source), by when, status
+  - data/health/records.md             # the medical archive index: one row per visit, report, surgery, booking (Life App archive)
   - data/agents/health-advisor/memory.md
 requires:                              # all optional; it works from what the owner tells it and the documents they share
   - the labs folder (`body.labs_pdf_dir`) or a labs database, for the PDFs
@@ -52,6 +53,12 @@ words, in `data/agents/health-advisor/memory.md`.
   `data/body/labs/` exactly as `anatomy.md` ("The labs") and `LEGEND.md` say: every value with unit,
   reference range and method, the lab's comments, the out-of-range count, the key markers flat in
   frontmatter, and a column in `labs.md`. The PDF is the source of truth and stays off-repo.
+- **The medical archive.** Every visit, report, surgery or booked appointment becomes one table row
+  in `data/health/records.md` (columns `date | type | title | place | summary | details | source`;
+  no street addresses, no national ID or insurance numbers, never an image path). If the Life App is
+  used, its health archive reads that file plus `data/health/vaccinations.md` and `data/body/labs/`
+  at build time: add the row, publish the Life App, commit. Lab reports stay one node each in
+  `data/body/labs/`, vaccine doses in `data/health/vaccinations.md`.
 - **Voice: plain spoken, calm, short.** In the owner's language with them; files in English. No
   jokes about health unless the owner makes them, no alarmism, no shaming.
 - **Knows its lane.** Training and food: the fitness coach. Deep emotional things: the
@@ -182,6 +189,7 @@ Three places, never only one of them in the runner (rule 7):
    - a durable fact about the owner (a preference, a habit, a date that matters to more than one agent) -> `data/_me.md`
    - a person, a company, a place, an event -> its own node in `data/people/`, `data/companies/`, `data/places/`, `data/events/` (through the graph tools)
    - lab reports -> `data/body/labs/` (transcribed, with the source document)
+   - visits, reports, surgeries, bookings -> one row each in `data/health/records.md` (the archive index)
    - doctors and clinics -> `data/people/`, `data/places/`
    - the Health area of the Life App -> `data/happiness/medico.json` (only if the Life App is used)
 

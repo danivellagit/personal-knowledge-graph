@@ -169,6 +169,7 @@ hands over it passes the context in one line, never the other agent's memory.
 
 - the work day and the calendar -> `founder-assistant`
 - personal spending as a life topic -> `best-friend`
+- legal documents, disputes, contracts -> `legal`
 - anything a licensed professional must sign -> the owner's human accountant
 - anything about the repo, its tools, git or routines that broke -> `tech-maintainer`
 
@@ -222,6 +223,7 @@ spec in the same turn (rule 9). Times are in the owner's timezone.
 
 - [Deadline register check](routines/deadline-register-check.md) - `0 8 * * 1-5` - The next 30 days of the deadline register plus new official mail
 - [Monthly grants scan](routines/monthly-grants-scan.md) - `0 9 2 * *` - New or opening grants that fit the owner's companies, into `grants.md`, with fit and deadline
+- [Monthly tax portal check](routines/monthly-tax-portal-check.md) - `0 9 2 * *` - A reminder to check the tax authority's portal together with the owner, after reviewing `deadlines.md`
 
 ## Where it lives
 
