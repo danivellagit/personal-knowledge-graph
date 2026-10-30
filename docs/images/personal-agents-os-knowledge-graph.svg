@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1214" viewBox="0 0 1600 1214" role="img" aria-labelledby="t d"><title id="t">Personal Agents OS: the knowledge graph model</title><desc id="d">Each node is a markdown file with frontmatter wikilinks written as forward and reverse pairs. Fake example: the owner Alex meets Sam at Café Example in Lisbon.</desc><defs><filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#0B0E10" flood-opacity="0.08"/></filter><marker id="m00895A" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#00895A"/></marker><marker id="m0093E7" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0093E7"/></marker><marker id="m6B5BE6" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6B5BE6"/></marker><marker id="m6B747B" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6B747B"/></marker><marker id="m8A7400" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A7400"/></marker><marker id="mD6336C" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D6336C"/></marker><marker id="mE57F00" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E57F00"/></marker></defs><rect x="1" y="1" width="1598" height="1212" rx="28" fill="#F5F7F8" stroke="#DDE3E7" stroke-width="2"/>
+<text style="white-space:pre" x="56" y="76" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00895A" letter-spacing="2.2">PERSONAL AGENTS OS  ·  2 / 4  ·  THE KNOWLEDGE GRAPH</text>
+<text style="white-space:pre" x="56" y="122" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#0B0E10" letter-spacing="-0.6">One node, one markdown file. Links live in frontmatter.</text>
+<text style="white-space:pre" x="56" y="158" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#3E474E">Every edge is a quoted [[slug]] wikilink, written as a forward + reverse pair. Fake example: Alex (the owner) meets Sam at Café Example.</text>
+<rect x="48" y="214" width="860" height="690" rx="22" fill="#fff" stroke="#DDE3E7" stroke-width="1.5"/>
+<text style="white-space:pre" x="72" y="250" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#6B747B" letter-spacing="1.8">THE EXAMPLE, AS A GRAPH</text>
+<text style="white-space:pre" x="884" y="250" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#6B747B" text-anchor="end">all names are fake</text>
+<rect x="640" y="283" width="119" height="74" rx="16" fill="#FFDE00" stroke="#0B0E10" stroke-width="1.8" filter="url(#sh)"/>
+<text style="white-space:pre" x="660" y="306" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="750" fill="#0B0E10" letter-spacing="1.6">OWNER</text>
+<text style="white-space:pre" x="660" y="328" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#0B0E10">Alex</text>
+<text style="white-space:pre" x="660" y="347" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="450" fill="#3E474E">data/_me.md</text>
+<rect x="547" y="463" width="306" height="74" rx="16" fill="#E2FBF1" stroke="#00895A" stroke-width="1.8" filter="url(#sh)"/>
+<text style="white-space:pre" x="567" y="486" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="750" fill="#00895A" letter-spacing="1.6">INTERACTION</text>
+<text style="white-space:pre" x="567" y="508" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#0B0E10">Coffee, 14 May 2030</text>
+<text style="white-space:pre" x="567" y="527" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="450" fill="#3E474E">interactions/sam-rivera/2030-05-14.md</text>
+<rect x="158" y="463" width="184" height="74" rx="16" fill="#EEEBFD" stroke="#6B5BE6" stroke-width="1.8" filter="url(#sh)"/>
+<text style="white-space:pre" x="178" y="486" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="750" fill="#6B5BE6" letter-spacing="1.6">PERSON</text>
+<text style="white-space:pre" x="178" y="508" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#0B0E10">Sam Rivera</text>
+<text style="white-space:pre" x="178" y="527" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="450" fill="#3E474E">people/sam-rivera.md</text>
+<rect x="169" y="283" width="162" height="74" rx="16" fill="#EEEBFD" stroke="#6B5BE6" stroke-width="1.8" filter="url(#sh)"/>
+<text style="white-space:pre" x="189" y="306" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="750" fill="#6B5BE6" letter-spacing="1.6">PERSON</text>
+<text style="white-space:pre" x="189" y="328" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#0B0E10">Jo Park</text>
+<text style="white-space:pre" x="189" y="347" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="450" fill="#3E474E">people/jo-park.md</text>
+<rect x="601" y="663" width="198" height="74" rx="16" fill="#FFF2E2" stroke="#E57F00" stroke-width="1.8" filter="url(#sh)"/>
+<text style="white-space:pre" x="621" y="686" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="750" fill="#E57F00" letter-spacing="1.6">PLACE</text>
+<text style="white-space:pre" x="621" y="708" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#0B0E10">Café Example</text>
+<text style="white-space:pre" x="621" y="727" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="450" fill="#3E474E">places/cafe-example.md</text>
+<rect x="172" y="803" width="155" height="74" rx="16" fill="#E4F3FC" stroke="#0093E7" stroke-width="1.8" filter="url(#sh)"/>
+<text style="white-space:pre" x="192" y="826" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="750" fill="#0093E7" letter-spacing="1.6">CITY</text>
+<text style="white-space:pre" x="192" y="848" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#0B0E10">Lisbon</text>
+<text style="white-space:pre" x="192" y="867" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="450" fill="#3E474E">cities/lisbon.md</text>
+<rect x="318" y="653" width="184" height="74" rx="16" fill="#FDE8EF" stroke="#D6336C" stroke-width="1.8" filter="url(#sh)"/>
+<text style="white-space:pre" x="338" y="676" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="750" fill="#D6336C" letter-spacing="1.6">PASSION</text>
+<text style="white-space:pre" x="338" y="698" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#0B0E10">climbing</text>
+<text style="white-space:pre" x="338" y="717" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="450" fill="#3E474E">passions/climbing.md</text>
+<rect x="66" y="653" width="148" height="74" rx="16" fill="#FFF8CC" stroke="#8A7400" stroke-width="1.8" filter="url(#sh)"/>
+<text style="white-space:pre" x="86" y="676" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="750" fill="#8A7400" letter-spacing="1.6">BOND</text>
+<text style="white-space:pre" x="86" y="698" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#0B0E10">friend</text>
+<text style="white-space:pre" x="86" y="717" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="450" fill="#3E474E">bonds/friend.md</text>
+<path d="M700,363 L700,457" fill="none" stroke="#6B747B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m6B747B)" stroke-dasharray="5 6"/>
+<rect x="576.6" y="398.0" width="246.8" height="24" rx="12.0" fill="#FFFFFF" stroke="#6B747B" stroke-width="1.2"/>
+<text style="white-space:pre" x="584.6" y="414.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#6B747B">point of view: the owner's day with Sam</text>
+<path d="M541,500 L348,500" fill="none" stroke="#00895A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m00895A)"/>
+<rect x="416.1" y="488.0" width="56.6" height="24" rx="12.0" fill="#FFFFFF" stroke="#00895A" stroke-width="1.2"/>
+<text style="white-space:pre" x="424.1" y="504.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#00895A">person</text>
+<path d="M700,543 L700,657" fill="none" stroke="#00895A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m00895A)"/>
+<rect x="686.4" y="588.0" width="27.1" height="24" rx="12.0" fill="#FFFFFF" stroke="#00895A" stroke-width="1.2"/>
+<text style="white-space:pre" x="694.4" y="604.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#00895A">at</text>
+<path d="M250,457 L250,363" fill="none" stroke="#6B5BE6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m6B5BE6)" marker-start="url(#m6B5BE6)"/>
+<rect x="158.8" y="398.0" width="182.3" height="24" rx="12.0" fill="#FFFFFF" stroke="#6B5BE6" stroke-width="1.2"/>
+<text style="white-space:pre" x="166.8" y="414.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#6B5BE6">introduced_by  ⇄  introduced</text>
+<path d="M250,543 L250,797" fill="none" stroke="#0093E7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m0093E7)" marker-start="url(#m0093E7)"/>
+<rect x="183.4" y="758.0" width="133.2" height="24" rx="12.0" fill="#FFFFFF" stroke="#0093E7" stroke-width="1.2"/>
+<text style="white-space:pre" x="191.4" y="774.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#0093E7">lives_in  ⇄  residents</text>
+<path d="M225,543 L165,647" fill="none" stroke="#8A7400" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m8A7400)" marker-start="url(#m8A7400)"/>
+<rect x="78.1" y="588.0" width="143.8" height="24" rx="12.0" fill="#FFFFFF" stroke="#8A7400" stroke-width="1.2"/>
+<text style="white-space:pre" x="86.1" y="604.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#8A7400">relationship  ⇄  people</text>
+<path d="M286,543 L374,647" fill="none" stroke="#D6336C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mD6336C)" marker-start="url(#mD6336C)"/>
+<rect x="321.2" y="588.0" width="97.5" height="24" rx="12.0" fill="#FFFFFF" stroke="#D6336C" stroke-width="1.2"/>
+<text style="white-space:pre" x="329.2" y="604.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#D6336C">into  ⇄  people</text>
+<path d="M347,543 L603,657" fill="none" stroke="#E57F00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mE57F00)" marker-start="url(#mE57F00)"/>
+<rect x="450.0" y="573.0" width="140.1" height="24" rx="12.0" fill="#FFFFFF" stroke="#E57F00" stroke-width="1.2"/>
+<text style="white-space:pre" x="458.0" y="589.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#E57F00">frequents  ⇄  regulars</text>
+<path d="M595,733 L334,814" fill="none" stroke="#0093E7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m0093E7)" marker-start="url(#m0093E7)"/>
+<rect x="408.2" y="761.4" width="112.0" height="24" rx="12.0" fill="#FFFFFF" stroke="#0093E7" stroke-width="1.2"/>
+<text style="white-space:pre" x="416.2" y="777.7" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#0093E7">in_city  ⇄  places</text>
+<rect x="940" y="214" width="612" height="243" rx="16" fill="#0B0E10"/>
+<circle cx="960" cy="236" r="5" fill="#FF5E86"/><circle cx="976" cy="236" r="5" fill="#FFDE00"/><circle cx="992" cy="236" r="5" fill="#16EC06"/>
+<text style="white-space:pre" x="1010" y="241" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#B7BEC4">data/people/sam-rivera.md</text>
+<text style="white-space:pre" x="962" y="276" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7F888F">---</text>
+<text style="white-space:pre" x="962" y="297" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">name:</text>
+<text style="white-space:pre" x="1002.5" y="297" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#FFFFFF"> Sam Rivera</text>
+<text style="white-space:pre" x="962" y="318" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">relationship:</text>
+<text style="white-space:pre" x="1067.3" y="318" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#00F19F"> ["[[friend]]"]</text>
+<text style="white-space:pre" x="962" y="339" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">lives_in:</text>
+<text style="white-space:pre" x="1034.9" y="339" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#00F19F"> ["[[lisbon]]"]</text>
+<text style="white-space:pre" x="962" y="360" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">frequents:</text>
+<text style="white-space:pre" x="1043.0" y="360" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#00F19F"> ["[[cafe-example]]"]</text>
+<text style="white-space:pre" x="962" y="381" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">into:</text>
+<text style="white-space:pre" x="1002.5" y="381" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#00F19F"> ["[[climbing]]"]</text>
+<text style="white-space:pre" x="962" y="402" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">introduced_by:</text>
+<text style="white-space:pre" x="1075.4" y="402" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#00F19F"> ["[[jo-park]]"]</text>
+<text style="white-space:pre" x="962" y="423" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7F888F">---</text>
+<text style="white-space:pre" x="962" y="444" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7F888F"># Sam Rivera  (profile, in Sam's own words)</text>
+<rect x="940" y="479" width="612" height="243" rx="16" fill="#0B0E10"/>
+<circle cx="960" cy="501" r="5" fill="#FF5E86"/><circle cx="976" cy="501" r="5" fill="#FFDE00"/><circle cx="992" cy="501" r="5" fill="#16EC06"/>
+<text style="white-space:pre" x="1010" y="506" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#B7BEC4">data/interactions/sam-rivera/2030-05-14.md</text>
+<text style="white-space:pre" x="962" y="541" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7F888F">---</text>
+<text style="white-space:pre" x="962" y="562" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">person:</text>
+<text style="white-space:pre" x="1018.7" y="562" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#00F19F"> "[[sam-rivera]]"</text>
+<text style="white-space:pre" x="962" y="583" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">date:</text>
+<text style="white-space:pre" x="1002.5" y="583" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#FFFFFF"> 2030-05-14</text>
+<text style="white-space:pre" x="962" y="604" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">setting:</text>
+<text style="white-space:pre" x="1026.8" y="604" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#FFFFFF"> in-person</text>
+<text style="white-space:pre" x="962" y="625" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">source:</text>
+<text style="white-space:pre" x="1018.7" y="625" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#FFFFFF"> manual:_me-2030-05-14</text>
+<text style="white-space:pre" x="962" y="646" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">at:</text>
+<text style="white-space:pre" x="986.3" y="646" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#00F19F"> ["[[cafe-example]]"]</text>
+<text style="white-space:pre" x="962" y="667" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">city:</text>
+<text style="white-space:pre" x="1002.5" y="667" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#00F19F"> ["[[lisbon]]"]</text>
+<text style="white-space:pre" x="962" y="688" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">about:</text>
+<text style="white-space:pre" x="1010.6" y="688" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#00F19F"> ["[[climbing]]"]</text>
+<text style="white-space:pre" x="962" y="709" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7F888F">---</text>
+<rect x="940" y="744" width="612" height="124" rx="16" fill="#0B0E10"/>
+<circle cx="960" cy="766" r="5" fill="#FF5E86"/><circle cx="976" cy="766" r="5" fill="#FFDE00"/><circle cx="992" cy="766" r="5" fill="#16EC06"/>
+<text style="white-space:pre" x="1010" y="771" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#B7BEC4">data/places/cafe-example.md</text>
+<text style="white-space:pre" x="962" y="806" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">in_city:</text>
+<text style="white-space:pre" x="1026.8" y="806" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#00F19F"> ["[[lisbon]]"]</text>
+<text style="white-space:pre" x="962" y="827" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#7BA1BB">regulars:</text>
+<text style="white-space:pre" x="1034.9" y="827" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="400" fill="#00F19F"> ["[[sam-rivera]]"]</text>
+<text style="white-space:pre" x="962" y="854" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#FF9F2E">regulars: the reverse edge, written by  lint.py --fix</text>
+<rect x="48" y="934" width="1504" height="214" rx="22" fill="#fff" stroke="#DDE3E7" stroke-width="1.5"/>
+<text style="white-space:pre" x="72" y="970" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#00895A" letter-spacing="1.8">NODE TYPES  ·  data/</text>
+<rect x="72" y="988" width="134" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="86" y="1008" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">person</text>
+<text style="white-space:pre" x="130.3" y="1008" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  people/</text>
+<rect x="214.484375" y="988" width="172" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="228.5" y="1008" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">company</text>
+<text style="white-space:pre" x="287.1" y="1008" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  companies/</text>
+<rect x="394.390625" y="988" width="124" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="408.4" y="1008" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">place</text>
+<text style="white-space:pre" x="442.8" y="1008" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  places/</text>
+<rect x="526.671875" y="988" width="113" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="540.7" y="1008" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">city</text>
+<text style="white-space:pre" x="564.4" y="1008" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  cities/</text>
+<rect x="647.859375" y="988" width="155" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="661.9" y="1008" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">passion</text>
+<text style="white-space:pre" x="711.5" y="1008" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  passions/</text>
+<rect x="810.890625" y="988" width="112" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="824.9" y="1008" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">term</text>
+<text style="white-space:pre" x="854.3" y="1008" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  terms/</text>
+<rect x="930.4375" y="988" width="127" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="944.4" y="1008" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">group</text>
+<text style="white-space:pre" x="981.7" y="1008" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  groups/</text>
+<rect x="1065.609375" y="988" width="115" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="1079.6" y="1008" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">bond</text>
+<text style="white-space:pre" x="1111.9" y="1008" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  bonds/</text>
+<rect x="1188.125" y="988" width="106" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="1202.1" y="1008" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">role</text>
+<text style="white-space:pre" x="1226.2" y="1008" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  roles/</text>
+<rect x="1302.109375" y="988" width="125" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="1316.1" y="1008" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">event</text>
+<text style="white-space:pre" x="1351.5" y="1008" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  events/</text>
+<rect x="72" y="1028" width="121" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="86" y="1048" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">media</text>
+<text style="white-space:pre" x="124.6" y="1048" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  media/</text>
+<rect x="201.109375" y="1028" width="339" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="215.1" y="1048" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">interaction</text>
+<text style="white-space:pre" x="283.1" y="1048" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  interactions/&lt;person&gt;/&lt;date&gt;.md</text>
+<rect x="548.296875" y="1028" width="122" height="30" rx="15" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="562.3" y="1048" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#0B3A2C">owner</text>
+<text style="white-space:pre" x="602.0" y="1048" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  _me.md</text>
+<text style="white-space:pre" x="72" y="1086" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#6B5BE6" letter-spacing="1.8">AROUND THE GRAPH</text>
+<rect x="72" y="1102" width="491" height="30" rx="15" fill="#EEEBFD" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="86" y="1122" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#3B2FA8">agent memory</text>
+<text style="white-space:pre" x="177.7" y="1122" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  data/agents/&lt;role&gt;/  ·  links  person: "[[_me]]"</text>
+<rect x="571.203125" y="1102" width="325" height="30" rx="15" fill="#EEEBFD" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="585.2" y="1122" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#3B2FA8">Life App areas</text>
+<text style="white-space:pre" x="675.8" y="1122" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">  data/happiness/&lt;area&gt;.json</text>
+<rect x="904.296875" y="1102" width="366" height="30" rx="15" fill="#EEEBFD" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="918.3" y="1122" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#3B2FA8">optional modules</text>
+<text style="white-space:pre" x="1026.9" y="1122" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#3E474E">  body, food, training days, lab reports</text>
+<text style="white-space:pre" x="1528" y="970" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#6B747B" text-anchor="end">who writes links:  remember-people (the skill)  →  tools/graph.py forward edge  →  lint.py --fix reverse edge</text>
+<text style="white-space:pre" x="1544" y="1184" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#6B747B" text-anchor="end">Body prose links are free-form and are not edges. The contract is LEGEND.md; the memory model is anatomy.md.</text>
+<text style="white-space:pre" x="56" y="1184" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#6B747B">Personal Agents OS</text>
+</svg>

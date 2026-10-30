@@ -3,6 +3,11 @@
 **Personal Agents OS is a personal knowledge graph you run with an AI agent.** It holds the people in your world and everything that connects them, kept current from your own stream (WhatsApp, meetings, email) as plain markdown you can browse as a graph. You can add a team of agents with a memory and a phone app that puts your whole life on one screen.
 
 <p align="center">
+  <img src="docs/images/personal-agents-os-architecture.png" alt="Architecture of Personal Agents OS: optional sources feed a team of agent roles; the agents read and write the knowledge graph (markdown in git, data/); tools enforce its shape; the Life App and Obsidian are views for humans">
+</p>
+<p align="center"><sub>Source: <a href="docs/images/personal-agents-os-architecture.svg">SVG</a>. Every diagram here is hand-drawn SVG with fake example names.</sub></p>
+
+<p align="center">
   <img src="tools/life-app/assets/screenshots/life-app-phone-home.png" width="200" alt="Life App, Home: the Life Health ring over seven areas (sample data)">
   &nbsp;
   <img src="tools/life-app/assets/screenshots/life-app-phone-body.png" width="200" alt="Life App, Body: daily body score, calories, training, steps (sample data)">
@@ -73,43 +78,11 @@ The graph mechanics described below exist to serve this rule. They don't replace
 
 ## How it works
 
-```mermaid
-flowchart LR
-  subgraph Sources["Your stream (all optional)"]
-    WA[WhatsApp]
-    MT[Meeting transcripts]
-    ML[Mail and calendar]
-    YOU[What you tell the agent]
-    WR[Wearable / GPS]
-  end
+The architecture is in the diagram at the top. This is the graph itself: every node is a markdown file, and every link is a quoted wikilink in its frontmatter.
 
-  subgraph Agent["Your AI agent"]
-    SK["Skills<br/>remember-people, graph-audit"]
-    AG["Agents (roles)<br/>fitness-coach, best-friend, accountant ..."]
-    RT["Routines<br/>daily sweep, weekly recap ..."]
-  end
-
-  subgraph Data["data/ (private markdown, gitignored)"]
-    P[people/]
-    E["places/ cities/ events/<br/>groups/ bonds/ passions/ ..."]
-    I["interactions/person/YYYY-MM-DD.md"]
-    G["_gaps/ (gap register)"]
-    AM["agents/role/memory.md"]
-    H["happiness/*.json"]
-  end
-
-  T["tools/<br/>graph.py, lint.py, gaps.py ..."]
-  APP["Life App<br/>(encrypted static site)"]
-  OBS[Obsidian graph view]
-
-  Sources --> Agent
-  SK --> P & E & I
-  AG --> AM & H
-  RT --> SK & AG
-  T -- "enforces the contract (LEGEND.md)" --> Data
-  H -- "publish.sh: build + encrypt" --> APP
-  Data --> OBS
-```
+<p align="center">
+  <img src="docs/images/personal-agents-os-knowledge-graph.png" alt="Knowledge graph model: node types (person, place, city, passion, bond, interaction, owner and more) linked by frontmatter wikilinks in forward and reverse pairs, with a fake example: Alex, the owner, meets Sam Rivera at Café Example in Lisbon">
+</p>
 
 1. **The stream comes in.** You talk to the agent, or it reads the sources you've wired up in `config.local.yml`.
 2. **The `remember-people` skill writes it down.** Each exchange goes into `data/interactions/<person>/YYYY-MM-DD.md`, the person's profile gets sharper, and the entities that connect people (places, events, groups, bonds and so on) become nodes when they come up again.
@@ -154,7 +127,8 @@ personal-knowledge-graph/
     <role>/AGENT.md              # spec: persona, lane and handoffs, memory, routines, flows
     <role>/memory-skeleton/      # empty memory files (headings only, no facts)
     <role>/routines/<slug>.md    # suggested routine specs (schedule, intent, when silent)
-  tools/life-app/assets/screenshots/                   # README screenshots (sample data only)
+  docs/images/                   # README diagrams (PNG + SVG source, fake example names only)
+  tools/life-app/assets/screenshots/ # README screenshots (sample data only)
   .claude/hooks/git-sync.sh      # optional: pull on session start, commit + push on stop
   .githooks/pre-commit           # optional guard (git config core.hooksPath .githooks)
   data/                          # PRIVATE, gitignored by default: your graph + your stream
@@ -227,6 +201,10 @@ Each role comes with:
 - **Suggested routines** (`routines/<slug>.md`, 48 in total), such as a daily graph lint, a weekly life recap, a meal reminder, a monthly grants scan or a birthdays-of-the-day ping. Each spec has a cron `schedule`, a `status` (`suggested` / `enabled` / `paused`), the intent, when it stays silent and the saved prompt.
 - **A thin launcher** in `skills/<role>/SKILL.md`, so "/fitness-coach" or "talk to the fitness coach" starts it.
 
+<p align="center">
+  <img src="docs/images/personal-agents-os-agents.png" alt="Agent lifecycle and memory: the spec in agents/<role>/, the private memory in data/agents/<role>/memory.md, runner memory and routines mirrored into the repo in the same turn, create, onboard, work, remember, commit and push, audited daily by the tech-maintainer">
+</p>
+
 **How memory works:**
 
 - **The persona is generated, not shipped.** `create_agent.py` fills `{{AGENT_NAME}}` with an invented name (or one you pick with `--name`) and prints the text to give your runner (a bot's system prompt, a project's instructions).
@@ -276,6 +254,10 @@ On a wide screen (1024 px and up by default), the app switches to a **desktop la
   <img src="tools/life-app/assets/screenshots/life-app-phone-finances.png" width="180" alt="Finances: taxes and deadlines, spending, margin">
 </p>
 </details>
+
+<p align="center">
+  <img src="docs/images/personal-agents-os-life-app-pipeline.png" alt="Data to Life App pipeline: one JSON file per area in data/happiness/ with one owner agent each, publish.sh validates, injects, builds and encrypts, regenerates the recaps and publishes ciphertext only; the phone or desktop decrypts it with the password; optional write-back to a private repo">
+</p>
 
 **What it does:**
 

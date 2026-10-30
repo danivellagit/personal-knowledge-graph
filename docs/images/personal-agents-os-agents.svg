@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1170" viewBox="0 0 1600 1170" role="img" aria-labelledby="t d"><title id="t">Personal Agents OS: agent lifecycle and memory</title><desc id="d">An agent is a role spec in agents/&lt;role&gt;/ plus a private memory in data/agents/&lt;role&gt;/. It is created from a role or from agents/_template, onboards from the repo on its first turn, mirrors runner memory and routines into the repo in the same turn, commits its own paths, and the tech-maintainer audits it daily.</desc><defs><filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#0B0E10" flood-opacity="0.08"/></filter><marker id="m00895A" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#00895A"/></marker><marker id="m00F19F" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#00F19F"/></marker><marker id="m6B5BE6" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6B5BE6"/></marker></defs><rect x="1" y="1" width="1598" height="1168" rx="28" fill="#F5F7F8" stroke="#DDE3E7" stroke-width="2"/>
+<text style="white-space:pre" x="56" y="76" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00895A" letter-spacing="2.2">PERSONAL AGENTS OS  ·  3 / 4  ·  AGENTS</text>
+<text style="white-space:pre" x="56" y="122" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#0B0E10" letter-spacing="-0.6">An agent is a role with a memory</text>
+<text style="white-space:pre" x="56" y="158" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#3E474E">The spec is versioned in agents/&lt;role&gt;/, the memory is private in data/agents/&lt;role&gt;/, and the runner is replaceable.</text>
+<rect x="48" y="214" width="740" height="380" rx="22" fill="#fff" stroke="#DDE3E7" stroke-width="1.5"/>
+<text style="white-space:pre" x="72" y="250" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#6B5BE6" letter-spacing="1.8">THE SHAPE OF AN AGENT</text>
+<text style="white-space:pre" x="72" y="284" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#6B747B">In the repo  ·  versioned, no personal data</text>
+<text style="white-space:pre" x="72" y="308" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="600" fill="#3B2FA8">agents/&lt;role&gt;/AGENT.md</text>
+<text style="white-space:pre" x="372" y="308" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">the spec: name, persona, channel, reads, writes, requires;</text>
+<text style="white-space:pre" x="372" y="327" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">then lane and handoffs, rules, memory, routines, flows</text>
+<text style="white-space:pre" x="72" y="356" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="600" fill="#3B2FA8">agents/&lt;role&gt;/memory-skeleton/</text>
+<text style="white-space:pre" x="372" y="356" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">empty memory files: headings only, no facts</text>
+<text style="white-space:pre" x="72" y="385" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="600" fill="#3B2FA8">agents/&lt;role&gt;/routines/&lt;slug&gt;.md</text>
+<text style="white-space:pre" x="372" y="385" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">one spec per routine: schedule, status, intent, when silent,</text>
+<text style="white-space:pre" x="372" y="404" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">prompt</text>
+<text style="white-space:pre" x="72" y="433" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="600" fill="#3B2FA8">skills/&lt;role&gt;/SKILL.md</text>
+<text style="white-space:pre" x="372" y="433" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">the thin launcher: "/fitness-coach" or "talk to the fitness</text>
+<text style="white-space:pre" x="372" y="452" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">coach"</text>
+<text style="white-space:pre" x="72" y="481" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="600" fill="#3B2FA8">agents/_template/</text>
+<text style="white-space:pre" x="372" y="481" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">the skeleton for a new role</text>
+<line x1="72" y1="508" x2="764" y2="508" stroke="#DDE3E7" stroke-width="1.5"/>
+<text style="white-space:pre" x="72" y="530" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#6B747B">In data/  ·  private</text>
+<text style="white-space:pre" x="72" y="554" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="600" fill="#00895A">data/agents/&lt;role&gt;/memory.md</text>
+<text style="white-space:pre" x="372" y="554" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">Agreements · Open · Log, from the skeleton;</text>
+<text style="white-space:pre" x="372" y="573" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">links  person: "[[_me]]"  so it is never an orphan</text>
+<rect x="820" y="214" width="732" height="380" rx="22" fill="#EEEBFD" stroke="#D6D0FA" stroke-width="1.5"/>
+<text style="white-space:pre" x="844" y="250" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#6B5BE6" letter-spacing="1.8">MEMORY LIVES IN THE REPO, NOT ONLY IN THE RUNNER</text>
+<rect x="844" y="278" width="200" height="290" rx="16" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="864" y="310" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#0B0E10">The runner</text>
+<text style="white-space:pre" x="864" y="336" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#6B747B">a Grok agent, a Claude</text>
+<text style="white-space:pre" x="864" y="355" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#6B747B">project, a Telegram bot,</text>
+<text style="white-space:pre" x="864" y="374" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#6B747B">a cron job</text>
+<rect x="860" y="410" width="124.2" height="32" rx="16.0" fill="#EEEBFD" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="872" y="430.7" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#3B2FA8">its own memory</text>
+<rect x="860" y="458" width="121.8" height="32" rx="16.0" fill="#EEEBFD" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="872" y="478.7" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#3B2FA8">a shared profile</text>
+<rect x="860" y="506" width="93.8" height="32" rx="16.0" fill="#EEEBFD" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="872" y="526.7" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#3B2FA8">its routines</text>
+<path d="M1052,426 H1120" fill="none" stroke="#6B5BE6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m6B5BE6)"/>
+<rect x="1126" y="406" width="402" height="40" rx="12" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="1140" y="431" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="600" fill="#0B0E10">data/agents/&lt;role&gt;/memory.md</text>
+<path d="M1052,474 H1120" fill="none" stroke="#6B5BE6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m6B5BE6)"/>
+<rect x="1126" y="454" width="402" height="40" rx="12" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="1140" y="479" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="600" fill="#0B0E10">data/_me.md  or a graph node</text>
+<path d="M1052,522 H1120" fill="none" stroke="#6B5BE6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m6B5BE6)"/>
+<rect x="1126" y="502" width="402" height="40" rx="12" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="1140" y="527" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="600" fill="#0B0E10">agents/&lt;role&gt;/routines/&lt;slug&gt;.md</text>
+<rect x="1048.9" y="370.0" width="74.2" height="24" rx="12.0" fill="#FFFFFF" stroke="#6B5BE6" stroke-width="1.2"/>
+<text style="white-space:pre" x="1056.9" y="386.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#6B5BE6">same turn</text>
+<text style="white-space:pre" x="1126" y="322" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#0B0E10">No fact may exist only in a runner:</text>
+<text style="white-space:pre" x="1126" y="346" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="450" fill="#3E474E">runners change, the repo stays.</text>
+<text style="white-space:pre" x="48" y="622" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#00895A" letter-spacing="1.8">LIFECYCLE</text>
+<rect x="48" y="634" width="274" height="240" rx="18" fill="#fff" stroke="#DDE3E7" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="82" cy="672" r="16" fill="#00F19F"/>
+<text style="white-space:pre" x="82" y="678" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="800" fill="#0B3A2C" text-anchor="middle">1</text>
+<text style="white-space:pre" x="108" y="678" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="750" fill="#0B0E10">Create</text>
+<text style="white-space:pre" x="68" y="714" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="600" fill="#00895A">create_agent.py &lt;role&gt;</text>
+<text style="white-space:pre" x="68" y="740" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">an invented persona name; the</text>
+<text style="white-space:pre" x="68" y="760" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">memory skeleton copied into</text>
+<text style="white-space:pre" x="68" y="780" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">data/agents/&lt;role&gt;/, never</text>
+<text style="white-space:pre" x="68" y="800" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">overwriting; prints the runner text.</text>
+<text style="white-space:pre" x="68" y="820" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">--new &lt;role&gt; copies</text>
+<text style="white-space:pre" x="68" y="840" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">agents/_template/.</text>
+<path d="M326,754 H352" fill="none" stroke="#00895A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m00895A)"/>
+<rect x="356" y="634" width="274" height="240" rx="18" fill="#fff" stroke="#DDE3E7" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="390" cy="672" r="16" fill="#00F19F"/>
+<text style="white-space:pre" x="390" y="678" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="800" fill="#0B3A2C" text-anchor="middle">2</text>
+<text style="white-space:pre" x="416" y="678" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="750" fill="#0B0E10">Onboard</text>
+<text style="white-space:pre" x="376" y="714" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#00895A">first turn</text>
+<text style="white-space:pre" x="376" y="740" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">pull the repo, read</text>
+<text style="white-space:pre" x="376" y="760" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">agents/README.md ("New agent</text>
+<text style="white-space:pre" x="376" y="780" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">onboarding"), then AGENT.md, then</text>
+<text style="white-space:pre" x="376" y="800" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">memory.md.</text>
+<path d="M633,754 H659" fill="none" stroke="#00895A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m00895A)"/>
+<rect x="663" y="634" width="274" height="240" rx="18" fill="#fff" stroke="#DDE3E7" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="697" cy="672" r="16" fill="#00F19F"/>
+<text style="white-space:pre" x="697" y="678" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="800" fill="#0B3A2C" text-anchor="middle">3</text>
+<text style="white-space:pre" x="723" y="678" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="750" fill="#0B0E10">Work</text>
+<text style="white-space:pre" x="683" y="714" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#00895A">every conversation</text>
+<text style="white-space:pre" x="683" y="740" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">search the graph before answering.</text>
+<text style="white-space:pre" x="683" y="760" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">One agent, one job: hand over to the</text>
+<text style="white-space:pre" x="683" y="780" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">owning role in one line.</text>
+<path d="M941,754 H967" fill="none" stroke="#00895A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m00895A)"/>
+<rect x="971" y="634" width="274" height="240" rx="18" fill="#fff" stroke="#DDE3E7" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="1005" cy="672" r="16" fill="#00F19F"/>
+<text style="white-space:pre" x="1005" y="678" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="800" fill="#0B3A2C" text-anchor="middle">4</text>
+<text style="white-space:pre" x="1031" y="678" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="750" fill="#0B0E10">Remember</text>
+<text style="white-space:pre" x="991" y="714" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#00895A">same turn</text>
+<text style="white-space:pre" x="991" y="740" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">quietly, in the owner's own words.</text>
+<text style="white-space:pre" x="991" y="760" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">Its own reads of the owner stay in</text>
+<text style="white-space:pre" x="991" y="780" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">its log, marked (read).</text>
+<path d="M1248,754 H1274" fill="none" stroke="#00895A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m00895A)"/>
+<rect x="1278" y="634" width="274" height="240" rx="18" fill="#fff" stroke="#DDE3E7" stroke-width="1.5" filter="url(#sh)"/>
+<circle cx="1312" cy="672" r="16" fill="#00F19F"/>
+<text style="white-space:pre" x="1312" y="678" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="800" fill="#0B3A2C" text-anchor="middle">5</text>
+<text style="white-space:pre" x="1338" y="678" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="750" fill="#0B0E10">Commit and push</text>
+<text style="white-space:pre" x="1298" y="714" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#00895A">only its own paths</text>
+<text style="white-space:pre" x="1298" y="740" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">pull first; never git add -A, never</text>
+<text style="white-space:pre" x="1298" y="760" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">force-push. Every surface then sees</text>
+<text style="white-space:pre" x="1298" y="780" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="400" fill="#3E474E">the same memory.</text>
+<rect x="48" y="912" width="1504" height="196" rx="22" fill="#0B0E10"/>
+<text style="white-space:pre" x="72" y="950" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#00F19F" letter-spacing="1.8">AUDITED DAILY  ·  tech-maintainer</text>
+<text style="white-space:pre" x="72" y="982" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#FFFFFF">Keeps every agent honest: what a runner holds, the repo holds too.</text>
+<text style="white-space:pre" x="72" y="1010" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#B7BEC4">Each routine is silent when green. Small mechanical fixes are reported in one line; structural changes only on the owner's yes.</text>
+<rect x="72" y="1036" width="211.2" height="32" rx="16.0" fill="#1A2026" stroke="#2A3239" stroke-width="1.2"/>
+<text style="white-space:pre" x="84" y="1056.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#00F19F">daily-agent-memory-sweep</text>
+<rect x="293.2" y="1036" width="211.2" height="32" rx="16.0" fill="#1A2026" stroke="#2A3239" stroke-width="1.2"/>
+<text style="white-space:pre" x="305.2" y="1056.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#00F19F">daily-routines-alignment</text>
+<rect x="514.4" y="1036" width="148.8" height="32" rx="16.0" fill="#1A2026" stroke="#2A3239" stroke-width="1.2"/>
+<text style="white-space:pre" x="526.4" y="1056.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#00F19F">daily-graph-lint</text>
+<rect x="673.2" y="1036" width="203.4" height="32" rx="16.0" fill="#1A2026" stroke="#2A3239" stroke-width="1.2"/>
+<text style="white-space:pre" x="685.2" y="1056.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#00F19F">daily-repo-health-check</text>
+<rect x="886.6" y="1036" width="258.0" height="32" rx="16.0" fill="#1A2026" stroke="#2A3239" stroke-width="1.2"/>
+<text style="white-space:pre" x="898.6" y="1056.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#00F19F">daily-life-app-freshness-check</text>
+<path d="M1530,912 V882" fill="none" stroke="#00F19F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m00F19F)" stroke-dasharray="5 6"/>
+<rect x="1374.6" y="883.0" width="190.9" height="24" rx="12.0" fill="#FFFFFF" stroke="#00895A" stroke-width="1.2"/>
+<text style="white-space:pre" x="1382.6" y="899.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#00895A">sweeps and alignment checks</text>
+<text style="white-space:pre" x="1544" y="1140" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#6B747B" text-anchor="end">Roles ship without names: the persona is generated by create_agent.py on your machine.</text>
+<text style="white-space:pre" x="56" y="1140" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#6B747B">Personal Agents OS</text>
+</svg>

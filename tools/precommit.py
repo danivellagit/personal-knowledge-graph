@@ -4,7 +4,8 @@
 Blocks a commit when a staged file:
   size     is bigger than 1 MiB (the machine ledgers in data/_gaps/ may grow to 5 MiB)
   layout   does not belong in the repo: logs, databases, archives, keys, caches, build output,
-           media outside tools/<app>/{icons,assets}/, any new top-level entry
+           media outside tools/<app>/{icons,assets}/ (README diagrams: docs/images/*.png|svg only),
+           any new top-level entry
   secrets  contains a credential (gitleaks on the staged diff; regex fallback without gitleaks)
   lint     carries a mechanical graph finding (`tools/lint.py` class MECH) touching that file
   happiness  a data/happiness/*.json that fails `tools/happiness.py validate`, or a data/happiness/*.md recap
@@ -35,13 +36,15 @@ LEDGERS = {"data/_gaps/register.jsonl", "data/_gaps/history.jsonl"}
 TOP_LEVEL = {"AGENTS.md", "CLAUDE.md", "LEGEND.md", "README.md", "anatomy.md", "config.example.yml", "LICENSE",
              "SETUP-WHATSAPP.md",
              ".gitignore", ".gitattributes", ".githooks", ".claude", ".grok", ".obsidian",
-             "agents", "data", "skills", "tools"}
+             "agents", "data", "docs", "skills", "tools"}
 BAD_EXT = {".log", ".db", ".sqlite", ".sqlite3", ".gz", ".tgz", ".zip", ".tar", ".7z", ".rar",
            ".bz2", ".xz", ".pyc", ".pem", ".key", ".p12", ".pfx", ".crt", ".der", ".jks", ".kdbx",
            ".bak", ".tmp", ".swp", ".orig", ".rej", ".patch"}
 MEDIA_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic", ".heif", ".svg", ".ico", ".pdf",
              ".mp4", ".mov", ".m4a", ".mp3", ".ogg", ".opus", ".wav", ".docx", ".xlsx", ".pptx"}
-MEDIA_OK = re.compile(r"^tools/[^/]+/(icons|assets)/")
+# README infographics are the one media exception outside tools/: flat PNG/SVG files in docs/images/ (no subfolders,
+# no photos or documents), so a README diagram does not need a fake app folder.
+MEDIA_OK = re.compile(r"^(tools/[^/]+/(icons|assets)/|docs/images/[^/]+\.(png|svg)$)")
 # Bank data: raw movements never enter the repo; an optional bank-sync folder holds monthly totals + README only.
 BANK_EXPORT_DIR = "data/finance/bank/"
 BANK_EXPORT_OK = {"README.md", "monthly-totals.md", "monthly-totals.json"}
@@ -113,7 +116,7 @@ def check_layout(files):
             bad.append("%s: no images or media under data/ (git history cannot be cleaned). Personal photos "
                        "and documents live in a private folder outside the repo" % p)
         elif ext in MEDIA_EXT and not MEDIA_OK.match(p):
-            bad.append("%s: media/documents only in tools/<app>/icons|assets/; personal files stay "
+            bad.append("%s: media/documents only in tools/<app>/icons|assets/ (or README diagrams in docs/images/*.png|svg); personal files stay "
                        "off-repo (see anatomy.md)" % p)
     return bad
 

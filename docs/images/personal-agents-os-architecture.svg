@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1150" viewBox="0 0 1600 1150" role="img" aria-labelledby="t d"><title id="t">Personal Agents OS: architecture overview</title><desc id="d">The owner talks to a team of AI agents (roles). Agents read optional sources and the knowledge graph, and write every fact back to markdown in git first. Tools enforce the graph's shape. The Life App and Obsidian are views for humans.</desc><defs><filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#0B0E10" flood-opacity="0.08"/></filter><marker id="m00895A" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#00895A"/></marker><marker id="m0093E7" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0093E7"/></marker><marker id="m6B5BE6" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6B5BE6"/></marker><marker id="m9AA1A8" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9AA1A8"/></marker><marker id="mE57F00" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E57F00"/></marker></defs><rect x="1" y="1" width="1598" height="1148" rx="28" fill="#F5F7F8" stroke="#DDE3E7" stroke-width="2"/>
+<text style="white-space:pre" x="56" y="76" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00895A" letter-spacing="2.2">PERSONAL AGENTS OS  ·  1 / 4  ·  ARCHITECTURE</text>
+<text style="white-space:pre" x="56" y="122" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#0B0E10" letter-spacing="-0.6">How it fits together</text>
+<text style="white-space:pre" x="56" y="158" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#3E474E">Memory first, markdown first: every fact lands in plain markdown in git before anything else uses it.</text>
+<rect x="48" y="214" width="300" height="798" rx="22" fill="#E4F3FC" stroke="#BFE3F7" stroke-width="1.5"/>
+<text style="white-space:pre" x="72" y="250" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#0093E7" letter-spacing="1.8">SOURCES</text>
+<text style="white-space:pre" x="72" y="278" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="21" font-weight="750" fill="#0B0E10">Your stream</text>
+<text style="white-space:pre" x="72" y="302" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="500" fill="#6B747B">all optional, wired in config.local.yml</text>
+<rect x="64" y="326" width="268" height="80" rx="14" fill="#fff" stroke="#D3EAF7" stroke-width="1.2"/>
+<text style="white-space:pre" x="82" y="359" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="650" fill="#0B0E10">Chat</text>
+<text style="white-space:pre" x="82" y="382" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#6B747B">WhatsApp, through a local bridge</text>
+<rect x="64" y="422" width="268" height="80" rx="14" fill="#fff" stroke="#D3EAF7" stroke-width="1.2"/>
+<text style="white-space:pre" x="82" y="455" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="650" fill="#0B0E10">Meetings</text>
+<text style="white-space:pre" x="82" y="478" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#6B747B">call transcripts</text>
+<rect x="64" y="518" width="268" height="80" rx="14" fill="#fff" stroke="#D3EAF7" stroke-width="1.2"/>
+<text style="white-space:pre" x="82" y="551" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="650" fill="#0B0E10">Email</text>
+<text style="white-space:pre" x="82" y="574" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#6B747B">person-to-person mail</text>
+<rect x="64" y="614" width="268" height="80" rx="14" fill="#fff" stroke="#D3EAF7" stroke-width="1.2"/>
+<text style="white-space:pre" x="82" y="647" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="650" fill="#0B0E10">Calendar</text>
+<text style="white-space:pre" x="82" y="670" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#6B747B">cadence and routine triggers</text>
+<rect x="64" y="710" width="268" height="80" rx="14" fill="#fff" stroke="#D3EAF7" stroke-width="1.2"/>
+<text style="white-space:pre" x="82" y="743" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="650" fill="#0B0E10">Notes</text>
+<text style="white-space:pre" x="82" y="766" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#6B747B">Notion, a work repo (read-only)</text>
+<rect x="64" y="806" width="268" height="80" rx="14" fill="#fff" stroke="#D3EAF7" stroke-width="1.2"/>
+<text style="white-space:pre" x="82" y="839" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="650" fill="#0B0E10">Body and location</text>
+<text style="white-space:pre" x="82" y="862" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#6B747B">a wearable, phone GPS</text>
+<rect x="64" y="902" width="268" height="80" rx="14" fill="#fff" stroke="#D3EAF7" stroke-width="1.2"/>
+<text style="white-space:pre" x="82" y="935" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="16" font-weight="650" fill="#0B0E10">You</text>
+<text style="white-space:pre" x="82" y="958" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#6B747B">what you tell the agent</text>
+<rect x="420" y="214" width="540" height="84" rx="22" fill="#FFF8CC" stroke="#F2DE5C" stroke-width="1.5"/>
+<text style="white-space:pre" x="444" y="248" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#8A7400" letter-spacing="1.8">YOU, THE OWNER</text>
+<text style="white-space:pre" x="444" y="278" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="15" font-weight="500" fill="#0B0E10">data/_me.md</text>
+<text style="white-space:pre" x="543.0" y="278" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="400" fill="#3E474E">  ·  the point of view of the whole graph</text>
+<rect x="420" y="346" width="540" height="300" rx="22" fill="#EEEBFD" stroke="#D6D0FA" stroke-width="1.5"/>
+<text style="white-space:pre" x="444" y="382" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#6B5BE6" letter-spacing="1.8">TEAM OF AGENTS</text>
+<text style="white-space:pre" x="444" y="410" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="21" font-weight="750" fill="#0B0E10">Roles with a memory</text>
+<rect x="444" y="432" width="156.6" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="456" y="451.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">founder-assistant</text>
+<rect x="608.6" y="432" width="133.2" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="620.6" y="451.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">health-advisor</text>
+<rect x="749.8" y="432" width="125.4" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="761.8" y="451.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">fitness-coach</text>
+<rect x="444" y="470" width="117.6" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="456" y="489.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">psychologist</text>
+<rect x="569.6" y="470" width="141.0" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="581.6" y="489.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">tech-maintainer</text>
+<rect x="718.6" y="470" width="63.0" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="730.6" y="489.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">legal</text>
+<rect x="789.6" y="470" width="102.0" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="801.6" y="489.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">accountant</text>
+<rect x="444" y="508" width="109.8" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="456" y="527.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">best-friend</text>
+<rect x="561.8" y="508" width="133.2" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="573.8" y="527.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">linkedin-coach</text>
+<rect x="703.0" y="508" width="133.2" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="715.0" y="527.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">brand-designer</text>
+<rect x="444" y="546" width="109.8" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="456" y="565.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">web-builder</text>
+<rect x="561.8" y="546" width="141.0" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="573.8" y="565.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">english-teacher</text>
+<rect x="710.8" y="546" width="94.2" height="30" rx="15.0" fill="#fff" stroke="#D6D0FA" stroke-width="1.2"/>
+<text style="white-space:pre" x="722.8" y="565.7" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B0E10">recruiter</text>
+<text style="white-space:pre" x="444" y="602" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#6B5BE6">Skills  </text>
+<text style="white-space:pre" x="484.0" y="602" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">remember-people · graph-audit · notion-sync</text>
+<text style="white-space:pre" x="444" y="628" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#6B5BE6">Routines  </text>
+<text style="white-space:pre" x="506.0" y="628" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="400" fill="#3E474E">agents/&lt;role&gt;/routines/&lt;slug&gt;.md</text>
+<rect x="420" y="712" width="540" height="300" rx="22" fill="#E2FBF1" stroke="#A9EBD0" stroke-width="1.5"/>
+<text style="white-space:pre" x="444" y="748" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#00895A" letter-spacing="1.8">KNOWLEDGE GRAPH</text>
+<text style="white-space:pre" x="444" y="776" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="21" font-weight="750" fill="#0B0E10">data/  ·  markdown in git</text>
+<text style="white-space:pre" x="936" y="748" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#00895A" text-anchor="end">private, gitignored by default</text>
+<rect x="444" y="796" width="65.0" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="454" y="814.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">_me.md</text>
+<rect x="516.0" y="796" width="72.5" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="526.0" y="814.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">people/</text>
+<rect x="595.5" y="796" width="95.0" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="605.5" y="814.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">companies/</text>
+<rect x="697.5" y="796" width="72.5" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="707.5" y="814.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">places/</text>
+<rect x="777.0" y="796" width="72.5" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="787.0" y="814.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">cities/</text>
+<rect x="856.5" y="796" width="72.5" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="866.5" y="814.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">events/</text>
+<rect x="444" y="830" width="72.5" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="454" y="848.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">groups/</text>
+<rect x="523.5" y="830" width="65.0" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="533.5" y="848.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">bonds/</text>
+<rect x="595.5" y="830" width="87.5" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="605.5" y="848.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">passions/</text>
+<rect x="690.0" y="830" width="65.0" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="700.0" y="848.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">roles/</text>
+<rect x="762.0" y="830" width="65.0" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="772.0" y="848.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">terms/</text>
+<rect x="834.0" y="830" width="65.0" height="28" rx="8" fill="#fff" stroke="#A9EBD0" stroke-width="1.2"/>
+<text style="white-space:pre" x="844.0" y="848.5" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="500" fill="#0B3A2C">media/</text>
+<text style="white-space:pre" x="444" y="888" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B3A2C">interactions/&lt;person&gt;/YYYY-MM-DD.md</text>
+<text style="white-space:pre" x="717.0" y="888" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#6B747B">   one day of one relationship</text>
+<text style="white-space:pre" x="444" y="919" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B3A2C">_gaps/</text>
+<text style="white-space:pre" x="490.8" y="919" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#6B747B">   the gap register</text>
+<text style="white-space:pre" x="444" y="950" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B3A2C">agents/&lt;role&gt;/memory.md</text>
+<text style="white-space:pre" x="623.4" y="950" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#6B747B">   each agent's own memory</text>
+<text style="white-space:pre" x="444" y="981" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#0B3A2C">happiness/&lt;area&gt;.json</text>
+<text style="white-space:pre" x="607.8" y="981" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#6B747B">   the Life App's data</text>
+<rect x="1080" y="712" width="472" height="300" rx="22" fill="#FFF2E2" stroke="#F8D3A6" stroke-width="1.5"/>
+<text style="white-space:pre" x="1104" y="748" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#E57F00" letter-spacing="1.8">TOOLS</text>
+<text style="white-space:pre" x="1104" y="776" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="21" font-weight="750" fill="#0B0E10">Code enforces the shape</text>
+<text style="white-space:pre" x="1104" y="816" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="14" font-weight="600" fill="#8A4B00">graph.py</text>
+<text style="white-space:pre" x="1104" y="837" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#3E474E">the only frontmatter reader and writer</text>
+<text style="white-space:pre" x="1104" y="863" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="14" font-weight="600" fill="#8A4B00">lint.py + checks.py</text>
+<text style="white-space:pre" x="1104" y="884" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#3E474E">--fix writes every reverse edge; done at mechanical: 0</text>
+<text style="white-space:pre" x="1104" y="910" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="14" font-weight="600" fill="#8A4B00">gaps.py</text>
+<text style="white-space:pre" x="1104" y="931" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#3E474E">the gap register: what the memory knows it doesn't know</text>
+<text style="white-space:pre" x="1104" y="957" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="14" font-weight="600" fill="#8A4B00">merge.py · rename.py</text>
+<text style="white-space:pre" x="1104" y="978" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#3E474E">one human = one node, placeholder slug to real name</text>
+<rect x="1080" y="214" width="472" height="432" rx="22" fill="#FFFFFF" stroke="#DDE3E7" stroke-width="1.5"/>
+<text style="white-space:pre" x="1104" y="250" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#6B747B" letter-spacing="1.8">VIEWS</text>
+<text style="white-space:pre" x="1104" y="278" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="21" font-weight="750" fill="#0B0E10">For humans</text>
+<rect x="1104" y="300" width="424" height="206" rx="18" fill="#0B0E10"/>
+<text style="white-space:pre" x="1128" y="336" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#00F19F" letter-spacing="1.8">LIFE APP</text>
+<text style="white-space:pre" x="1128" y="368" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#FFFFFF">Your whole life on one screen</text>
+<circle cx="1134" cy="397" r="3.5" fill="#00F19F"/>
+<text style="white-space:pre" x="1148" y="402" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#B7BEC4">Life Health: one score over seven areas</text>
+<circle cx="1134" cy="424" r="3.5" fill="#00F19F"/>
+<text style="white-space:pre" x="1148" y="429" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#B7BEC4">one file, encrypted whole (AES-256-GCM)</text>
+<circle cx="1134" cy="451" r="3.5" fill="#00F19F"/>
+<text style="white-space:pre" x="1148" y="456" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#B7BEC4">static site with ciphertext only</text>
+<circle cx="1134" cy="478" r="3.5" fill="#00F19F"/>
+<text style="white-space:pre" x="1148" y="483" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#B7BEC4">phone home screen and desktop layout</text>
+<circle cx="1466" cy="352" r="30" fill="none" stroke="#2A3239" stroke-width="7"/>
+<path d="M1469.6,322.2 A30,30 0 0 1 1487.0,330.6" fill="none" stroke="#16EC06" stroke-width="7" stroke-linecap="round"/>
+<path d="M1491.5,336.2 A30,30 0 0 1 1495.8,355.1" fill="none" stroke="#16EC06" stroke-width="7" stroke-linecap="round"/>
+<path d="M1494.2,362.1 A30,30 0 0 1 1482.2,377.3" fill="none" stroke="#FFDE00" stroke-width="7" stroke-linecap="round"/>
+<path d="M1475.7,380.4 A30,30 0 0 1 1456.3,380.4" fill="none" stroke="#16EC06" stroke-width="7" stroke-linecap="round"/>
+<path d="M1449.8,377.3 A30,30 0 0 1 1437.8,362.1" fill="none" stroke="#FFDE00" stroke-width="7" stroke-linecap="round"/>
+<path d="M1436.2,355.1 A30,30 0 0 1 1440.5,336.2" fill="none" stroke="#7BA1BB" stroke-width="7" stroke-linecap="round"/>
+<path d="M1445.0,330.6 A30,30 0 0 1 1462.4,322.2" fill="none" stroke="#16EC06" stroke-width="7" stroke-linecap="round"/>
+<text style="white-space:pre" x="1466" y="359" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="20" font-weight="800" fill="#FFFFFF" text-anchor="middle">66</text>
+<rect x="1104" y="524" width="424" height="98" rx="18" fill="#fff" stroke="#DDE3E7" stroke-width="1.2"/>
+<text style="white-space:pre" x="1128" y="562" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#0B0E10">Obsidian graph view</text>
+<text style="white-space:pre" x="1128" y="590" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#6B747B">point a vault at the folder: the graph view runs on it</text>
+<path d="M352,520 H414" fill="none" stroke="#0093E7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m0093E7)"/>
+<rect x="362.0" y="486.0" width="42.1" height="24" rx="12.0" fill="#FFFFFF" stroke="#0093E7" stroke-width="1.2"/>
+<text style="white-space:pre" x="370.0" y="502.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#0093E7">read</text>
+<path d="M690,302 V340" fill="none" stroke="#6B5BE6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m6B5BE6)" marker-start="url(#m6B5BE6)"/>
+<rect x="725.2" y="309.0" width="61.7" height="24" rx="12.0" fill="#FFFFFF" stroke="#6B5BE6" stroke-width="1.2"/>
+<text style="white-space:pre" x="733.2" y="325.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#6B5BE6">you talk</text>
+<path d="M610,650 V704" fill="none" stroke="#00895A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m00895A)"/>
+<rect x="554.9" y="665.0" width="110.1" height="24" rx="12.0" fill="#FFFFFF" stroke="#00895A" stroke-width="1.2"/>
+<text style="white-space:pre" x="562.9" y="681.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#00895A">write, same turn</text>
+<path d="M800,706 V652" fill="none" stroke="#6B5BE6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m6B5BE6)"/>
+<rect x="759.0" y="667.0" width="82.0" height="24" rx="12.0" fill="#FFFFFF" stroke="#6B5BE6" stroke-width="1.2"/>
+<text style="white-space:pre" x="767.0" y="683.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#6B5BE6">search first</text>
+<path d="M966,862 H1074" fill="none" stroke="#E57F00" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mE57F00)" marker-start="url(#mE57F00)"/>
+<rect x="989.6" y="826.0" width="60.7" height="24" rx="12.0" fill="#FFFFFF" stroke="#E57F00" stroke-width="1.2"/>
+<text style="white-space:pre" x="997.6" y="842.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#E57F00">enforce</text>
+<rect x="977.2" y="874.0" width="85.7" height="24" rx="12.0" fill="#FFFFFF" stroke="#E57F00" stroke-width="1.2"/>
+<text style="white-space:pre" x="985.2" y="890.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#E57F00">LEGEND.md</text>
+<path d="M966,742 H1030 V420 H1098" fill="none" stroke="#00895A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m00895A)"/>
+<rect x="991.9" y="588.0" width="76.3" height="24" rx="12.0" fill="#FFFFFF" stroke="#00895A" stroke-width="1.2"/>
+<text style="white-space:pre" x="999.9" y="604.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#00895A">publish.sh</text>
+<path d="M966,770 H1052 V574 H1098" fill="none" stroke="#9AA1A8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m9AA1A8)" stroke-dasharray="5 6"/>
+<rect x="48" y="1040" width="366" height="58" rx="14" fill="#fff" stroke="#DDE3E7" stroke-width="1.2"/>
+<text style="white-space:pre" x="66" y="1065" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00895A">Memory first</text>
+<text style="white-space:pre" x="66" y="1085" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#3E474E">runner memory is mirrored to the repo the same turn</text>
+<rect x="428" y="1040" width="366" height="58" rx="14" fill="#fff" stroke="#DDE3E7" stroke-width="1.2"/>
+<text style="white-space:pre" x="446" y="1065" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00895A">Markdown first</text>
+<text style="white-space:pre" x="446" y="1085" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#3E474E">one fact, one .md file, frontmatter links</text>
+<rect x="807" y="1040" width="366" height="58" rx="14" fill="#fff" stroke="#DDE3E7" stroke-width="1.2"/>
+<text style="white-space:pre" x="825" y="1065" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00895A">The wall</text>
+<text style="white-space:pre" x="825" y="1085" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#3E474E">nothing personal leaves data/</text>
+<rect x="1186" y="1040" width="366" height="58" rx="14" fill="#fff" stroke="#DDE3E7" stroke-width="1.2"/>
+<text style="white-space:pre" x="1204" y="1065" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00895A">No secrets</text>
+<text style="white-space:pre" x="1204" y="1085" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#3E474E">tokens and keys live outside the repo</text>
+<text style="white-space:pre" x="1544" y="1120" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#6B747B" text-anchor="end">Roles ship without names; personas are generated on your machine.</text>
+<text style="white-space:pre" x="56" y="1120" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#6B747B">Personal Agents OS</text>
+</svg>

@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1060" viewBox="0 0 1600 1060" role="img" aria-labelledby="t d"><title id="t">Personal Agents OS: from data to the Life App</title><desc id="d">Agents write one JSON file per life area in data/happiness/. publish.sh validates, injects, builds and encrypts the app, regenerates the recaps and pushes only ciphertext to a separate Pages repo. The phone or desktop decrypts it with the password. Optional write-back saves small event files to a private repo that an agent folds into data/.</desc><defs><filter id="sh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#0B0E10" flood-opacity="0.08"/></filter><marker id="m00895A" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#00895A"/></marker><marker id="m6B5BE6" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6B5BE6"/></marker><marker id="m6B747B" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6B747B"/></marker><marker id="mE57F00" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E57F00"/></marker></defs><rect x="1" y="1" width="1598" height="1058" rx="28" fill="#F5F7F8" stroke="#DDE3E7" stroke-width="2"/>
+<text style="white-space:pre" x="56" y="76" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#00895A" letter-spacing="2.2">PERSONAL AGENTS OS  ·  4 / 4  ·  THE LIFE APP</text>
+<text style="white-space:pre" x="56" y="122" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="38" font-weight="800" fill="#0B0E10" letter-spacing="-0.6">From data/ to an encrypted app</text>
+<text style="white-space:pre" x="56" y="158" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="400" fill="#3E474E">One file per area, one owner per file. The published site holds only ciphertext; the password opens it in the browser.</text>
+<circle cx="62" cy="224" r="14" fill="#6B5BE6"/>
+<text style="white-space:pre" x="62" y="230" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="800" fill="#FFFFFF" text-anchor="middle">1</text>
+<text style="white-space:pre" x="86" y="229" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="750" fill="#0B0E10">Data</text>
+<text style="white-space:pre" x="136.640625" y="229" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="14" font-weight="500" fill="#6B747B">data/  (private)</text>
+<rect x="48" y="256" width="520" height="640" rx="22" fill="#fff" stroke="#DDE3E7" stroke-width="1.5"/>
+<text style="white-space:pre" x="72" y="290" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="14" font-weight="600" fill="#3B2FA8">data/happiness/&lt;area&gt;.json</text>
+<text style="white-space:pre" x="544" y="290" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#6B747B" text-anchor="end">owner agent</text>
+<rect x="64" y="312" width="488" height="38" rx="10" fill="#F5F7F8"/>
+<circle cx="84" cy="331" r="6" fill="#16EC06"/>
+<text style="white-space:pre" x="100" y="336" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="650" fill="#0B0E10">Body</text>
+<text style="white-space:pre" x="218" y="336" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#3E474E">corpo.json</text>
+<text style="white-space:pre" x="538" y="336" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#3B2FA8" text-anchor="end">fitness-coach</text>
+<rect x="64" y="356" width="488" height="38" rx="10" fill="#F5F7F8"/>
+<circle cx="84" cy="375" r="6" fill="#FF5A6E"/>
+<text style="white-space:pre" x="100" y="380" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="650" fill="#0B0E10">Health</text>
+<text style="white-space:pre" x="218" y="380" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#3E474E">medico.json</text>
+<text style="white-space:pre" x="538" y="380" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#3B2FA8" text-anchor="end">health-advisor</text>
+<rect x="64" y="400" width="488" height="38" rx="10" fill="#F5F7F8"/>
+<circle cx="84" cy="419" r="6" fill="#A98BFF"/>
+<text style="white-space:pre" x="100" y="424" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="650" fill="#0B0E10">Mind</text>
+<text style="white-space:pre" x="218" y="424" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#3E474E">mente.json</text>
+<text style="white-space:pre" x="538" y="424" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#3B2FA8" text-anchor="end">psychologist</text>
+<rect x="64" y="444" width="488" height="38" rx="10" fill="#F5F7F8"/>
+<circle cx="84" cy="463" r="6" fill="#2FA6DE"/>
+<text style="white-space:pre" x="100" y="468" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="650" fill="#0B0E10">Work</text>
+<text style="white-space:pre" x="218" y="468" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#3E474E">lavoro.json</text>
+<text style="white-space:pre" x="538" y="468" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#3B2FA8" text-anchor="end">founder-assistant, linkedin-coach</text>
+<rect x="64" y="488" width="488" height="38" rx="10" fill="#F5F7F8"/>
+<circle cx="84" cy="507" r="6" fill="#FFB020"/>
+<text style="white-space:pre" x="100" y="512" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="650" fill="#0B0E10">Finances</text>
+<text style="white-space:pre" x="218" y="512" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#3E474E">finanze.json</text>
+<text style="white-space:pre" x="538" y="512" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#3B2FA8" text-anchor="end">accountant</text>
+<rect x="64" y="532" width="488" height="38" rx="10" fill="#F5F7F8"/>
+<circle cx="84" cy="551" r="6" fill="#FF5E86"/>
+<text style="white-space:pre" x="100" y="556" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="650" fill="#0B0E10">Relationships</text>
+<text style="white-space:pre" x="218" y="556" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#3E474E">relazioni.json</text>
+<text style="white-space:pre" x="538" y="556" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#3B2FA8" text-anchor="end">best-friend</text>
+<rect x="64" y="576" width="488" height="38" rx="10" fill="#F5F7F8"/>
+<circle cx="84" cy="595" r="6" fill="#00C98A"/>
+<text style="white-space:pre" x="100" y="600" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="650" fill="#0B0E10">Growth</text>
+<text style="white-space:pre" x="218" y="600" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#3E474E">crescita.json</text>
+<text style="white-space:pre" x="538" y="600" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#3B2FA8" text-anchor="end">best-friend</text>
+<rect x="64" y="620" width="488" height="38" rx="10" fill="#F5F7F8"/>
+<circle cx="84" cy="639" r="6" fill="#7BA1BB"/>
+<text style="white-space:pre" x="100" y="644" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="650" fill="#0B0E10">Life</text>
+<text style="white-space:pre" x="218" y="644" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#3E474E">vita.json</text>
+<text style="white-space:pre" x="538" y="644" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#3B2FA8" text-anchor="end">best-friend</text>
+<rect x="64" y="664" width="488" height="38" rx="10" fill="#F5F7F8"/>
+<circle cx="84" cy="683" r="6" fill="#0B0E10"/>
+<text style="white-space:pre" x="100" y="688" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14.5" font-weight="650" fill="#0B0E10">Home recap</text>
+<text style="white-space:pre" x="218" y="688" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#3E474E">weekly-summary.json</text>
+<text style="white-space:pre" x="538" y="688" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#3B2FA8" text-anchor="end">the Monday recap</text>
+<text style="white-space:pre" x="72" y="722" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="650" fill="#3E474E">The build also reads markdown, when present:</text>
+<text style="white-space:pre" x="72" y="746" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="450" fill="#00895A">data/body/ (+ labs/)   data/training/   data/events/</text>
+<text style="white-space:pre" x="72" y="767" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="450" fill="#00895A">data/people/ (birthday:)   data/health/*.md</text>
+<text style="white-space:pre" x="72" y="788" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12.5" font-weight="450" fill="#00895A">data/finance/scadenzario.md (deadlines)</text>
+<text style="white-space:pre" x="72" y="876" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#6B747B">An agent writes only its own file, only facts it has a source for.</text>
+<circle cx="654" cy="224" r="14" fill="#E57F00"/>
+<text style="white-space:pre" x="654" y="230" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="800" fill="#FFFFFF" text-anchor="middle">2</text>
+<text style="white-space:pre" x="678" y="229" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="750" fill="#0B0E10">Build</text>
+<text style="white-space:pre" x="732.125" y="229" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="14" font-weight="500" fill="#6B747B">publish.sh</text>
+<rect x="640" y="256" width="460" height="640" rx="22" fill="#FFF2E2" stroke="#F8D3A6" stroke-width="1.5"/>
+<rect x="660" y="280" width="420" height="74" rx="14" fill="#fff" stroke="#F8D3A6" stroke-width="1.2"/>
+<text style="white-space:pre" x="682" y="310" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#0B0E10">validate</text>
+<text style="white-space:pre" x="1060" y="310" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="500" fill="#8A4B00" text-anchor="end">happiness.py validate</text>
+<text style="white-space:pre" x="682" y="332" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#3E474E">invalid data: nothing is built</text>
+<path d="M870,356 V366" fill="none" stroke="#E57F00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mE57F00)"/>
+<rect x="660" y="368" width="420" height="74" rx="14" fill="#fff" stroke="#F8D3A6" stroke-width="1.2"/>
+<text style="white-space:pre" x="682" y="398" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#0B0E10">inject</text>
+<text style="white-space:pre" x="1060" y="398" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="500" fill="#8A4B00" text-anchor="end">happiness.py inject</text>
+<text style="white-space:pre" x="682" y="420" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#3E474E">the area data goes into the app page</text>
+<path d="M870,444 V454" fill="none" stroke="#E57F00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mE57F00)"/>
+<rect x="660" y="456" width="420" height="92" rx="14" fill="#fff" stroke="#F8D3A6" stroke-width="1.2"/>
+<text style="white-space:pre" x="682" y="486" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#0B0E10">build + encrypt</text>
+<text style="white-space:pre" x="1060" y="486" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="500" fill="#8A4B00" text-anchor="end">build.mjs</text>
+<text style="white-space:pre" x="682" y="508" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#3E474E">esbuild bundles ONE file, encrypted whole: AES-256-GCM,</text>
+<text style="white-space:pre" x="682" y="526" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#3E474E">key from PBKDF2-SHA256</text>
+<path d="M870,550 V560" fill="none" stroke="#E57F00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mE57F00)"/>
+<rect x="660" y="562" width="420" height="74" rx="14" fill="#fff" stroke="#F8D3A6" stroke-width="1.2"/>
+<text style="white-space:pre" x="682" y="592" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#0B0E10">recap</text>
+<text style="white-space:pre" x="1060" y="592" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="500" fill="#8A4B00" text-anchor="end">happiness.py recap</text>
+<text style="white-space:pre" x="682" y="614" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#3E474E">regenerates the .md recaps next to the JSON</text>
+<path d="M870,638 V648" fill="none" stroke="#E57F00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mE57F00)"/>
+<rect x="660" y="650" width="420" height="74" rx="14" fill="#fff" stroke="#F8D3A6" stroke-width="1.2"/>
+<text style="white-space:pre" x="682" y="680" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#0B0E10">publish</text>
+<text style="white-space:pre" x="1060" y="680" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="12" font-weight="500" fill="#8A4B00" text-anchor="end">only if the build changed</text>
+<text style="white-space:pre" x="682" y="702" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#3E474E">one commit to your separate GitHub Pages repo</text>
+<rect x="660" y="742" width="420" height="72" rx="14" fill="#0B0E10"/>
+<text style="white-space:pre" x="682" y="774" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="13.5" font-weight="600" fill="#00F19F">verify.mjs</text>
+<text style="white-space:pre" x="763.0" y="774" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#FFFFFF">  headless check at phone size</text>
+<text style="white-space:pre" x="682" y="796" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="450" fill="#B7BEC4">a wrong password is refused; every tab and area opens</text>
+<circle cx="1186" cy="224" r="14" fill="#00F19F"/>
+<text style="white-space:pre" x="1186" y="230" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="800" fill="#0B3A2C" text-anchor="middle">3</text>
+<text style="white-space:pre" x="1210" y="229" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="750" fill="#0B0E10">The app</text>
+<text style="white-space:pre" x="1290.828125" y="229" font-family="'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace" font-size="14" font-weight="500" fill="#6B747B">phone + desktop</text>
+<rect x="1172" y="256" width="380" height="640" rx="22" fill="#0B0E10"/>
+<rect x="1206" y="290" width="150" height="300" rx="26" fill="#0B0E10" stroke="#3A444C" stroke-width="3"/>
+<rect x="1256" y="300" width="50" height="8" rx="4" fill="#2A3239"/>
+<circle cx="1281.0" cy="390" r="44" fill="none" stroke="#2C353C" stroke-width="8"/>
+<path d="M1285.4,346.2 A44,44 0 0 1 1312.5,359.3" fill="none" stroke="#16EC06" stroke-width="8" stroke-linecap="round"/>
+<path d="M1318.0,366.1 A44,44 0 0 1 1324.7,395.5" fill="none" stroke="#16EC06" stroke-width="8" stroke-linecap="round"/>
+<path d="M1322.7,404.0 A44,44 0 0 1 1304.0,427.5" fill="none" stroke="#FFDE00" stroke-width="8" stroke-linecap="round"/>
+<path d="M1296.0,431.4 A44,44 0 0 1 1266.0,431.4" fill="none" stroke="#16EC06" stroke-width="8" stroke-linecap="round"/>
+<path d="M1258.0,427.5 A44,44 0 0 1 1239.3,404.0" fill="none" stroke="#FFDE00" stroke-width="8" stroke-linecap="round"/>
+<path d="M1237.3,395.5 A44,44 0 0 1 1244.0,366.1" fill="none" stroke="#7BA1BB" stroke-width="8" stroke-linecap="round"/>
+<path d="M1249.5,359.3 A44,44 0 0 1 1276.6,346.2" fill="none" stroke="#16EC06" stroke-width="8" stroke-linecap="round"/>
+<text style="white-space:pre" x="1281.0" y="399" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="26" font-weight="800" fill="#FFFFFF" text-anchor="middle">66</text>
+<rect x="1224" y="460" width="114" height="18" rx="6" fill="#1A2026"/>
+<rect x="1224" y="460" width="91" height="18" rx="6" fill="#16EC06" opacity="0.85"/>
+<rect x="1224" y="488" width="114" height="18" rx="6" fill="#1A2026"/>
+<rect x="1224" y="488" width="71" height="18" rx="6" fill="#FFDE00" opacity="0.85"/>
+<rect x="1224" y="516" width="114" height="18" rx="6" fill="#1A2026"/>
+<rect x="1224" y="516" width="84" height="18" rx="6" fill="#16EC06" opacity="0.85"/>
+<rect x="1224" y="544" width="114" height="18" rx="6" fill="#1A2026"/>
+<rect x="1224" y="544" width="57" height="18" rx="6" fill="#FFDE00" opacity="0.85"/>
+<text style="white-space:pre" x="1281.0" y="614" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#B7BEC4" text-anchor="middle">phone: home screen app</text>
+<rect x="1380" y="290" width="140" height="140" rx="16" fill="#1A2026" stroke="#2A3239" stroke-width="1.2"/>
+<rect x="1436" y="324" width="28" height="22" rx="4" fill="#00F19F"/><path d="M1441,324 v-6 a9,9 0 0 1 18,0 v6" fill="none" stroke="#00F19F" stroke-width="3.5"/>
+<rect x="1398" y="366" width="104" height="22" rx="6" fill="#0B0E10" stroke="#2A3239" stroke-width="1"/>
+<text style="white-space:pre" x="1408" y="382" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#B7BEC4">••••••••</text>
+<text style="white-space:pre" x="1450" y="414" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#7F888F" text-anchor="middle">password</text>
+<rect x="1380" y="450" width="140" height="96" rx="10" fill="#0B0E10" stroke="#3A444C" stroke-width="2.5"/>
+<rect x="1388" y="458" width="30" height="80" rx="5" fill="#1A2026"/>
+<rect x="1426" y="460" width="38" height="32" rx="5" fill="#1A2026"/>
+<rect x="1470" y="460" width="38" height="32" rx="5" fill="#1A2026"/>
+<rect x="1426" y="500" width="38" height="32" rx="5" fill="#1A2026"/>
+<rect x="1470" y="500" width="38" height="32" rx="5" fill="#1A2026"/>
+<rect x="1432" y="553" width="36" height="10" rx="3" fill="#3A444C"/>
+<text style="white-space:pre" x="1450" y="590" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.5" font-weight="500" fill="#B7BEC4" text-anchor="middle">desktop: 1024 px +</text>
+<circle cx="1212" cy="651" r="3.5" fill="#00F19F"/>
+<text style="white-space:pre" x="1226" y="656" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#FFFFFF">Life Health: one score over seven areas</text>
+<circle cx="1212" cy="681" r="3.5" fill="#00F19F"/>
+<text style="white-space:pre" x="1226" y="686" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#FFFFFF">a static site that holds only ciphertext</text>
+<circle cx="1212" cy="711" r="3.5" fill="#00F19F"/>
+<text style="white-space:pre" x="1226" y="716" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#FFFFFF">the password decrypts it in the browser</text>
+<circle cx="1212" cy="741" r="3.5" fill="#00F19F"/>
+<text style="white-space:pre" x="1226" y="746" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" font-weight="450" fill="#FFFFFF">without the password, the site is noise</text>
+<text style="white-space:pre" x="1206" y="856" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#FF9F2E">Password and salt never go into git.</text>
+<path d="M574,576 H632" fill="none" stroke="#6B5BE6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m6B5BE6)"/>
+<rect x="560.1" y="538.0" width="87.9" height="24" rx="12.0" fill="#FFFFFF" stroke="#6B5BE6" stroke-width="1.2"/>
+<text style="white-space:pre" x="568.1" y="554.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#6B5BE6">agents write</text>
+<path d="M1106,576 H1164" fill="none" stroke="#00895A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m00895A)"/>
+<rect x="1098.4" y="538.0" width="75.2" height="24" rx="12.0" fill="#FFFFFF" stroke="#00895A" stroke-width="1.2"/>
+<text style="white-space:pre" x="1106.4" y="554.3" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#00895A">ciphertext</text>
+<path d="M1362.0,902 V966 H308.0 V904" fill="none" stroke="#6B747B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#m6B747B)" stroke-dasharray="6 7"/>
+<rect x="290" y="941" width="1020" height="50" rx="25" fill="#fff" stroke="#DDE3E7" stroke-width="1.5"/>
+<text style="white-space:pre" x="396.3" y="973" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0B0E10">Optional write-back, off by default:  </text>
+<text style="white-space:pre" x="624.7" y="973" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="400" fill="#3E474E">a tap (a pill taken, a weigh-in) → an event file in your private repo → an agent folds it into data/</text>
+<text style="white-space:pre" x="1544" y="1030" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#6B747B" text-anchor="end">Ships with fake sample data (every value says "sample"); setup.sh copies it into data/happiness/ until agents write real values.</text>
+<text style="white-space:pre" x="56" y="1030" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#6B747B">Personal Agents OS</text>
+</svg>
