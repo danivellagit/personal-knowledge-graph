@@ -23,7 +23,10 @@ Steps of the copy (any failure stops the run with exit code != 0 and nothing com
   1. source: read files from the source repo's last COMMIT (git show HEAD:path), never its working tree
   2. template: must be a clean git worktree; create/reset the branch sync/life-app-<YYYY-MM-DD> from origin/<--base>
   3. copy every allowlisted file that differs (SYNC); HOLD paths are template-owned and never overwritten;
-     PENDING paths are reported but not copied while the source still carries personal values in them
+     PENDING paths are reported but not copied while the source still carries personal values in them.
+     The template is ENGLISH (since 2026-10-30): a changed SYNC file whose new content brings Italian words its
+     template version does not have (ITALIAN below) stops the run, nothing committed; move that file to HOLD and
+     port the change by hand, translated. Anything ported by hand (HOLD, --detect items) lands translated to English.
   4. leak check over every tracked + new file of the template worktree:
        - denylist built AT RUNTIME from the source repo (never written here): owner name/short/aliases from
          data/_me.md, every full name in data/people/, company names in data/companies/, agent personas
@@ -56,11 +59,21 @@ SYNC = [
     "tools/happiness_eval.mjs", "tools/config.py", "tools/template_sync.py", "tools/template_sync.gitleaks.toml",
 ]
 # template-owned: written for template users (or the template's own copy of the health page; an instance may build
-# from a page kept elsewhere, life_app.health_page), never overwritten by a sync
+# from a page kept elsewhere, life_app.health_page), never overwritten by a sync. HOLD wins over SYNC: a path on both
+# is never copied, and --detect lists its changes as pending items to port by hand, translated to English.
 HOLD = [
     "tools/life-app/README.md", "tools/life-app/DATA-MODEL.md", "tools/life-app/sample-data/*",
     "tools/life-app/src/health/*", "tools/life-app/publish.sh", "tools/life-app/setup.sh", "tools/life-app/verify.mjs",
     "tools/life-app/make_sample_data.py", "tools/happiness.py",
+    # translated to English in the template (2026-10-30); build.mjs and src/health/health-page.tsx go together
+    "tools/life-app/build.mjs", "tools/life-app/shell.html", "tools/life-app/manifest.webmanifest",
+    "tools/life-app/life_config.py", "tools/life-app/*.fragments.txt",
+    "tools/life-app/archive.mjs", "tools/life-app/archive-patches.mjs", "tools/life-app/misure.mjs",
+    "tools/life-app/misure-patches.mjs", "tools/life-app/steps-patches.mjs", "tools/life-app/training.mjs",
+    "tools/life-app/training-patches.mjs", "tools/life-app/src/app.tsx", "tools/life-app/src/happy-orb.tsx",
+    "tools/life-app/src/history.ts", "tools/life-app/src/pill-bridge.mjs", "tools/life-app/src/scores.ts",
+    # template-only images: README screenshots (sample data) and infographics
+    "tools/life-app/assets/screenshots/*", "docs/images/*",
 ]
 # shared in principle, but the source still has personal values in them: reported, not copied. Add a file here only
 # while the source repo has not moved its personal values into config/data yet (empty since 2026-10-26).
@@ -71,6 +84,11 @@ NEVER = ["tools/life-app/instance.yml", "config.local.yml", "*/node_modules/*", 
 IMAGE_OK = ["tools/life-app/icons/*.png"]
 IMG_EXT = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic", ".bmp", ".tif", ".tiff", ".avif")
 TEXT_SKIP = ("package-lock.json",)
+# Italian words that only occur in prose (UI strings, comments), not in the template's Italian data keys (corpo,
+# salute, oggi...): a changed SYNC file that gains one of them is Italian text, see step 3
+ITALIAN = re.compile(r"(?<!\w)(della|delle|degli|dello|nella|nelle|negli|sono|perch[eé]|più|già|ancora|senza|questa|"
+                     r"questo|quello|quella|niente|nessun[aoe]?|hai|ieri|domani|giorni|settiman[ae]|ultim[aoi]|"
+                     r"aggiornat[aoie]|è)(?!\w)", re.I)
 # identity of every commit this script makes: --author "Name <user@users.noreply.github.com>" (or TEMPLATE_SYNC_AUTHOR,
 # or the template worktree's git config). The email MUST be a GitHub noreply address; the name is the only personal
 # value allowed in commit metadata, and in LICENSE (the copyright line) the only file where it may appear.
@@ -339,8 +357,8 @@ def classify(path, cfg):
     for r in cfg["rules"]:
         if r["mode"] == "exclude" and r["_rx"].match(path): return "exclude", None, r
     if match(path, NEVER): return "exclude", None, {"why": "NEVER list"}
+    if match(path, HOLD): return "anonymize", path, {"note": "HOLD: template-owned English version, port by hand, translated"}
     if match(path, SYNC): return "generic", path, {"note": "SYNC list: copied verbatim by the sync step"}
-    if match(path, HOLD): return "anonymize", path, {"note": "HOLD: template-owned version, update it by hand"}
     for r in cfg["rules"]:
         m = r["_rx"].match(path)
         if m and r["mode"] != "exclude": return r["mode"], target(r, m), r
@@ -552,13 +570,17 @@ def main():
         print("   on %s from %s" % (branch, base))
 
     print("== 3. copy")
-    changed, pending, held = [], [], []
+    changed, pending, held, italian = [], [], [], []
     for f in files:
         if match(f, HOLD): held.append(f); continue
         data, dst = show(src, f), os.path.join(tpl, f)
         if os.path.exists(dst) and open(dst, "rb").read() == data: continue
         if match(f, PENDING):
             pending.append(f); continue
+        if f != "tools/template_sync.py":   # the template is English: no new Italian words in a copied file
+            new = {w.lower() for w in ITALIAN.findall(data.decode("utf-8", "ignore"))}
+            old = {w.lower() for w in ITALIAN.findall(open(dst, encoding="utf-8", errors="ignore").read())} if os.path.exists(dst) else set()
+            if new - old: italian.append("%s: %s" % (f, ", ".join(sorted(new - old)[:8]))); continue
         changed.append(f)
         if not a.dry_run:
             os.makedirs(os.path.dirname(dst), exist_ok=True); open(dst, "wb").write(data)
@@ -566,6 +588,12 @@ def main():
     for f in changed: print("   copied  " + f)
     for f in pending: print("   PENDING " + f + " (differs; source not config-driven yet, not copied)")
     if not changed: print("   nothing new to copy")
+    if italian:
+        print("\n".join("   ITALIAN " + h for h in italian))
+        if not a.dry_run:
+            git(tpl, "checkout", "-q", "--", "."); git(tpl, "clean", "-qfd", "--", "tools")
+            raise SystemExit("FAILED: %d file(s) would bring Italian text into the English template; nothing committed. "
+                             "Add them to HOLD and port the change by hand, translated." % len(italian))
 
     print("== 4. leak check")
     terms = denylist(src)
