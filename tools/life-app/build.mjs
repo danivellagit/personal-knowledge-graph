@@ -403,7 +403,11 @@ writeFileSync(join(work, "gen.ts"), genWith(histOld));
   const rows = H.computeHistory(bodyDays), today = H.DATA_TODAY, by = new Map(histOld.map((r) => [r.date, r]));
   for (const r of rows) { const o = by.get(r.date); if (!o || r.date === today || r.n >= o.n) by.set(r.date, r); }
   const merged = [...by.values()].filter((r) => r.date <= today).sort((a, b) => (a.date < b.date ? -1 : 1));
-  writeFileSync(HIST_FILE, JSON.stringify(merged, null, 0).replace(/\},\{/g, "},\n{") + "\n");
+  // read-only builds (HAPPINESS_NO_COMMIT=1, e.g. a frequent live-publish job) keep the merged rows in memory only:
+  // nothing would commit the file, and a dirty copy in the main checkout breaks the next pull --autostash
+  const histTxt = JSON.stringify(merged, null, 0).replace(/\},\{/g, "},\n{") + "\n";
+  const histRO = process.env.HAPPINESS_NO_COMMIT === "1" || process.env.LIFE_HEALTH_NO_WRITE === "1";
+  if (!histRO && (!existsSync(HIST_FILE) || readFileSync(HIST_FILE, "utf8") !== histTxt)) writeFileSync(HIST_FILE, histTxt);
   writeFileSync(join(work, "gen.ts"), genWith(merged));
   console.log(`corpo history: ${merged.length} days (${merged[0]?.date} .. ${merged[merged.length - 1]?.date})`);
 }

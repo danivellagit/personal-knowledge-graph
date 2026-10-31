@@ -19,6 +19,13 @@ the morning window and sends at the first run where the owner is awake and the w
 night's main sleep; a small marker file outside the repo (today's date, written after sending) makes every
 later run that day do nothing.
 
+**Up for good, whole night.** It waits until the owner is up for good, not the first brief wake-up (an
+early wake followed by falling back asleep is common). It combines all of last night's sleep sessions from
+the wearable: a second session after a short wake counts as the same night. Later in the morning it does one
+silent recheck (no message): it re-reads the night and updates the body data if the wearable synced more,
+but never overwrites a manual correction (a day flagged `sleepCorrected` keeps its sleep fields). When the
+owner says they slept longer, trust them.
+
 **When it stays silent.** Silent if the owner is not awake yet or the night has not synced (it tries again on the next run), if today's check was already sent, or if there is no new night.
 
 **Repo.** If it writes to the repo it pulls first and commits + pushes only its own paths at the end
