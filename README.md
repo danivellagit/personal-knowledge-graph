@@ -71,7 +71,7 @@ The graph mechanics described below exist to serve this rule. They don't replace
 
 **Optional modules**, each switched on in `config.local.yml` and documented in [`anatomy.md`](anatomy.md):
 
-- **Agents**: thirteen ready-made roles with a memory, each with suggested routines ([details below](#agents-memory-and-routines)).
+- **Agents**: fourteen ready-made roles with a memory, each with suggested routines ([details below](#agents-memory-and-routines)).
 - **The body layer**: wearable data (sleep, heart, sessions) becomes one node per day and is matched by time to who you saw and where. It also includes a food log, a training log and lab reports (`tools/body.py`, `body-pull.sh`, `food.py`, `calories.py`, `sleep_fields.py`).
 - **The location layer**: your phone's GPS (through the Overland app and a small receiver you host) plus a Google Maps Timeline export, both kept outside the repo. A meeting can get a place without anyone mentioning it (`tools/location.py`, `location-pull.sh`).
 - **[The Life App](#the-life-app)**: your whole life on one encrypted phone screen.
@@ -185,14 +185,14 @@ personal-knowledge-graph/
 
 An agent here is **a role with a memory**. It talks to you, reads the parts of the graph its job needs, and writes back what it learns, so each conversation starts where the last one ended. The graph is the shared memory, and an agent is one way of using it. The full rules are in [`agents/README.md`](agents/README.md).
 
-**Thirteen roles ship ready to use, without names:**
+**Fourteen roles ship ready to use, without names:**
 
 | | | | |
 | --- | --- | --- | --- |
 | `fitness-coach` | `psychologist` | `founder-assistant` | `linkedin-coach` |
 | `best-friend` | `brand-designer` | `accountant` | `health-advisor` |
 | `web-builder` | `tech-maintainer` | `english-teacher` | `recruiter` |
-| `legal` | | | |
+| `legal` | `agent-manager` | | |
 
 Each role comes with:
 

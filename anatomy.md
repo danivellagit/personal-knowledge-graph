@@ -202,8 +202,9 @@ medications; never changes a medication, not a doctor), `best-friend` (plain com
 daily-life errands; never handles payment details or passwords), `tech-maintainer` (the repo,
 its tools, git, routines and the daily memory sweep), `english-teacher` (language practice,
 corrections logged, CEFR evidence), `recruiter` (CVs, interviews, the pipeline; only skills and
-experience count) and `legal` (legal documents, open matters and deadlines, drafts; a source for every
-law, not binding advice). The persona name is generated when the owner creates the agent
+experience count) `legal` (legal documents, open matters and deadlines, drafts; a source for every
+law, not binding advice) and `agent-manager` (status, weekly retrospectives and coordination of the
+other agents; does none of their work). The persona name is generated when the owner creates the agent
 (`python3 tools/agents/create_agent.py <role>`); see `agents/README.md`.
 
 Rules every agent inherits: `CLAUDE.md` applies in full (the wall, quotes vs reads, never

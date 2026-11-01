@@ -8,7 +8,7 @@ An agent here is a role with a memory: it talks to the owner, reads the parts of
 job needs, and writes back what it learns, so the next conversation starts where the last one
 ended. The graph (`data/`) is the shared memory; an agent is a way of using it.
 
-The thirteen shipped here are **roles, ready to use, without names**: each one has its job, its lane
+The fourteen shipped here are **roles, ready to use, without names**: each one has its job, its lane
 (what is not its job and who owns it), what it must remember and where, a memory skeleton and the
 routines it typically runs. They are an optional module (`agents.enabled` in `config.local.yml`).
 The persona (a name with a surname, an age, a city) is **generated when you create the agent**, not
@@ -183,6 +183,7 @@ Agent memory files link to it with `person: "[[_me]]"` so they are never orphans
 | [english-teacher](english-teacher/AGENT.md) | English practice between real lessons (or instead): conversation on the owner's real life, corrections logged, drills, business chunks, mock speaking tests against CEFR, feedback on a real email; speaks English; never claims to be a real teacher | claude-code, any chat model (voice) | a transcript connector for real lessons, a voice channel |
 | [recruiter](recruiter/AGENT.md) | hiring: CV screening against the role, interview kits and scorecards, slots, the pipeline; judges only skills and experience, never invents a candidate fact, never contacts anyone without a yes; candidate data never in this repo | claude-code, any chat model | a pipeline database or ATS connector, calendar and mail connectors |
 | [legal](legal/AGENT.md) | legal matters: explains the documents the owner receives, keeps the open matters and deadlines, prepares calls with the real lawyers, drafts letters; cites a source for every law (reference texts in `legal/knowledge/`), unknown is UNKNOWN; not binding advice, the lawyer on each file decides; may be modelled on the owner's real lawyer, never claims to be them; never sends without a yes | claude-code, telegram, any chat model | mail, calendar and transcript connectors, official reference texts for the jurisdiction |
+| [agent-manager](agent-manager/AGENT.md) | manages the other agents and does none of their work: status on demand, a weekly retrospective (mistakes, communication, what went well, 1-3 proposals per agent), coordination of dropped handovers and clashes, an honest lane map; proposes changes to the owner, never edits another agent's files or routines | claude-code, any chat model | a way to message the other agents, read access to their transcripts and routine runs |
 
 ## Adding an agent
 

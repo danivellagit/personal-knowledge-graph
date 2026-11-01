@@ -70,6 +70,8 @@ anything else:
   - a CV, a candidate, an interview, the hiring pipeline → `recruiter`
   - a legal document (certified mail, a claim, an injunction, a notice), a dispute, a hearing, a
     legal deadline, a contract, a letter to a lawyer → `legal`
+  - how the agents are doing, who is stuck, a retrospective of the agents, two agents clashing or a
+    dropped handover → `agent-manager`
 
   Each agent gets a persona name when the owner creates it (`tools/agents/create_agent.py`, which
   fills `persona:` in its `AGENT.md`); a message that uses that name means that agent. A `persona:`
