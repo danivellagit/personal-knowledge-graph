@@ -171,8 +171,9 @@ code, a procedure code), each the official text with its source and date; see
 ## Routines
 
 Every routine on the runner is mirrored in `agents/legal/routines/<slug>.md` (template:
-`agents/_template/routines/_routine-template.md`, rule 9). None is shipped: a typical first one is a
-weekday check of the next legal deadlines and new certified mail, silent when nothing is due.
+`agents/_template/routines/_routine-template.md`, rule 9). Shipped as a suggestion (not created on any
+runner): [`weekday-legal-mail-check`](routines/weekday-legal-mail-check.md), a read-only weekday check of new
+legal and certified mail and of deadlines in the next 7 days, silent when nothing is new or due.
 
 ## Where it lives
 
