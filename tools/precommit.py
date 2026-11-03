@@ -8,12 +8,14 @@ Blocks a commit when a staged file:
            any new top-level entry
   secrets  contains a credential (gitleaks on the staged diff; regex fallback without gitleaks)
   lint     carries a mechanical graph finding (`tools/lint.py` class MECH) touching that file
+  bank     adds a full IBAN (mod-97 valid) or a card number (13-19 digits, Luhn-valid) anywhere; or puts a raw bank
+           export, a non-markdown file or a UUID under data/finance/banks/ (layout)
   happiness  a data/happiness/*.json that fails `tools/happiness.py validate`, or a data/happiness/*.md recap
            without its generated header (recaps are written by `tools/happiness.py recap`, never by hand; the weekly
            conclusion weekly-summary*.md by `tools/weekly_summary.py --render`)
 
 Emergency skip, never as habit (every skip is logged and reported by `tools/wt.sh doctor`):
-    DK_PRECOMMIT_SKIP=lint DK_PRECOMMIT_REASON="why" git commit ...   # or size,layout,secrets,happiness / all
+    DK_PRECOMMIT_SKIP=lint DK_PRECOMMIT_REASON="why" git commit ...   # or size,layout,secrets,happiness,bank / all
 `git commit --no-verify` is not the sanctioned way: it leaves no trace.
 
 Prints file paths and rule names only, never a secret value.
@@ -45,11 +47,15 @@ MEDIA_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic", ".heif", ".svg",
 # README infographics are the one media exception outside tools/: flat PNG/SVG files in docs/images/ (no subfolders,
 # no photos or documents), so a README diagram does not need a fake app folder.
 MEDIA_OK = re.compile(r"^(tools/[^/]+/(icons|assets)/|docs/images/[^/]+\.(png|svg)$)")
-# Bank data: raw movements never enter the repo; an optional bank-sync folder holds monthly totals + README only.
-BANK_EXPORT_DIR = "data/finance/bank/"
-BANK_EXPORT_OK = {"README.md", "monthly-totals.md", "monthly-totals.json"}
+# Bank data (optional banks section, see data/finance/banks/README.md): a bank sync keeps its raw exports (bank ids,
+# full IBANs, balances) in a private folder outside the repo; the repo gets only what tools/bank_export.py writes:
+# sanitized markdown (one file per month, account card, totals) plus <bank>/monthly-totals.json. Everywhere in the
+# repo: no checksum-valid IBAN and no Luhn-valid card number (bank_export.find_ibans / find_cards, on the added
+# lines of the staged diff).
+BANK_EXPORT_DIR = "data/finance/banks/"
+BANK_EXPORT_OK = re.compile(r"^(.+\.md|[^/]+/monthly-totals\.json)$")
 RAW_FINANCE = re.compile(r"^(transactions-\d{4}-\d{2}\.csv|balances\.json)$")
-IBAN = re.compile(r"\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){3,7}(?: ?[A-Z0-9]{1,4})?\b")
+UUID = re.compile(r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b")
 BAD_PART = {"node_modules", "__pycache__", ".venv", "venv", "out", "dist", ".next", "_archive"}
 BAD_NAME = re.compile(r"^(\.env(\..*)?|config\.local.*|\.DS_Store|id_rsa.*|id_ed25519.*|.*\.secret.*)$")
 
@@ -98,14 +104,15 @@ def check_layout(files):
         ext = os.path.splitext(name)[1].lower()
         if parts[0] not in TOP_LEVEL:
             bad.append("%s: new top-level entry; the repo layout is %s" % (p, ", ".join(sorted(TOP_LEVEL))))
-        elif p.startswith(BANK_EXPORT_DIR) and p[len(BANK_EXPORT_DIR):] not in BANK_EXPORT_OK:
-            bad.append("%s: raw bank data never enters the repo (only %s); raw files live in "
-                       "a private folder outside the repo" % (p, ", ".join(sorted(BANK_EXPORT_OK))))
-        elif RAW_FINANCE.match(name):
-            bad.append("%s: looks like a raw bank export (transactions/balances); keep it in "
+        elif RAW_FINANCE.match(name) or (p.startswith("data/finance/") and name == "state.json"):
+            bad.append("%s: looks like a raw bank export (transactions/balances/state); keep it in "
                        "a private folder outside the repo" % p)
-        elif p.startswith(BANK_EXPORT_DIR) and IBAN.search(git("show", ":" + p).stdout or ""):
-            bad.append("%s: contains an IBAN-like string; the repo gets totals only" % p)
+        elif p.startswith(BANK_EXPORT_DIR) and not BANK_EXPORT_OK.match(p[len(BANK_EXPORT_DIR):]):
+            bad.append("%s: only sanitized markdown (and <bank>/monthly-totals.json) goes in %s; raw exports and "
+                       "statement PDFs stay in a private folder outside the repo" % (p, BANK_EXPORT_DIR))
+        elif p.startswith(BANK_EXPORT_DIR) and UUID.search(git("show", ":" + p).stdout or ""):
+            bad.append("%s: contains a UUID (bank reference / transaction id); export it through "
+                       "tools/bank_export.py, which drops them" % p)
         elif BAD_NAME.match(name):
             bad.append("%s: local config / secret file, never committed" % p)
         elif ext in BAD_EXT:
@@ -165,6 +172,38 @@ def check_secrets(files):
                 if rx.search(l):
                     bad.append("%s:%d  %s (regex fallback; install gitleaks)" % (cur, line, rule))
             line += 1
+    return bad
+
+
+def bank_findings(path, lines):
+    """Full IBANs / card numbers in (line_no, text) pairs of one file. Pure: tested in tools/tests/."""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
+    import bank_export  # noqa: E402
+    bad = []
+    for n, l in lines:
+        if bank_export.find_ibans(l):
+            bad.append("%s:%d  full IBAN (keep only the last 4: IBAN ****1234)" % (path, n))
+        if bank_export.find_cards(l):
+            bad.append("%s:%d  card-like number (13-19 digits, Luhn-valid; mask to ****1234)" % (path, n))
+    return bad
+
+
+def check_bank(files):
+    """Added lines of the staged diff, every text file: no full IBAN, no card number."""
+    diff = git("diff", "--cached", "-U0", "--no-color", "--diff-filter=ACMR").stdout
+    per, cur, line = {}, None, 0
+    for l in diff.splitlines():
+        if l.startswith("+++ "):
+            cur = l[6:] if l.startswith("+++ b/") else None
+        elif l.startswith("@@"):
+            m = re.search(r"\+(\d+)", l)
+            line = int(m.group(1)) if m else 0
+        elif l.startswith("+") and cur:
+            per.setdefault(cur, []).append((line, l[1:]))
+            line += 1
+    bad = []
+    for p, ls in per.items():
+        bad += bank_findings(p, ls)
     return bad
 
 
@@ -241,11 +280,11 @@ def main():
         return 0
     skips = set(x.strip() for x in os.environ.get("DK_PRECOMMIT_SKIP", "").split(",") if x.strip())
     if "all" in skips:
-        skips = {"size", "layout", "secrets", "lint", "happiness"}
+        skips = {"size", "layout", "secrets", "lint", "happiness", "bank"}
     if skips:
         log_skip(skips)
     checks = {"size": check_size, "layout": check_layout, "secrets": check_secrets,
-              "lint": check_lint, "happiness": check_happiness}
+              "lint": check_lint, "happiness": check_happiness, "bank": check_bank}
     results = {}
     with cf.ThreadPoolExecutor(max_workers=4) as ex:
         fut = {ex.submit(fn, files): k for k, fn in checks.items() if k not in skips}
@@ -265,8 +304,9 @@ def main():
         "secrets": "remove the secret from the file (use an env var or ~/.secrets/), restage. Never paste it in chat.",
         "lint": "run  python3 tools/lint.py --fix && python3 tools/lint.py  and stage the files it changed.",
         "happiness": "fix the field named above in your area JSON (schema: tools/happiness.py), or rerun the publisher for recaps.",
+        "bank": "mask it (IBAN ****1234 / ****1234) or export through tools/bank_export.py; see data/finance/banks/README.md.",
     }
-    for k in ("size", "layout", "secrets", "lint", "happiness"):
+    for k in ("size", "layout", "secrets", "lint", "happiness", "bank"):
         if k in failed:
             print("\n  [%s] %d finding(s) -> %s" % (k, len(failed[k]), hints[k]), file=sys.stderr)
             for line in failed[k][:15]:

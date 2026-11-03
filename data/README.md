@@ -40,6 +40,9 @@ data/
   food/                        food-<date>.md, photos/, food-log.md, ingredients.md
   training/                    training-<date>.md
   agents/<role>/               each agent's own memory
+  finance/                     money: deadlines, and the optional banks section
+      banks/                     README (privacy rules, data flow), <bank>/ (accounts.md, monthly totals,
+                                 transactions/<bank>-YYYY-MM.md sanitized by tools/bank_export.py), statements/ index
 ```
 
 Raw streams of the optional modules (wearable samples, GPS points, lab PDFs) and their SQLite
