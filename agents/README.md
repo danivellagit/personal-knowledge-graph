@@ -154,6 +154,30 @@ Agent memory files link to it with `person: "[[_me]]"` so they are never orphans
    delete a routine and the file changes in the same turn. The tech-maintainer checks the
    alignment daily. A routine that writes to the repo pulls first and commits only its own paths.
 
+10. **Memory: a short `memory.md` + a monthly archive.** An agent's `data/agents/<role>/memory.md`
+   is read at every turn, so it holds only the **current state**: who the agent is for the owner,
+   the owner's rules and standing agreements (their words), open items, and the recent log.
+   Target under ~8 KB; above ~15 KB it must be compacted.
+   - **History lives in `data/agents/<role>/memory-archive/YYYY-MM.md`**, moved there verbatim by
+     `python3 tools/memory_compact.py <role>` (dated sections and Log entries older than 7 days;
+     `--dry-run` first). Nothing is ever deleted or rewritten; the tool refuses to write if a
+     single line of the old file would be lost. Never hand-edit an archive file.
+   - **Reading:** `memory.md` every turn; before telling the owner something is unknown, or when
+     a routine needs an older fact, search the archive too:
+     `grep -rn "word" data/agents/<role>/memory-archive/`. The generated `## Archive` index at the
+     end of `memory.md` lists every archived section by month.
+   - **Writing, going forward:** new log lines go under `## Log` (the last section before the
+     generated index), one dated line each (`- YYYY-MM-DD HH:MM: ...`). A standing rule or fact
+     goes in an undated section (Agreements, Open, the agent's rules), not in a dated heading,
+     or the next compaction archives it. A dated section that must stay: add `<!-- keep -->`
+     to its heading. A big reference list a routine reads (an exercise catalogue, usual meals)
+     can live in its own file next to `memory.md` (`--extract "HEADING=file.md"`), with a
+     pointer left in `memory.md`. Text written after the index is not lost: the next run moves
+     it into `## Log`.
+   - **Compacting:** when `python3 tools/memory_compact.py --sizes` flags a file (over 15 KB),
+     run it at the end of a turn and commit `memory.md` + `memory-archive/`. The tech-maintainer
+     checks the sizes in its daily health check.
+
 ## Who remembers what
 
 | kind of fact | where it goes |

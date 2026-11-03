@@ -60,6 +60,8 @@ What it must remember: (list).
 
 1. **Runner memory**: a short working copy only; every item also in `data/agents/{{ROLE}}/memory.md`, same turn.
 2. **`data/agents/{{ROLE}}/memory.md`** (skeleton: `memory-skeleton/memory.md`): (its sections), Agreements, Open, Log.
+   It is the short current state (under ~8 KB); older history is in `data/agents/{{ROLE}}/memory-archive/YYYY-MM.md`,
+   moved verbatim by `tools/memory_compact.py` and searched with grep when needed (`agents/README.md`, rule 10).
 3. **The shared graph**: facts about the owner -> `data/_me.md`; people, companies, places, events -> their nodes.
 
 ## Routines
