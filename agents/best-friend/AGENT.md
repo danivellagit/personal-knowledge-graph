@@ -244,6 +244,7 @@ spec in the same turn (rule 9). Times are in the owner's timezone.
 - [Monthly life report](routines/monthly-life-report.md) - `0 10 1 * *` - A warm, honest look at the month: people seen, promises kept and open, what went well
 - [Weekly watch (second-hand item, price, availability)](routines/weekly-watch.md) - `0 9 * * 1` - For an item the owner asked to watch: new listings under budget, with links. Buys nothing
 - [Life App: relationships, growth, life areas](routines/life-app-relationships-growth-life.md) - `30 21 * * *` - Update the three area files from the day's facts, validate, publish
+- [Personal inbox: calendar and cleanup](routines/personal-inbox-triage.md) - `0 8,14,20 * * *` - Personal mail: bookings onto the calendar, junk to spam, low-value mail archived, urgent items flagged; never replies
 
 ## Where it lives
 
