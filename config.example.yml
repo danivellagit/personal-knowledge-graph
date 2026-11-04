@@ -71,6 +71,18 @@ checks:
   common_tokens: []             # alias tokens too common to mean anything (your company's domain)
   stop_words: []                # capitalised words that are never a venue ("Monday", your own name)
 
+# OPTIONAL: read-only bank sync (tools/bank_sync.py, Enable Banking PSD2; docs/setup/bank-enable-banking.md).
+# Both folders must be OUTSIDE the repo; only sanitized files land in data/finance/banks/<bank>/.
+banks:
+  # secrets_dir: "~/.secrets/enablebanking"   # private.key, app.json, banks/<bank>.json (700/600); env EB_SECRETS_DIR
+  # private_dir: "~/private/finance"          # raw movements, balances, sync state per bank (700); env EB_PRIVATE_DIR
+
+# Updates of the original template (tools/template_update.py, skills/template-updates). The tool never touches
+# data/, config.local.yml or .template-version; add your own paths it must never overwrite under `protect`.
+template:
+  # upstream: "https://github.com/danivellagit/personal-knowledge-graph.git"   # default
+  # protect: ["agents/fitness-coach/AGENT.md"]
+
 # ---------------------------------------------------------------------------------------------
 # OPTIONAL MODULES. Each is off unless `enabled: true`. See anatomy.md, "Optional modules".
 # ---------------------------------------------------------------------------------------------

@@ -99,6 +99,7 @@ personal-knowledge-graph/
   LEGEND.md                      # the field-and-edge contract the tooling enforces
   anatomy.md                     # the memory model, node map, rules, optional modules
   config.example.yml             # copy to config.local.yml (gitignored)
+  INSTALL.md                     # install + the guided first run + the integrations menu (start here)
   SETUP-WHATSAPP.md              # wiring the WhatsApp bridge
   tools/
     graph.py                     # the only sanctioned frontmatter reader/writer
@@ -115,11 +116,16 @@ personal-knowledge-graph/
     life-app/                    # optional: the Life App (setup.sh, publish.sh, sample-data/, src/)
     agents/create_agent.py       # optional: create an agent from its role
     git-sync.sh  wt.sh           # safe git sync / one worktree per agent on a shared machine
+    onboarding.py                # the first run: owed? + the integrations checklist (data/_setup.md)
+    template_update.py           # read the original template's updates, install only what you approve
+    bank_sync.py  bank_export.py # optional: read-only bank sync (Enable Banking, PSD2), sanitized export
     template_sync.py             # maintainers: bring app updates from an upstream instance, leak-checked
   skills/
     remember-people/             # the core engine (+ templates for person, interaction, media)
     graph-audit/                 # the weekly look from above
     notion-sync/                 # optional
+    onboarding/                  # the guided first run (interview + integrations menu)
+    template-updates/            # install the template's updates, on your yes
     <role>/                      # thin launchers for the agents
   agents/
     README.md                    # onboarding, rules every agent inherits, who remembers what
@@ -127,12 +133,14 @@ personal-knowledge-graph/
     <role>/AGENT.md              # spec: persona, lane and handoffs, memory, routines, flows
     <role>/memory-skeleton/      # empty memory files (headings only, no facts)
     <role>/routines/<slug>.md    # suggested routine specs (schedule, intent, when silent)
+  docs/setup/                    # integration guides: bank, wearables, email + calendar, always-on agents
   docs/images/                   # README diagrams (PNG + SVG source, fake example names only)
   tools/life-app/assets/screenshots/ # README screenshots (sample data only)
   .claude/hooks/git-sync.sh      # optional: pull on session start, commit + push on stop
   .githooks/pre-commit           # optional guard (git config core.hooksPath .githooks)
   data/                          # PRIVATE, gitignored by default: your graph + your stream
     _me.md                              # the owner node (the point of view)
+    _setup.md                           # the first-run checklist: each integration done / skipped / later
     people/  companies/  places/  passions/  cities/  terms/  groups/  events/
     bonds/   roles/   media/
     interactions/<slug>/YYYY-MM-DD.md   # recent, daily
@@ -144,6 +152,8 @@ personal-knowledge-graph/
 ```
 
 ## Quick start
+
+**The guided way: [`INSTALL.md`](INSTALL.md).** Clone, open the folder in Claude Code (or Cursor, Codex) and say hello: the agent notices the copy is not set up and runs a short first run. It asks a few questions for your profile and config, then offers an optional integrations menu: template updates, WhatsApp, your bank (read-only), a wearable, mail and calendar, the Life App, agents, always-on routines. You can skip any of them and do it later by saying "connect X". The steps below are the same thing by hand.
 
 **Requirements:** `git` and `python3` for the graph. The Life App also needs `node` 18+ and `npm`, plus `gh` (logged in) if you want it to create the site repo for you.
 

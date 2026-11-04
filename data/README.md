@@ -18,6 +18,7 @@ counterpart.
 ```
 data/
   _me.md                       the owner: durable profile + current state
+  _setup.md                    the first-run checklist (tools/onboarding.py): each integration done / skipped / later
   people/<slug>.md             one profile per person (semantic + working memory)
   companies/<slug>.md          one per company (mirrored from your system of record, if any)
   interactions/<slug>/         one file per exchange day, append-only

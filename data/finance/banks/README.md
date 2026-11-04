@@ -29,10 +29,11 @@ Individual transactions may go in the (private) repo, but sanitized:
 
 1. **Open-banking provider** (PSD2 AIS, read-only: balances and transactions, no payments possible). You approve
    the consent in your bank's app; it lasts at most 180 days, track its expiry in your credentials list.
-2. **Your bank sync tool** (not shipped: it is specific to your bank and provider) reads new movements about once
-   a day (banks allow ~4 unattended reads a day).
-3. **Private raw copy**, outside the repo (e.g. `~/private/finance/<bank>/`, mode 700): raw transactions with
-   bank ids, balances, sync state.
+2. **The bank sync tool** reads new movements about once a day (banks allow ~4 unattended reads a day). Shipped:
+   `tools/bank_sync.py`, read-only through Enable Banking (most EU / EEA banks and neobanks it lists; set up
+   with `docs/setup/bank-enable-banking.md`). Another provider: write your own tool on top of `bank_export.py`.
+3. **Private raw copy**, outside the repo (`~/private/finance/<bank>/` by default, mode 700): raw transactions
+   with bank ids, balances, sync state. The provider's key and sessions live in `~/.secrets/enablebanking/`.
 4. **Sanitized export into the repo** with `tools/bank_export.py` (`write_months(...)`), overwritten per month on
    every sync: `<bank>/transactions/<bank>-YYYY-MM.md`, plus your own `<bank>/accounts.md` card and
    `<bank>/monthly-totals.{md,json}`.

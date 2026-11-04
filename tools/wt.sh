@@ -11,6 +11,7 @@
 #   tools/wt.sh path   <agent>                    # print the worktree path (cd "$(tools/wt.sh path x)")
 #   tools/wt.sh status                            # one line per worktree
 #   tools/wt.sh doctor [--hours N] [--quiet]      # self-maintenance, exit 1 if something needs a human
+#                                                 # (stale worktrees, agent + owner onboarding gaps, guards)
 #
 # Layout: worktree $WT_ROOT/<agent> (default: the directory next to the main checkout, i.e.
 # /workspace/wt on the box; override with DK_WT_ROOT), branch wt/<agent>, upstream origin/main.
@@ -260,6 +261,11 @@ cmd_doctor() {
     [ -f "$MAIN/data/agents/$a/memory.md" ] || problems+=("agents/$a: no data/agents/$a/memory.md")
     [ -d "$MAIN/agents/$a/routines" ] || problems+=("agents/$a: no routines/ folder")
   done
+  # owner onboarding: the guided first run (skills/onboarding/SKILL.md) still owed, or integrations never asked
+  if [ -f "$MAIN/tools/onboarding.py" ]; then
+    while IFS= read -r line; do [ -n "$line" ] && problems+=("first run: $line -> skills/onboarding/SKILL.md"); done \
+      < <(cd "$MAIN" && python3 tools/onboarding.py check --quiet 2>&1 | sed -n 's/^  - //p')
+  fi
   # Life App / Health data (data/happiness): stale area files, canvas <-> JSON drift, old recaps
   if [ -f "$MAIN/tools/happiness.py" ]; then
     while IFS= read -r line; do [ -n "$line" ] && problems+=("happiness: $line"); done \
@@ -279,5 +285,5 @@ case "${1:-}" in
   path)   shift; check_agent "${1:-}"; echo "$WT_ROOT/$1" ;;
   status) shift; cmd_status ;;
   doctor) shift; cmd_doctor "$@" ;;
-  *) sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
+  *) sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac

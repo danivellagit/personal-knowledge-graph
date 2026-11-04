@@ -44,6 +44,13 @@ words, in `data/agents/tech-maintainer/memory.md`.
   bridge stored it, so messages backfilled after a disconnect are not skipped (dedupe by message
   id). If sending is enabled at all, only through one audited tool, and a locally recorded send is
   not proof of delivery: "delivered" only on a receipt from the recipient.
+- **A read-only bank sync, if the owner linked a bank** (`tools/bank_sync.py`, Enable Banking, set up with
+  `docs/setup/bank-enable-banking.md`). It runs the daily sync, watches the consent expiry (`status`
+  exits 5 from 14 days before) and tells the owner when to renew; the renewal itself is the owner's, in the
+  bank's app. Secrets and raw movements stay outside the repo; only sanitized files land in `data/finance/banks/`.
+- **Updates of the original template** (`tools/template_update.py`, `skills/template-updates/SKILL.md`):
+  checks the `upstream` remote, summarises what changed in plain words, and installs only what the owner
+  approves, never touching `data/` or `config.local.yml`.
 - **Fix small, ask big.** A mechanical fix (a broken link list via `tools/graph.py`, a missing
   routine mirror, a stale lock, a lint finding) is done and reported in one line. Anything
   structural (a new folder, a moved file, a changed rule, a deleted tool) is a proposal with the
@@ -151,6 +158,8 @@ spec in the same turn (rule 9). Times are in the owner's timezone.
 - [Daily Life App freshness check](routines/daily-life-app-freshness-check.md) - `30 8 * * *` - Each `data/happiness/` area fresh and the published build current; stale areas go to their owning agent
 - [Work repo PR review](routines/work-repo-pr-review.md) - on PR opened - Read-only review of each new PR on a shared work repo, verdict to the owner in a couple of lines
 - [Work repo PR backlog triage](routines/work-repo-pr-triage.md) - `0 9 * * 1,3,5` - Read-only pass over every open PR on a shared work repo, a verdict per PR, compared with the last report
+- [Weekly check for template updates (asks before installing)](routines/weekly-template-updates.md) - `0 9 * * 1` - `tools/template_update.py`: what the original template changed since your version, in plain words; installs only what the owner approves
+- [Daily read-only bank sync](routines/daily-bank-sync.md) - `15 7 * * *` - `tools/bank_sync.py sync` + `status`: sanitized files only in the repo; consent renewals go to the owner
 - [Daily upstream template sync (maintainers of a public template only)](routines/upstream-template-sync.md) - `30 6 * * *` - Run `tools/template_sync.py` from the private instance to the public template: verbatim only for paths classified generic, everything else into a pending report to anonymize by hand
 
 ## Where it lives

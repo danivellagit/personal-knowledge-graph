@@ -70,9 +70,16 @@ FFmpeg is optional (only for sending audio as playable voice messages).
 
 5. **Let the backfill detector find the store.** The bridge keeps every message in
    `whatsapp-bridge/store/messages.db`. `tools/owed_backfill.py` reads it to measure which days
-   with real traffic still have no log, so point `backfill.whatsapp_db` in `config.local.yml`
+   with real traffic still have no log, so point `whatsapp.bridge_db` in `config.local.yml`
    at that file. The bridge only holds what it has synced since you linked it; if your WhatsApp
-   desktop app keeps a longer history, you can add its store as `backfill.whatsapp_desktop_db`.
+   desktop app keeps a longer history, you can add its store as `whatsapp.desktop_db`.
+
+6. **Optional: pull every hour.** Nothing pulls by itself while no agent session is open. The
+   tech-maintainer's suggested routine
+   [`hourly-message-pull`](agents/tech-maintainer/routines/hourly-message-pull.md) reads only new
+   messages, read-only, into the graph; run it on an always-on runner or from cron
+   ([`docs/setup/always-on-agents.md`](docs/setup/always-on-agents.md)). Then mark it done:
+   `python3 tools/onboarding.py mark whatsapp done`.
 
 Once connected, the `remember-people` daily sweep reads your real conversations, attributes
 group messages to their sender, and feeds them into each person's node. See the full sweep

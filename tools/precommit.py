@@ -36,7 +36,7 @@ LEDGER_MAX = 5 * 1024 * 1024
 LEDGERS = {"data/_gaps/register.jsonl", "data/_gaps/history.jsonl"}
 
 TOP_LEVEL = {"AGENTS.md", "CLAUDE.md", "LEGEND.md", "README.md", "anatomy.md", "config.example.yml", "LICENSE",
-             "SETUP-WHATSAPP.md",
+             "SETUP-WHATSAPP.md", "INSTALL.md", ".template-version",
              ".gitignore", ".gitattributes", ".githooks", ".claude", ".grok", ".obsidian",
              "agents", "data", "docs", "skills", "tools"}
 BAD_EXT = {".log", ".db", ".sqlite", ".sqlite3", ".gz", ".tgz", ".zip", ".tar", ".7z", ".rar",

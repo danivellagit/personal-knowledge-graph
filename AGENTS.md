@@ -34,8 +34,17 @@ Read `owner` (display name), `owner_slug` and `owner_language` from
 [`config.local.yml`](config.example.yml). The owner's own node is always `data/_me.md`, with
 their episodes in `data/interactions/_me/`; `owner_slug` defaults to `_me`, and if it names
 another slug (the one other sources use for the owner), the tools treat both as the owner. If
-`config.local.yml` does not exist yet, tell the user to `cp config.example.yml config.local.yml`
-and edit it, then proceed with what you can.
+`config.local.yml` does not exist yet, the first run below creates it with them.
+
+**First run.** At the start of a session, run `python3 tools/onboarding.py check`. If it exits 1
+(`data/_me.md` missing or still the placeholder, no `config.local.yml`, or no `data/_setup.md`
+checklist), this copy is not set up yet: before anything else, greet the user and offer the guided
+first run in [`skills/onboarding/SKILL.md`](skills/onboarding/SKILL.md): a short interview for
+`data/_me.md` and `config.local.yml`, then an optional integrations menu (template updates,
+WhatsApp, bank, wearable, mail and calendar, Life App, agents, always-on routines), each one
+skippable and doable later ("connect X"), tracked in `data/_setup.md`. If they want to do something
+else first, do it and offer the first run again at the end. A scheduled routine or a sweep never
+starts the onboarding: it just reports the gap. Human-readable version: [`INSTALL.md`](INSTALL.md).
 
 **Talk to the owner in `owner_language`. Write the repo in English.**
 
@@ -95,7 +104,9 @@ anything else:
 Then the skill being invoked: [`skills/remember-people/SKILL.md`](skills/remember-people/SKILL.md)
 (the core engine: log, roll up, wire, graph pass, brief),
 [`skills/graph-audit/SKILL.md`](skills/graph-audit/SKILL.md) (the weekly look from above), or
-[`skills/notion-sync/SKILL.md`](skills/notion-sync/SKILL.md) (optional). `config.local.yml` says
+[`skills/notion-sync/SKILL.md`](skills/notion-sync/SKILL.md) (optional), or
+[`skills/onboarding/SKILL.md`](skills/onboarding/SKILL.md) (the first run) and
+[`skills/template-updates/SKILL.md`](skills/template-updates/SKILL.md) (install the template's updates, on a yes). `config.local.yml` says
 which sources, integrations and modules are actually wired. Empty is fine: every skill still
 works, sources only enrich.
 
@@ -200,6 +211,9 @@ Run every command from the repo root.
 | body: what happened in a time window | `python3 tools/body.py window 2030-05-14T18:30:00 2030-05-14T19:15:00` |
 | a meal photo into the food log | `python3 tools/food.py add <photo> [--time HH:MM]`, fill the block, then `python3 tools/food.py table` |
 | daily calorie estimate next to the wearable's | `python3 tools/calories.py day YYYY-MM-DD [--write]` |
+| first run: owed? the checklist | `python3 tools/onboarding.py check` / `status` / `mark <item> done\|skipped\|later` |
+| the original template's updates | `python3 tools/template_update.py` (dry run) / `apply <items>` / `decline <items>` |
+| bank, read-only (optional) | `python3 tools/bank_sync.py sync` / `status` (Enable Banking; `docs/setup/bank-enable-banking.md`) |
 | location: pull and rebuild the store | `tools/location-pull.sh && python3 tools/location.py ingest`, then `day YYYY-MM-DD` / `summary` |
 
 Never run a login or re-authorisation for an external account (a wearable CLI, a mail account,
