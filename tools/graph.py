@@ -5,10 +5,30 @@ it does line-surgery on the frontmatter instead of re-serialising it, so any key
 not manage comes out byte-identical. Comments survive.
 
 The graph shape it knows about lives in LEGEND.md — keep the two in sync.
+
+Dated edges (LEGEND.md section 2b): an edge can carry optional `since` /
+`until` in a separate nested map, so a past job or relation is closed instead of rewritten as
+"(ex-Northwind)" prose. The edge itself stays in its link list (reverse edges and lint unchanged):
+
+    works_at:
+      - "[[northwind]]"
+    edge_dates:
+      works_at:
+        "[[northwind]]": {since: 2018-03, until: 2021-06}
+
+Dates are YYYY, YYYY-MM or YYYY-MM-DD; `until: UNKNOWN` means "ended, date unknown". An edge
+with no entry is simply undated (current, as before). CLI:
+
+    python3 tools/graph.py dates <slug>                       # list the dated edges of a node
+    python3 tools/graph.py date <slug> <field> <target> [--since D] [--until D] [--note TEXT]
+    python3 tools/graph.py undate <slug> <field> <target>     # remove the dates, keep the edge
+    python3 tools/graph.py current <slug> <field> [--on YYYY-MM-DD]   # links current on a day
 """
 
+import datetime
 import os
 import re
+import sys
 
 DATA = "data"
 
@@ -82,6 +102,84 @@ BODY_SECTIONS = {
 BODY_MARKER = "_Seen via profiles (data/people)._"
 
 LINK_RE = re.compile(r"\[\[([^\]|#]+)")
+
+# dated edges (LEGEND.md section 2b)
+EDGE_DATES_KEY = "edge_dates"
+EDGE_DATE_ATTRS = ("since", "until", "note")
+EDGE_DATE_RE = re.compile(r"^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$")
+UNKNOWN = "UNKNOWN"
+
+
+def _split_flow(inner):
+    """Split the inside of a one-line flow map on commas outside quotes."""
+    parts, buf, q, esc = [], "", None, False
+    for ch in inner:
+        if q:
+            buf += ch
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == q:
+                q = None
+            continue
+        if ch in "\"'":
+            q = ch
+            buf += ch
+            continue
+        if ch == ",":
+            parts.append(buf)
+            buf = ""
+            continue
+        buf += ch
+    if buf.strip():
+        parts.append(buf)
+    return parts
+
+
+def _unquote(v):
+    v = v.strip()
+    if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
+        v = v[1:-1]
+        if v and '\\"' in v:
+            v = v.replace('\\"', '"')
+    return v
+
+
+def parse_flow_map(text):
+    """`{since: 2018-03, until: "2021"}` -> dict, or None when it is not a one-line flow map."""
+    t = text.strip()
+    if not (t.startswith("{") and t.endswith("}")):
+        return None
+    out = {}
+    for part in _split_flow(t[1:-1]):
+        if ":" not in part:
+            return None
+        k, v = part.split(":", 1)
+        out[k.strip()] = _unquote(v)
+    return out
+
+
+def date_key(d, end=False):
+    """A partial date as a comparable (y, m, d); `end` takes the last day of a partial range."""
+    p = [int(x) for x in d.split("-")]
+    if len(p) == 1:
+        p += [12, 31] if end else [1, 1]
+    elif len(p) == 2:
+        p += [31] if end else [1]
+    return tuple(p)
+
+
+def _render_flow(attrs):
+    bits = []
+    for k in EDGE_DATE_ATTRS:
+        if k not in attrs or attrs[k] in (None, ""):
+            continue
+        v = str(attrs[k])
+        if k == "note" or not (EDGE_DATE_RE.match(v) or v == UNKNOWN):
+            v = '"%s"' % v.replace('"', '\\"')
+        bits.append("%s: %s" % (k, v))
+    return "{%s}" % ", ".join(bits)
 
 
 def split_comment(rest):
@@ -213,6 +311,157 @@ class Node:
     def has_link(self, key, slug):
         return slug in self.link_list(key)
 
+    # ---------- dated edges ----------
+
+    def _edge_dates_span(self):
+        """(index of the `edge_dates` entry, index after its last nested line) or (None, None)."""
+        for i, e in enumerate(self.entries):
+            if e.get("key") == EDGE_DATES_KEY:
+                j = i + 1
+                while j < len(self.entries):
+                    x = self.entries[j]
+                    if x["kind"] == "raw" and x["raw"][:1] in (" ", "\t") and x["raw"].strip():
+                        j += 1
+                        continue
+                    break
+                return i, j
+        return None, None
+
+    def edge_dates_raw(self):
+        """[(field, target slug or raw key, attrs dict or None, raw line)] in file order."""
+        i, j = self._edge_dates_span()
+        out = []
+        if i is None:
+            return out
+        field = None
+        for x in self.entries[i + 1:j]:
+            line = x["raw"]
+            indent = len(line) - len(line.lstrip())
+            body, _ = split_comment(line.strip())
+            if body.startswith("#") or not body:
+                continue
+            mf = re.match(r"^([A-Za-z_][\w\-]*):\s*$", body)
+            if indent <= 2 and mf:
+                field = mf.group(1)
+                continue
+            mi = re.match(r"^(\"[^\"]*\"|'[^']*'|[^:]+):\s*(.*)$", body)
+            if not mi:
+                out.append((field, None, None, line))
+                continue
+            key = _unquote(mi.group(1))
+            ls = links_of(key)
+            out.append((field, ls[0] if ls else key, parse_flow_map(mi.group(2)), line))
+        return out
+
+    def edge_dates(self):
+        """{(field, target): {"since": .., "until": .., "note": ..}} for every well-formed entry."""
+        return {(f, t): a for f, t, a, _ in self.edge_dates_raw() if f and t and a is not None}
+
+    def edge_date_problems(self):
+        """Shape problems of the `edge_dates` map, as text (empty list = fine)."""
+        probs = []
+        e = next((x for x in self.entries if x.get("key") == EDGE_DATES_KEY), None)
+        if e is None:
+            return probs
+        if e["kind"] != "block" or e["items"]:
+            return ["edge_dates must be a nested map (field -> \"[[target]]\": {since, until})"]
+        seen = set()
+        for field, target, attrs, line in self.edge_dates_raw():
+            where = line.strip()[:60]
+            if field is None:
+                probs.append("edge_dates entry outside a field: %s" % where)
+                continue
+            if attrs is None:
+                probs.append("edge_dates entry is not `\"[[slug]]\": {since: .., until: ..}`: %s" % where)
+                continue
+            if (field, target) in seen:
+                probs.append("edge_dates duplicate entry %s -> %s" % (field, target))
+            seen.add((field, target))
+            if target not in self.link_list(field):
+                probs.append("edge_dates %s -> [[%s]] but %s has no such link" % (field, target, field))
+            bad = sorted(set(attrs) - set(EDGE_DATE_ATTRS))
+            if bad:
+                probs.append("edge_dates %s -> %s: unknown attribute %s" % (field, target, ", ".join(bad)))
+            if not attrs.get("since") and not attrs.get("until"):
+                probs.append("edge_dates %s -> %s: neither since nor until" % (field, target))
+            for k in ("since", "until"):
+                v = attrs.get(k)
+                if v and not (EDGE_DATE_RE.match(v) or v == UNKNOWN):
+                    probs.append("edge_dates %s -> %s: %s '%s' is not YYYY[-MM[-DD]] or UNKNOWN"
+                                 % (field, target, k, v))
+            s_, u_ = attrs.get("since"), attrs.get("until")
+            if s_ and u_ and EDGE_DATE_RE.match(s_) and EDGE_DATE_RE.match(u_) \
+                    and date_key(s_) > date_key(u_, end=True):
+                probs.append("edge_dates %s -> %s: since %s is after until %s" % (field, target, s_, u_))
+        return probs
+
+    def edge_is_current(self, field, target, on=None):
+        """True unless the edge's dates say it was not active on `on` (default today).
+
+        Undated edges are current (backward compatible). `until: UNKNOWN` = ended.
+        """
+        a = self.edge_dates().get((field, target))
+        if not a:
+            return True
+        on = on or datetime.date.today()
+        day = (on.year, on.month, on.day)
+        u, s_ = a.get("until"), a.get("since")
+        if u == UNKNOWN:
+            return False
+        if u and EDGE_DATE_RE.match(u) and day > date_key(u, end=True):
+            return False
+        if s_ and EDGE_DATE_RE.match(s_) and day < date_key(s_):
+            return False
+        return True
+
+    def current_links(self, field, on=None):
+        return [t for t in self.link_list(field) if self.edge_is_current(field, t, on)]
+
+    def past_links(self, field, on=None):
+        return [t for t in self.link_list(field) if not self.edge_is_current(field, t, on)]
+
+    def set_edge_dates(self, field, target, since=None, until=None, note=None):
+        """Create/replace the dates of one existing edge; all three None removes the entry.
+
+        Rewrites only the `edge_dates` block, sorted by field then target. Never touches the
+        link list itself: the edge must already exist (add it with add_link first).
+        """
+        if target not in self.link_list(field):
+            raise ValueError("%s has no %s -> [[%s]] edge to date" % (self.slug, field, target))
+        for k, v in (("since", since), ("until", until)):
+            if v and not (EDGE_DATE_RE.match(v) or v == UNKNOWN):
+                raise ValueError("%s '%s' is not YYYY[-MM[-DD]] or UNKNOWN" % (k, v))
+        cur = {}
+        for f, t, a, line in self.edge_dates_raw():
+            if f and t and a is not None:
+                cur[(f, t)] = a
+            else:
+                raise ValueError("%s: edge_dates has a malformed line, fix it first: %s"
+                                 % (self.path, line.strip()))
+        if since is None and until is None and note is None:
+            cur.pop((field, target), None)
+        else:
+            cur[(field, target)] = {"since": since, "until": until, "note": note}
+        i, j = self._edge_dates_span()
+        keep_comment = self.entries[i].get("comment", "") if i is not None else ""
+        if i is not None:
+            del self.entries[i:j]
+        else:
+            i = len(self.entries)
+            while i > 0 and self.entries[i - 1]["kind"] == "raw" and not self.entries[i - 1]["raw"].strip():
+                i -= 1
+        if cur:
+            new = [{"key": EDGE_DATES_KEY, "kind": "block", "items": [], "comment": keep_comment,
+                    "indent": 2}]
+            for f in sorted({f for f, _ in cur}):
+                new.append({"key": None, "kind": "raw", "raw": "  %s:" % f})
+                for (f2, t) in sorted(k for k in cur if k[0] == f):
+                    new.append({"key": None, "kind": "raw",
+                                "raw": '    "[[%s]]": %s' % (t, _render_flow(cur[(f2, t)]))})
+            self.entries[i:i] = new
+        self.dirty = True
+        return True
+
     # ---------- writing ----------
 
     def set_links(self, key, slugs, comment=""):
@@ -342,6 +591,8 @@ class Node:
             k = e.get("key")
             if k and k in MANAGED and sorted(links_of(self.get(k))) != sorted(links_of(back.get(k))):
                 raise RuntimeError("write lost edges in %s :: %s" % (self.path, k))
+        if self.edge_dates() != back.edge_dates():
+            raise RuntimeError("write lost edge dates in %s" % self.path)
         self.dirty = False
         return True
 
@@ -394,3 +645,64 @@ def load_interactions(root=DATA):
             n.date = f[:-3]
             out.append(n)
     return out
+
+
+# ---------------------------------------------------------------------- CLI (dated edges)
+
+def _cli(argv):
+    import argparse
+    ap = argparse.ArgumentParser(prog="tools/graph.py", description="Dated edges (LEGEND.md 2b).")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    a = sub.add_parser("dates", help="list the dated edges of a node")
+    a.add_argument("slug")
+    a = sub.add_parser("date", help="set since/until on an existing edge")
+    a.add_argument("slug"); a.add_argument("field"); a.add_argument("target")
+    a.add_argument("--since"); a.add_argument("--until"); a.add_argument("--note")
+    a.add_argument("--dry-run", action="store_true")
+    a = sub.add_parser("undate", help="remove the dates of an edge (the edge stays)")
+    a.add_argument("slug"); a.add_argument("field"); a.add_argument("target")
+    a.add_argument("--dry-run", action="store_true")
+    a = sub.add_parser("current", help="links of a field current on a day")
+    a.add_argument("slug"); a.add_argument("field"); a.add_argument("--on")
+    args = ap.parse_args(argv)
+
+    nodes = load_nodes()
+    n = nodes.get(args.slug)
+    if n is None:
+        print("no node %s under data/" % args.slug, file=sys.stderr)
+        return 2
+    if args.cmd == "dates":
+        for (f, t), at in sorted(n.edge_dates().items()):
+            print("%s -> [[%s]]  %s%s" % (f, t, _render_flow(at),
+                                          "" if n.edge_is_current(f, t) else "  (past)"))
+        for p_ in n.edge_date_problems():
+            print("PROBLEM: " + p_)
+        return 1 if n.edge_date_problems() else 0
+    if args.cmd == "current":
+        on = datetime.date.fromisoformat(args.on) if args.on else None
+        for t in n.current_links(args.field, on):
+            print(t)
+        return 0
+    if args.cmd == "date" and not (args.since or args.until):
+        print("give --since and/or --until (YYYY, YYYY-MM, YYYY-MM-DD, or UNKNOWN)", file=sys.stderr)
+        return 2
+    try:
+        if args.cmd == "date":
+            n.set_edge_dates(args.field, args.target, args.since, args.until, args.note)
+        else:
+            n.set_edge_dates(args.field, args.target)
+    except ValueError as e:
+        print("refused: %s" % e, file=sys.stderr)
+        return 2
+    if args.dry_run:
+        sys.stdout.write(n.render_frontmatter())
+        return 0
+    n.write()
+    print("%s: %s -> [[%s]] %s" % (n.path, args.field, args.target,
+                                   _render_flow(n.edge_dates().get((args.field, args.target), {}))
+                                   if args.cmd == "date" else "dates removed"))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(_cli(sys.argv[1:]))

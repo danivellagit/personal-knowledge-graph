@@ -26,6 +26,7 @@ import collections
 
 from graph import (load_nodes, load_interactions, load_body, links_of,
                    RULE_MAP, SYMMETRIC, BODY_SECTIONS)
+from schema import check_node as schema_check
 import config
 
 MECH = "MECH"
@@ -256,6 +257,13 @@ def collect(root="data", today=None):
                 emit(MECH, "interaction-misfiled", "misfiled:%s" % ix.path,
                      "%s :: person -> [[%s]] but it lives in interactions/%s/"
                      % (ix.path, a, ix.person), ix.person)
+
+    # Dated edges (graph.py, LEGEND.md 2b): optional, but a malformed or dangling date entry
+    # is a shape error. No auto-fix: the right date is a fact, not something to guess.
+    for n in nodes.values():
+        for p_ in n.edge_date_problems():
+            emit(MECH, "edge-dates-invalid", "edgedates:%s:%s" % (n.slug, p_[:40]),
+                 "%s — %s" % (n.path, p_), n.slug)
 
     for n in nodes.values():
         for e in n.entries:
@@ -521,6 +529,15 @@ def collect(root="data", today=None):
         else:
             emit(GAP, "no-location", "loc:%s" % s, n.path, s,
                  question="where does %s live?" % s, priority=4)
+
+    # Frontmatter schema per node type (tools/schema.py, LEGEND.md 1b). SOFT on purpose: a
+    # one-off key is a smell to review in a sweep, never something to rewrite automatically.
+    # The detail names the key only, never its value (values can be private).
+    for n in nodes.values():
+        for kind, key, hint in schema_check(n):
+            emit(SOFT, kind, "schema:%s:%s" % (n.slug, key),
+                 "%s :: %s%s" % (n.path, key, (" — use " + hint) if hint else
+                                 " — not in the %s schema" % n.type), n.slug)
 
     # introductions, as one standing gap
     n_intro = sum(1 for n in people.values() if n.link_list("introduced_by"))

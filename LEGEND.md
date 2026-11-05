@@ -51,6 +51,35 @@ Examples below use fictional names (`wren-halvorsen`, `lisbon`, `the-copper-kett
 `city` vs `place` is the distinction that keeps getting lost: **Lisbon is a city, The Copper
 Kettle is a place.** A place has `in_city`.
 
+### 1b. Frontmatter schema per node type
+
+The allowed top-level frontmatter keys of each node type live in **`tools/schema.py`** (`SCHEMA`,
+`DIVERGENT`); this table is the human view. Every type also takes `name`, `aliases`, `type`,
+`notion_url`, `external_node`, `edge_dates` (2b) and its edge fields from section 2 (forward, the
+reverses other types write onto it, and for people the symmetric `knows` / `colleagues` /
+`family` / `partner_of`).
+
+| Type | Extra keys |
+| --- | --- |
+| person | the template's (`relationship company role first_met cadence birthday family interests sensitive_topics comms_style links`), `phone`, `whatsapp_lid`, `notion_duplicate`, `partner`, `children`, `based` (legacy, a gap), `origin` |
+| company | `hq`, `sector`, `website`, `domain` |
+| city | `country` |
+| group | `city` |
+| event | `date`, `start`, `end` |
+| media | `format`, `show`, `by`, `url`, `date`, `about` |
+| place, passion, term, bond, role | none |
+
+Divergent keys (same meaning, other name) and what to use instead: person `born` / `age` ->
+`birthday`; `mail` / `email` -> `links: email`; `whatsapp` -> `whatsapp_lid` / `phone`;
+`phone_work` -> `phone` or `links`; `location` / `city_note` -> `lives_in` (or `based`); `surname`
+-> `name`; event `end_date` -> `end`, `slug` -> the file name; term `people` -> no edge rule exists.
+
+`python3 tools/lint.py` reports these as **SOFT** only (`frontmatter-divergent-field`,
+`frontmatter-unknown-field`): never mechanical, never in the gap register, never auto-fixed, and
+the detail names the key, never its value. Moving a value is a sweep decision made by hand,
+keeping the value exactly. A new key that is really needed: add it to `tools/schema.py` and this
+table in the same commit. Episodic files (interactions, body days, labs) are not covered yet.
+
 ---
 
 ## 2. Edge rules: the whole table
@@ -80,6 +109,39 @@ the reverse. Body prose links are free-form and are not edges.
 `family`, `partner_of`. (`partner:` is a free-text description, the field that carries
 `NAME UNKNOWN (gap to chase)` until the name arrives; `partner_of` is the edge once the partner
 has a node.)
+
+### 2b. Dated edges (`since` / `until`, optional)
+
+A past job, company or relation is **closed, not rewritten**: the edge stays in its link list (so
+the reverse edge and the lint are unchanged) and gets dates in one nested map, `edge_dates`, on
+the node that holds the forward (or symmetric) edge:
+
+```yaml
+works_at:
+  - "[[acme]]"
+  - "[[northwind]]"
+edge_dates:
+  works_at:
+    "[[northwind]]": {since: 2018-03, until: 2021-06}
+    "[[acme]]": {since: 2021-07}
+```
+
+- Attributes: `since`, `until` (`YYYY`, `YYYY-MM` or `YYYY-MM-DD`), optional `note` (quoted).
+  `until: UNKNOWN` = it ended, the date is not known. Never guess a date to fill one in.
+- An edge with no entry is **undated = current**, exactly as before. Nothing has to be migrated.
+- Only on the source side; the reverse edge (`people:` on the company) carries no dates.
+- Written only through the tooling, like every link list:
+  `python3 tools/graph.py date <slug> <field> <target> --since .. --until .. [--note ..]`,
+  `undate` to remove the dates, `dates <slug>` to read them, `current <slug> <field> [--on day]`.
+  In code: `Node.set_edge_dates()`, `edge_dates()`, `current_links()`, `past_links()`.
+- The keys are quoted wiki-links on purpose: `tools/rename.py` and `tools/merge.py` relink them
+  with every other `[[slug]]`, and Obsidian sees them as links.
+- The lint reports a malformed or dangling entry (bad date, `since` after `until`, a target that is
+  not in the field's list, an unknown attribute) as mechanical `edge-dates-invalid`, with no
+  auto-fix.
+- "(ex-Northwind)" prose is a candidate, not an edge: `tools/migrations/dated-edge-candidates.py`
+  writes a read-only review list to `data/agents/tech-maintainer/reports/`; close each one by hand
+  with evidence.
 
 `role:` is a free-text title ("Co-founder & CEO") and stays a string; `role_type:` carries the
 normalised linked node (`["[[co-founder]]"]`) once two or more people share it.
