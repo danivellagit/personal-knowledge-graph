@@ -72,6 +72,10 @@ HOLD = [
     "tools/life-app/misure-patches.mjs", "tools/life-app/steps-patches.mjs", "tools/life-app/training.mjs",
     "tools/life-app/training-patches.mjs", "tools/life-app/src/app.tsx", "tools/life-app/src/happy-orb.tsx",
     "tools/life-app/src/history.ts", "tools/life-app/src/pill-bridge.mjs", "tools/life-app/src/scores.ts",
+    # new Italian-text modules (2026-11-07) and recap.ts (imports HOME from scores.ts): ported by hand, translated, with scores.ts/build.mjs
+    "tools/life-app/src/finanze-logic.mjs", "tools/life-app/src/home-health.mjs", "tools/life-app/src/recap.ts",
+    "tools/life-app/tests/finance-bundle.test.mjs", "tools/life-app/tests/finanze-logic.test.mjs",
+    "tools/life-app/tests/home-health.test.mjs",
     # template-only images: README screenshots (sample data) and infographics
     "tools/life-app/assets/screenshots/*", "docs/images/*",
 ]
