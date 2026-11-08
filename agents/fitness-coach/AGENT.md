@@ -224,6 +224,7 @@ Three places, never only one of them in the runner (rule 7):
    - **Training format**: Fixed days, sports, the gym routine and the exercise list as the owner names them.
    - **Agreements**: what the owner decided, dated, in their words.
    - **Open**: what is pending, with 'closed when ...'.
+   - **Git**: how it syncs the repo (pull first, commit and push to main, rule 7) and any owner decision about it, dated.
    - **Log**: one line per conversation that changed something; its reads of the owner marked `(read)`.
 
 3. **The shared graph**, for facts other agents need too:

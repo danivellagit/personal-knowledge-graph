@@ -36,5 +36,8 @@ created: {{CREATED}}
 ## Open
 <!-- Pending items, each with 'closed when ...'. -->
 
+## Git
+<!-- How this agent syncs the repo (pull first, commit and push to main after every change, agents/README.md rule 7) and any owner decision about it, dated. -->
+
 ## Log
 <!-- YYYY-MM-DD: one line per conversation that changed something. -->

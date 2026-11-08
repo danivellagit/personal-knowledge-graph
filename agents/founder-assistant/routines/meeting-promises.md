@@ -14,9 +14,11 @@ runner_id:            # the routine's id or folder on the runner, filled when cr
 
 **Intent.** Read every transcript of the previous working day (Monday: the weekend too), including duplicate recordings of the same meeting, and extract every commitment the owner made (send something, an intro, a follow-up, a call, a piece of work): person, company, what, deadline if said, meeting. Check each against sent mail, drafts, chat and the calendar (done / draft ready / open). For each open one, block a short hold on the work calendar in the next 1-3 working days, before any deadline, never overlapping an existing event or protected block, no guests, no notifications, never a duplicate. Save the open promises in the work digest (`data/_followups/`) and the interaction notes (work only), then report grouped by person.
 
+**Which meetings.** Only meetings the owner actually attended (a recorder may join calls the owner skipped); the team's main leadership meeting, if there is one, is read in full and listed first. Besides promises to people it captures the owner's own action items, and it lists still-open items from previous runs that are now overdue.
+
 **Only what the owner said.** An item whose speaker cannot be attributed (a room microphone) is marked uncertain and gets no hold. It never sends a mail, message or invite.
 
-**When it stays silent.** Silent when there were no meetings or no promises.
+**When it stays silent.** Silent only when there were no relevant meetings and no action items or promises.
 
 **Repo.** If it writes to the repo it pulls first and commits + pushes only its own paths at the end
 (agents/README.md, rule 7); anything it learns goes to `data/agents/founder-assistant/memory.md` or the right graph node.

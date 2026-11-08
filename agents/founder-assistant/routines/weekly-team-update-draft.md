@@ -12,7 +12,7 @@ runner_id:            # the routine's id or folder on the runner, filled when cr
 <!-- A generic routine spec shipped with the template. When the owner creates it on a runner, keep this
      file as its mirror: same schedule and status, the saved prompt below (agents/README.md, rule 9). -->
 
-**Intent.** Draft the weekly update for the owner's team channel from last week's closed loops; the owner sends it.
+**Intent.** Draft the weekly update for the owner's team channel from last week's closed loops, with an asks section (open requests that came out of the week's meetings, tagging the relevant people); the owner sends it.
 
 **When it stays silent.** Never posts; silent if nothing closed.
 

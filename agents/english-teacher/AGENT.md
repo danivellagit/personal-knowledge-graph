@@ -111,15 +111,16 @@ Three places, never only one of them in the runner (rule 7):
    [`memory-skeleton/memory.md`](memory-skeleton/memory.md), copied there by `tools/agents/create_agent.py`):
    every file carries `person: "[[_me]]"`. Sections:
 
-   - **Agreements**: Lesson days, correction style, language of explanations.
+   - **Agreements**: Lesson days, correction style, language of explanations; what the owner decided, dated, in their words.
    - **The owner's level: what is verified**: CEFR descriptor, evidence (a quote, a date), what is still missing.
-   - **Open**: Homework, promised exercises, what to test next.
-   - **Agreements**: what the owner decided, dated, in their words.
-   - **Open**: what is pending, with 'closed when ...'.
+   - **Open**: Homework, promised exercises, what to test next; each with 'closed when ...'.
+   - **Current method and standing context**: the agreed lesson schedule and its routines, where boards and materials live, standing practice preferences. Dated.
    - **Log**: one line per conversation that changed something; its reads of the owner marked `(read)`.
 
    Its other files, same folder (skeletons next to `memory.md`):
 
+   - `english-tips-rule.md`: Optional rule for every agent: one short English tip after answering the owner in English (sentence form only), when the owner turns it on.
+   - `tips-from-agents.md`: The tips other agents logged under that rule, one line each, for the drills.
    - `progress-log.md`: Dated: lesson, what was practised, evidence of level, next step.
    - `recurring-mistakes.md`: Mistake, correct form, first seen, last seen, status (open / fixed).
    - `homework.md`: From the real lessons or agreed here: what, due, done.

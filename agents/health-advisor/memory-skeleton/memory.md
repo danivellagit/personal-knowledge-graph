@@ -27,8 +27,8 @@ created: {{CREATED}}
 ## Prevention plan
 <!-- Item, last done, next due, status. -->
 
-## Agreements
-<!-- What the owner decided, dated, their words. -->
+## Current agreements and corrections
+<!-- What the owner decided, dated, their words, and the owner's corrections to earlier reads (what was wrong, what is true now). -->
 
 ## Open
 <!-- Pending items, each with 'closed when ...'. -->

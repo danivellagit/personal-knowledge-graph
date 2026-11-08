@@ -135,6 +135,7 @@ Three places, never only one of them in the runner (rule 7):
 
    - `proposals.md`: Dated: problem, proposed change, effort, the owner's answer.
    - `credentials-expiry.md`: Name of the credential, where it lives (a path or a vault name, never the value), expiry date, who renews it.
+   - `message-action-review.md`: State of the message action review: its own cursor, open items with stable ids, items seen and not surfaced, a short log.
 
 3. **The shared graph**, for facts other agents need too:
 
@@ -149,6 +150,7 @@ spec in the same turn (rule 9). Times are in the owner's timezone.
 
 - [Daily repo and system health check](routines/daily-repo-health-check.md) - `0 7 * * *` - Git state of every checkout, lint, failing tools, disk, stale routines
 - [Hourly message pull into the graph (if a message bridge runs)](routines/hourly-message-pull.md) - `0 6-23 * * *` - New messages since the cursors into the graph through `skills/remember-people`; restarts a down bridge and says so
+- [Message action review (if a message bridge runs)](routines/message-action-review.md) - `0 9-21/3 * * *` - Open requests, promises, deadlines and meetings from the chats into a short digest; calendar read only, never replies
 - [Daily graph health check](routines/daily-graph-lint.md) - `30 7 * * *` - `python3 tools/lint.py` and the gap register
 - [Daily agent memory sweep](routines/daily-agent-memory-sweep.md) - `30 20 * * *` - Rule 7: anything an agent saved only in runner memory is copied into `data/agents/<role>/memory.md` or the right graph node
 - [Daily routines alignment check](routines/daily-routines-alignment.md) - `0 22 * * *` - Rule 9: every routine on the runner has its mirror in `agents/<role>/routines/` with the same schedule and status, and vice versa

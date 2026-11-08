@@ -12,7 +12,7 @@ runner_id:            # the routine's id or folder on the runner, filled when cr
 <!-- A generic routine spec shipped with the template. When the owner creates it on a runner, keep this
      file as its mirror: same schedule and status, the saved prompt below (agents/README.md, rule 9). -->
 
-**Intent.** Three priorities for the week from open loops, calendar and last week's log; asks the owner to confirm or change them.
+**Intent.** Three priorities for the week from open loops, calendar and last week's log; asks the owner to confirm or change them. It also scans the work digest (`data/_followups/`) for open work items that are past their due date or whose calendar hold has already passed, and proposes one action for each: close (only with evidence it was done), move (a concrete new date) or delegate (a person only if the source names one), in a short overdue follow-ups section.
 
 **When it stays silent.** Always sends on Monday.
 

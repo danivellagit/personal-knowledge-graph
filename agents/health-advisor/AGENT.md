@@ -180,7 +180,7 @@ Three places, never only one of them in the runner (rule 7):
    - **Conditions, allergies, medications**: The owner's words or a document, with the source.
    - **Family history**: As the owner told it.
    - **Prevention plan**: Item, last done, next due, status.
-   - **Agreements**: what the owner decided, dated, in their words.
+   - **Current agreements and corrections**: what the owner decided, dated, in their words, and the owner's corrections to earlier reads.
    - **Open**: what is pending, with 'closed when ...'.
    - **Log**: one line per conversation that changed something; its reads of the owner marked `(read)`.
 

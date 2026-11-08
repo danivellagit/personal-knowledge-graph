@@ -13,19 +13,17 @@ created: {{CREATED}}
      (about the owner, people, places) go to data/_me.md and the graph nodes, not here. -->
 
 ## Agreements
-<!-- Lesson days, correction style, language of explanations. -->
+<!-- Lesson days, correction style, language of explanations; what the owner decided, dated, their words. -->
 
 ## The owner's level: what is verified
 <!-- CEFR descriptor, evidence (a quote, a date), what is still missing. -->
 
 ## Open
-<!-- Homework, promised exercises, what to test next. -->
+<!-- Homework, promised exercises, what to test next; each with 'closed when ...'. -->
 
-## Agreements
-<!-- What the owner decided, dated, their words. -->
-
-## Open
-<!-- Pending items, each with 'closed when ...'. -->
+## Current method and standing context
+<!-- The lesson schedule agreed with the owner and the routines behind it, where the lesson boards and
+     materials live, standing preferences about how practice runs. Dated. -->
 
 ## Log
 <!-- YYYY-MM-DD: one line per conversation that changed something. -->
