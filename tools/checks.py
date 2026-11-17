@@ -21,6 +21,8 @@ group names are qualifiers, never surnames) and from optional keys in config.loc
 
 import os
 import re
+import difflib
+import unicodedata
 import datetime
 import collections
 
@@ -413,17 +415,22 @@ def collect(root="data", today=None):
               "the", "and", "srl", "spa", "ltd", "inc"} | {
         w.lower() for w in config.get_list("checks.common_tokens")}
 
-    def tokens(n):
-        """Name tokens only — an alias that is an email or a handle is not a name."""
-        vals = [n.get("name")] + list(n.get("aliases") or [])
-        out = set()
-        for v in vals:
+    def name_forms(n):
+        """The node's human names: `name` + aliases, without the graph's own annotations
+        ("Alex — SURNAME UNKNOWN (gap to chase)" is "alex"), emails, urls or handles.
+        Tokenising the raw strings made "surname/unknown/chase" and a shared city
+        ("Ann Springfield", "Bob Springfield") count as a name match."""
+        out = []
+        for v in [n.get("name")] + list(n.get("aliases") or []):
             v = str(v or "").strip().strip("\"'")
             if "@" in v or v.startswith("http") or re.search(r"\d", v):
-                continue          # email / url / handle-with-digits: not a human name
-            for w in re.split(r"[^\wàèéìòù]+", v.lower()):
-                if len(w) > 2 and w not in COMMON:
-                    out.add(w)
+                continue
+            v = re.split(r"\s+[—–-]\s+|\(|;|\bsaved as\b", v)[0]
+            v = unicodedata.normalize("NFKD", v.lower())
+            v = "".join(ch for ch in v if not unicodedata.combining(ch))
+            toks = [w for w in re.split(r"[^a-z]+", v) if w and w not in COMMON]
+            if toks:
+                out.append(toks)
         return out
 
     quals = {s: qualifiers_for(n, nodes) for s, n in people.items()}
@@ -442,14 +449,41 @@ def collect(root="data", today=None):
             if x and y:
                 NICK.append((x, y))
 
-    def name_affinity(a, b):
-        ta, tb = tokens(a), tokens(b)
-        if ta & tb:
+    def word_similar(x, y):
+        if x == y:
             return True
-        for x, y in NICK:
-            if (x in ta and y in tb) or (y in ta and x in tb):
-                return True
-        return False
+        if len(x) == len(y) and x[:-1] == y[:-1] and {x[-1], y[-1]} <= set("aeio"):
+            return False        # Alexa / Alexis, Julia / Julio: two names, not a typo
+        if (x, y) in NICK or (y, x) in NICK:
+            return True
+        if min(len(x), len(y)) >= 3 and (x.startswith(y) or y.startswith(x)):
+            return True
+        return difflib.SequenceMatcher(None, x, y).ratio() >= 0.85
+
+    def names_similar(a, b):
+        """Genuinely the same name, not just co-occurrence: an identical name/alias, or the same /
+        near-same / nickname / prefix first name with a compatible surname (missing on one side,
+        or itself near-same). Qualifier words (a company name, a city) are never a surname match."""
+        fa_all, fb_all = name_forms(a), name_forms(b)
+        if fa_all and fb_all and not word_similar(fa_all[0][0], fb_all[0][0]):
+            # the two `name:` fields carry different first names (Alexa vs Alexis, whose
+            # alias "Alex" would prefix-match her): only an identical full alias can still tie them
+            for fa in fa_all:
+                if len(fa) >= 2 and fa in fb_all:
+                    return "same name/alias '%s'" % " ".join(fa)
+            return None
+        for fa in fa_all:
+            for fb in fb_all:
+                if fa == fb:
+                    return "same name/alias '%s'" % " ".join(fa)
+                if not word_similar(fa[0], fb[0]):
+                    continue
+                sa = [w for w in fa[1:] if w not in QUALIFIER_WORDS]
+                sb = [w for w in fb[1:] if w not in QUALIFIER_WORDS]
+                if sa and sb and not word_similar(sa[-1], sb[-1]):
+                    continue        # two different surnames: two people
+                return "similar names '%s' / '%s'" % (" ".join(fa), " ".join(fb))
+        return None
 
     days = collections.defaultdict(set)
     for ix in inter:
@@ -458,6 +492,9 @@ def collect(root="data", today=None):
     plist = [(s, n) for s, n in sorted(people.items()) if s not in KIN]
     for i, (sa, na) in enumerate(plist):
         for sb, nb in plist[i + 1:]:
+            similar = names_similar(na, nb)
+            if not similar:
+                continue        # co-occurrence (a day, a place, a company) alone is never a duplicate
             why = []
             pa, pb = norm(na.get("phone")), norm(nb.get("phone"))
             if pa and pa == pb:
@@ -472,8 +509,8 @@ def collect(root="data", today=None):
             shared_days = days[sa] & days[sb]
             # A name match only matters when one of the two is a nickname or placeholder.
             # Two people who both have a full surname are two people, however alike the
-            # first names are (ines-varga and ines-bersani are not one Ines).
-            if name_affinity(na, nb) and (incomplete_name(sa, na) or incomplete_name(sb, nb)):
+            # first names are (two people sharing a first name are not one person).
+            if incomplete_name(sa, na) or incomplete_name(sb, nb):
                 if same_company:
                     why.append("nickname node + same company (%s)" % (na.get("company")
                                                                       or nb.get("company")))
@@ -486,7 +523,7 @@ def collect(root="data", today=None):
             if not why:
                 continue
             emit(GAP, "possible-duplicate", "dupe-person:%s|%s" % (sa, sb),
-                 "%s <-> %s — %s" % (sa, sb, "; ".join(why)), sa,
+                 "%s <-> %s — %s; %s" % (sa, sb, similar, "; ".join(why)), sa,
                  question="are %s and %s the same person? If yes, merge (never fork)" % (sa, sb),
                  priority=1)
 
@@ -687,21 +724,21 @@ def collect(root="data", today=None):
                  "%s — no wiki-link in and none out: invisible in the graph, unreachable from a brief"
                  % p, os.path.basename(p)[:-3])
 
-    # light nodes nothing points at
+    # light nodes nothing points at. One pass over every edge, not one per light node: the
+    # nested version was O(nodes^2) and a third of the lint's runtime (pre-commit budget).
+    pointed_at = set()
+    for other in nodes.values():
+        for e in other.entries:
+            k = e.get("key")
+            if k and k != "aliases":
+                pointed_at.update(t for t in other.link_list(k) if t != other.slug)
+    referenced = set()
+    for ix in inter:
+        referenced.update(links_of([ix.get("about"), ix.get("at"), ix.get("city")]))
     for s, n in nodes.items():
         if n.type in ("people", "companies"):
             continue
-        inbound = 0
-        for other in nodes.values():
-            if other.slug == s:
-                continue
-            for e in other.entries:
-                k = e.get("key")
-                if k and k != "aliases" and s in other.link_list(k):
-                    inbound += 1
-        refs = sum(1 for ix in inter
-                   if s in links_of([ix.get("about"), ix.get("at"), ix.get("city")]))
-        if not inbound and not refs:
+        if s not in pointed_at and s not in referenced:
             emit(GAP, "orphan-light-node", "orphan:%s" % s, n.path, s,
                  question="wire [[%s]] to something or delete it" % s, priority=4)
 

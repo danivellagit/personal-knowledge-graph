@@ -39,6 +39,19 @@ from an invented list that no other agent of yours uses (`--seed` makes it repea
 changes nothing and reprints the runner text. `data/` is local, so on a fresh clone it recreates the
 missing memory skeletons and leaves the names alone.
 
+## Core rule: memory first, MD first
+
+Everything is tracked in the markdown files of the repo; an app (the Life App or any future one) is
+only a human-readable representation of those files. Anything the owner enters or taps in an app
+must end up saved in the files, never only on the phone. This applies to every agent and every
+developer.
+
+In practice: the files in `data/` (including `data/happiness/`) are the truth, an app only renders
+them. A tap, an input or a toggle in an app is a write that has to reach the files (for the Life
+App: the write-back event log, see "Write-back" in `tools/life-app/README.md`). Browser
+localStorage is only a bridge until the next import and build, never the place where something
+lives. A feature that stores user input only on the device is unfinished.
+
 ## New agent onboarding (read this first if you are a new agent)
 
 A new agent sets itself up from this repo on its **first turn**, before answering anything else.
@@ -133,6 +146,10 @@ Agent memory files link to it with `person: "[[_me]]"` so they are never orphans
    agents from several surfaces, every agent pulls when a conversation starts and commits + pushes
    only its own paths after every change (never `git add -A`, never force-push), or memory written
    on one surface never reaches the others.
+   **One worktree per agent** when several agents share a machine: `tools/wt.sh init <role>` once,
+   then work in that worktree (its own branch, the same `.git`) and publish with
+   `tools/wt.sh sync <role> "message" <your paths>` (fetch, rebase onto `origin/main`, push, retries,
+   never force). One agent's leftovers then never block another's pull.
 
 8. **The Life App data rule** (only if you use `tools/life-app/`). Each life area has one owner
    agent and one file in `data/happiness/`: `corpo.json` (fitness-coach), `medico.json`

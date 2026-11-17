@@ -8,7 +8,7 @@ a report and a memory. This file gives every gap an identity and a history:
     first_seen   when the graph first noticed it was missing something
     last_seen    the last run that still saw it open
     attempts     how many times a sweep actually tried to close it, with notes
-    status       open | closed | dropped
+    status       open | closed | dropped | accepted
     closed_by    the evidence that closed it (never "it disappeared")
 
 Commands:
@@ -18,6 +18,9 @@ Commands:
     python3 tools/gaps.py attempt <id> -n "..."  # tried, did not close: record what was checked
     python3 tools/gaps.py close   <id> -e "..."  # closed, with the evidence
     python3 tools/gaps.py drop    <id> -n "..."  # not closeable / not worth it, with the reason
+    python3 tools/gaps.py accept  <id> -n "..."  # minor, we live without it (kept, not chased)
+    python3 tools/gaps.py reopen  <id> -n "..."  # undo accept/drop/close, back to the chase list
+    python3 tools/gaps.py expire [--dry-run]    # minor gaps open > ACCEPT_AFTER_DAYS -> accepted
     python3 tools/gaps.py trend                 # opened vs closed over time
 
 Files (all under data/_gaps/, part of your private data):
@@ -29,6 +32,13 @@ Rule that makes this safe: **a gap closes on evidence, not on silence.** If a de
 reporting a gap, `sync` marks it `closed` with `closed_by: "detector: no longer reported"` — but
 if it was a fact-gap (a missing name, a missing city) that is suspicious, and sync says so,
 because a fact does not become known by itself.
+
+`accepted` (2026-10-24): the register only ever grew (78 -> 573 open in 80 days) because nothing
+let a minor gap stop being "open". A MINOR_KINDS gap still open after ACCEPT_AFTER_DAYS with no
+attempt in that window moves to `accepted` on `sync` (one log line each, `closed_by` says why).
+Accepted is not closed: the fact is still unknown, the gap stays in the register, is never
+resurrected by sync, and `reopen` puts it back on the chase list. The owner's "no, not worth it"
+in a gap review (`tools/gap-review.py`) also lands here.
 """
 
 import os
@@ -54,6 +64,13 @@ FACT_KINDS = {"no-full-name", "partner-unnamed", "partner-in-prose-only", "no-lo
 
 STALLED_ATTEMPTS = 3     # tried this often without closing -> stop guessing, ask the owner
 NAG_DAYS = 21            # open this long with no attempt -> it is being ignored, not worked
+
+# minor = nice to know, never blocks a brief. Open this long without anyone trying -> accepted.
+# Not here on purpose: needs-rollup (work for the sweep, not a question), possible-duplicate,
+# names, partners, co-presence (they matter before real conversations).
+MINOR_KINDS = {"no-location", "proper-noun-no-node", "orphan-light-node",
+               "body-session-unattributed"}
+ACCEPT_AFTER_DAYS = 60
 
 
 def today_str():
@@ -109,10 +126,11 @@ def cmd_sync(args):
             r["last_seen"] = day
             r["detail"] = f.detail
             r["priority"] = f.priority
-            if r["status"] == "dropped":
+            if r["status"] in ("dropped", "accepted"):
                 # a human judged this one not real / not worth chasing. The detector will keep
                 # emitting it forever (nothing in the data changed), so honouring that judgement
                 # is the whole point of the status. Never resurrect it automatically.
+                # Same for `accepted`: a judgement (or the minor-gap expiry), not a fix.
                 continue
             if r["status"] != "open":
                 # a CLOSED gap that came back is different: it means the fix did not hold, or
@@ -134,6 +152,7 @@ def cmd_sync(args):
         if r["kind"] in FACT_KINDS:
             suspicious.append(gid)
 
+    accepted = expire(reg, day)
     save(reg)
     write_open_md(reg)
 
@@ -141,6 +160,7 @@ def cmd_sync(args):
     os.makedirs(GAPDIR, exist_ok=True)
     with open(HISTORY, "a", encoding="utf8") as fh:
         fh.write(json.dumps({"date": day, "opened": len(opened), "closed": len(closed),
+                             "accepted": len(accepted),
                              "open_total": sum(counts.values()), "by_kind": dict(counts)},
                             ensure_ascii=False, sort_keys=True) + "\n")
 
@@ -151,6 +171,9 @@ def cmd_sync(args):
     print("  closed this run: %d" % len(closed))
     for g in closed[:10]:
         print("     - " + g)
+    print("  accepted this run (minor, open >%dd, untried): %d" % (ACCEPT_AFTER_DAYS, len(accepted)))
+    for g in accepted[:10]:
+        print("     ~ " + g)
     if suspicious:
         print("\n  !! %d fact-gaps vanished without recorded evidence." % len(suspicious))
         print("     A name does not become known by itself. Check these were really answered")
@@ -160,6 +183,50 @@ def cmd_sync(args):
     print("\n  open now: %d" % sum(counts.values()))
     for k, c in counts.most_common():
         print("     %-26s %d" % (k, c))
+
+
+# ---------------------------------------------------------------------- expiry
+
+def expirable(r, today=None):
+    """A minor gap open too long that nobody has tried lately: the register should stop
+    pretending it is being chased."""
+    today = today or datetime.date.today()
+    if r["status"] != "open" or r["kind"] not in MINOR_KINDS:
+        return False
+    if age(r, today) < ACCEPT_AFTER_DAYS:
+        return False
+    if r.get("reopened_by_hand"):
+        return False          # someone reopened it on purpose: do not expire it again
+    last = max([a.get("on", "") for a in r.get("attempts", [])] or [""])
+    if last and (today - datetime.date.fromisoformat(last)).days < ACCEPT_AFTER_DAYS:
+        return False
+    return True
+
+
+def expire(reg, day, dry=False):
+    out = []
+    for gid, r in sorted(reg.items(), key=lambda kv: kv[1]["first_seen"]):
+        if not expirable(r):
+            continue
+        out.append(gid)
+        if dry:
+            continue
+        r["status"] = "accepted"
+        r["closed_on"] = day
+        r["closed_by"] = ("accepted: minor gap (%s) open %dd with no attempt in %dd - auto-expiry"
+                          % (r["kind"], age(r), ACCEPT_AFTER_DAYS))
+    return out
+
+
+def cmd_expire(args):
+    reg = load()
+    got = expire(reg, today_str(), dry=args.dry_run)
+    if not args.dry_run and got:
+        save(reg)
+        write_open_md(reg)
+    by = collections.Counter(reg[g]["kind"] for g in got)
+    print("%s %d minor gap(s) -> accepted%s" % ("would move" if args.dry_run else "moved", len(got),
+          "" if not by else " (" + ", ".join("%s %d" % kv for kv in by.most_common()) + ")"))
 
 
 # ----------------------------------------------------------------------- today
@@ -228,6 +295,32 @@ def cmd_close(args):
     print("closed %s\n  evidence: %s" % (args.id, args.evidence))
 
 
+def cmd_accept(args):
+    reg = load()
+    r = _get(reg, args.id)
+    r["status"] = "accepted"
+    r["closed_on"] = today_str()
+    r["closed_by"] = "accepted: " + args.note
+    save(reg)
+    write_open_md(reg)
+    print("accepted %s" % args.id)
+
+
+def cmd_reopen(args):
+    reg = load()
+    r = _get(reg, args.id)
+    r.setdefault("reopened", []).append({"on": today_str(), "was": r["status"],
+                                         "had_been_closed_by": r.get("closed_by"),
+                                         "note": args.note})
+    r["status"] = "open"
+    r["closed_by"] = None
+    r["closed_on"] = None
+    r["reopened_by_hand"] = True
+    save(reg)
+    write_open_md(reg)
+    print("reopened %s" % args.id)
+
+
 def cmd_drop(args):
     reg = load()
     r = _get(reg, args.id)
@@ -268,6 +361,7 @@ def write_open_md(reg):
     openg = [r for r in reg.values() if r["status"] == "open"]
     closed = [r for r in reg.values() if r["status"] == "closed"]
     dropped = [r for r in reg.values() if r["status"] == "dropped"]
+    accepted = [r for r in reg.values() if r["status"] == "accepted"]
     by_kind = collections.defaultdict(list)
     for r in openg:
         by_kind[r["kind"]].append(r)
@@ -276,8 +370,8 @@ def write_open_md(reg):
     L.append("# Gaps — what this memory knows it does not know\n")
     L.append("Generated by `tools/gaps.py`. **Do not edit by hand** — record outcomes with\n"
              "`gaps.py attempt|close|drop`, so the history survives.\n")
-    L.append("_%s — %d open, %d closed, %d dropped._\n"
-             % (today_str(), len(openg), len(closed), len(dropped)))
+    L.append("_%s — %d open, %d closed, %d dropped, %d accepted._\n"
+             % (today_str(), len(openg), len(closed), len(dropped), len(accepted)))
     L.append("A gap closes on **evidence**, never on silence. Never invent a fact to close one:\n"
              "this graph is read before real conversations with real people.\n")
 
@@ -307,6 +401,12 @@ def write_open_md(reg):
         for r in dropped:
             L.append("- `%s` — %s" % (r["id"], r.get("closed_by")))
 
+    if accepted:
+        by = collections.Counter(r["kind"] for r in accepted)
+        L.append("\n## Accepted (%d) — still unknown, no longer chased; `gaps.py reopen <id>`\n"
+                 % len(accepted))
+        L.append(", ".join("%s %d" % kv for kv in sorted(by.items())))
+
     os.makedirs(GAPDIR, exist_ok=True)
     with open(OPEN_MD, "w", encoding="utf8") as fh:
         fh.write("\n".join(L) + "\n")
@@ -332,6 +432,14 @@ def main():
     d.add_argument("id")
     d.add_argument("-n", "--note", required=True)
     d.set_defaults(func=cmd_drop)
+    for name, fn in (("accept", cmd_accept), ("reopen", cmd_reopen)):
+        x = sub.add_parser(name)
+        x.add_argument("id")
+        x.add_argument("-n", "--note", required=True)
+        x.set_defaults(func=fn)
+    e = sub.add_parser("expire")
+    e.add_argument("--dry-run", action="store_true")
+    e.set_defaults(func=cmd_expire)
     sub.add_parser("trend").set_defaults(func=cmd_trend)
     args = ap.parse_args()
     chdir_repo()

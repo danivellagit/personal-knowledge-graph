@@ -37,6 +37,9 @@ Numbers are facts; what they mean is not. A heart at 112 while sitting still is 
 exactly that, never as "stressed" or "anxious" (CLAUDE.md, "Quotes are facts, reads are
 guesses"). Only stillness-filtered readings count as anything at all, because walking, stairs
 and coffee move the heart too.
+The Life App "Stress" view keeps this rule: it shows heart-rate activation
+against the owner's own last 14 days, labelled as activation (Recovery / Calm / Active / Under
+pressure), never as a feeling.
 
 Exercise sessions become `activities:` links by matching the session's name (e.g. "Running")
 against your passion nodes: the slug, the `name:` or any of the `aliases:` of a node in
@@ -648,9 +651,14 @@ def render(d):
         w("From each interaction's `time:`. Heart against this day's still median (%s). Numbers, not moods."
           % (d.get("hr_still_median") or "—"))
         for a, b, rel, setting in sorted(timed):
-            end_day = d["date"] if b > a else (dt.date.fromisoformat(d["date"]) + dt.timedelta(days=1)).isoformat()
+            t0 = dt.datetime.fromisoformat("%sT%s:00" % (d["date"], a))
+            t1 = dt.datetime.fromisoformat("%sT%s:00" % (d["date"], b))
+            if t1 < t0:             # crosses midnight
+                t1 += dt.timedelta(days=1)
+            elif t1 == t0:          # a single instant ("18:30-18:30"): one minute, never a 24h wrap
+                t1 += dt.timedelta(minutes=1)
             try:
-                r = window("%sT%s:00" % (d["date"], a), "%sT%s:00" % (end_day, b))
+                r = window(t0.isoformat(), t1.isoformat())
             except Exception:       # noqa: BLE001 — a bad time must not break the day
                 continue
             if not r.get("readings", 1):

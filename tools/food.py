@@ -80,7 +80,7 @@ GEN_END = "<!-- food:totals:end -->"
 def meal_nutrients(body):
     """One dict per meal that has numbers: the Nutrients line if present, else the old Estimate line."""
     out = []
-    for block in re.split(r"(?m)^## \d\d:\d\d · ", body)[1:]:
+    for block in MEAL_SPLIT.split(body)[1:]:
         m = NUTR_LINE.search(block)
         if m:
             d = {}
@@ -95,7 +95,11 @@ def meal_nutrients(body):
         if e:
             out.append({k: float(v.replace(",", ".")) for k, v in zip(EST_KEYS, e.groups()) if v})
     return out
-MEAL_H = re.compile(r"^## (\d\d:\d\d) · ", re.M)
+# meal heading: "## HH:MM · name"; an approximate time "## ~HH:MM · ..." and a span "## ~10:00–13:15 · ..." count too.
+# Group 1 = the (start) time.
+MEAL_HEAD = r"^## ~?(\d\d:\d\d)(?:\s*[–-]\s*~?\d\d:\d\d)? · "
+MEAL_H = re.compile(MEAL_HEAD, re.M)
+MEAL_SPLIT = re.compile(MEAL_HEAD.replace("(\\d\\d:\\d\\d)", "\\d\\d:\\d\\d", 1), re.M)
 
 
 def meal_name(hhmm):

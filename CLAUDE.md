@@ -233,7 +233,21 @@ python3 tools/gaps.py close <id> -e "..."    # closed, WITH the evidence
 python3 tools/gaps.py attempt <id> -n "..."  # tried and failed: say what you actually checked
 python3 tools/gaps.py drop <id> -n "..."     # not real / not worth it, with the reason
 python3 tools/gaps.py trend                  # are gaps net closing or net opening?
+python3 tools/gaps.py accept <id> -n "..."   # minor, we live without it: kept, no longer chased
+python3 tools/gaps.py reopen <id> -n "..."   # back on the chase list
+python3 tools/gap-review.py generate         # weekly: 10 yes/no questions for the owner
+python3 tools/gap-review.py apply <date> <id>=yes|no ...   # the owner's answers: merges, renames, closes
 ```
+
+**Accepted** is the fourth state, next to open / closed / dropped: still unknown, no longer
+chased. `sync` moves a minor gap (no-location, proper-noun-no-node, orphan-light-node,
+body-session-unattributed) there when it has been open 60 days with no attempt in that window,
+with a `closed_by` line saying so; the owner's "no, not worth it" in a gap review lands there too.
+
+**The weekly gap review** (`data/agents/tech-maintainer/gap-review/<date>.md`) is how the gaps
+that need the owner reach them: possible duplicates first, then provisional filenames, then the
+stalled and oldest gaps, ten yes/no questions with stable ids. Nothing is merged or renamed
+without an explicit yes to that id.
 
 Every gap carries `first_seen`, `last_seen`, `attempts` and, when it closes, `closed_by`. Read
 `data/_gaps/OPEN.md` in Obsidian; never edit it by hand.
